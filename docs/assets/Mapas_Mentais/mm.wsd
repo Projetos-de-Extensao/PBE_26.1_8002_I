@@ -1,0 +1,59 @@
+@startuml mindmap
+skinparam monochrome true
+skinparam ArrowColor #000000
+skinparam NodeFontSize 14
+
+* Censo Demográfico 2022
+** Dados Coletados
+*** 1. Identificação do Domicílio
+    **** UF/Município/Distrito
+    **** Espécie (Permanente/Improvisado/Coletivo)
+    **** Tipo (Casa/Apartamento/Tenda/etc.)
+*** 2. Moradores
+    **** Quantidade total
+    **** Crianças (0-9 anos)
+    **** _Lista por nome_
+    **** Sexo/Data Nascimento/Idade
+    **** Parentesco com responsável
+*** 3. Características do Domicílio
+    **** Água (Rede/Poço/Chuva)
+    **** Banheiros/Esgoto
+    **** Coleta de Lixo
+*** 4. Identificação Étnico-Racial
+    **** Cor/Raça (Branca/Preta/Parda/Indígena)
+    **** Línguas Indígenas
+    **** Comunidades Quilombolas
+*** 7. Trabalho e Renda
+    **** Rendimento do Responsável
+    **** Faixas de Renda
+*** 8. Mortalidade
+    **** Óbitos (2019-2022)
+    **** Idade/Causa
+
+** Fluxo do Questionário
+*** _Seção 1 → Seção 2_
+    **** Se domicílio ocupado
+*** _Seção 2 → Seção 3_
+    **** Se domicílio permanente
+*** _Seção 4 condicional_
+    **** Indígena? → Etnia
+    **** Quilombola? → Comunidade
+
+** Tecnologias
+*** Coleta
+    **** Formulário Digital (API Django)
+    **** Sincronização Offline
+*** Processamento
+    **** Validação Automática
+    **** Georreferenciamento
+*** Análise
+    <<dashboard>>
+    Dashboard Interativo
+    Relatórios CSV/PDF
+
+** Atores Principais
+*** Entrevistador
+*** Responsável pelo Domicílio
+*** IBGE (Coordenação)
+*** Equipe de TI
+@enduml
