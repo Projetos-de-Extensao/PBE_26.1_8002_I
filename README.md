@@ -3,11 +3,11 @@
 **Código da Disciplina**: IBM8936<br>
 
 ## Integrantes
-**Lucas de Souza Alcantara**
-**João Gabriel Teodósio de Oliveira Lima**
-**Roger dos Santos Tavares Pires**
-**Letícia Rocha Valladão**
-**Vinícius Machado**
+- **Lucas de Souza Alcantara**
+- **João Gabriel Teodósio de Oliveira Lima**
+- **Roger dos Santos Tavares Pires**
+- **Letícia Rocha Valladão**
+- **Vinícius Machado**
 
 ## Sobre 
 Descreva o seu projeto em linhas gerais. 
