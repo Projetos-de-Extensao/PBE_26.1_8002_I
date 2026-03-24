@@ -7,7 +7,7 @@
 - **João Gabriel Teodósio de Oliveira Lima**
 - **Roger dos Santos Tavares Pires**
 - **Letícia Rocha Valladão**
-- **Vinícius Dias Machado**
+- **Vinícius Dias Lopes Machado Martinez**
 
 ## Sobre 
 Descreva o seu projeto em linhas gerais. 
