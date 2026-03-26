@@ -110,8 +110,11 @@ A pesquisa foi feita tendo como base as três maiores plataformas de estágios d
 [Manual Do Aluno](https://docs.google.com/document/d/1-EBnCU-gWHCVcA6gCT13AO1B996HvPrHwVn0lN1X354/edit?pli=1&tab=t.ocph83xikpdx#heading=h.5l9jxhy2j1lx)
 
 Resumos de cada aplicação: Adaptações das descrições presentes nos sites oficiais.
+
 [CIEE](https://portal.ciee.org.br)
+
 [Super Estágios](www.superestagios.com.br)
+
 [IEL](https://iel.portaldaindustria.com.br/para-voce/vagas-de-estagio)
 
 Certificações e premoações:
