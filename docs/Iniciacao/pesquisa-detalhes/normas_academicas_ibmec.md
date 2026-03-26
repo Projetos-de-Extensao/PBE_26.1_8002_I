@@ -1,6 +1,6 @@
 # 🌸 Normas Acadêmicas do IBMEC 🌸
  
-  ## 🎀 Critérios para elegibilidade do aluno:
+## 🎀 Critérios para elegibilidade do aluno:
   
 -   O aluno deve estar devidamente matriculado  e frequente às aulas;
     
@@ -22,7 +22,7 @@
 
 -   TCE: Deve ser entregue à secretaria antes do início das atividades, obrigatoriamente contendo o número da apólice do Seguro de vida;
 
-💕 <u>__RELATÓRIO DE ATIVIDADES:__<u/>
+💕 <u>__RELATÓRIO DE ATIVIDADES:__</u>
 
 -   Acompanhamento de Estágio: deve ser preenchido após o período de 90 dias de estágio pelo aluno;
     
@@ -38,7 +38,7 @@
 
 -   Apenas o TCE não basta, é exigido também um termo de cooperação entre a empresa concedente do estágio e o IBMEC, que exige que o Estágio Supervisionado deve ser cumprido em organizações conveniadas;
    
-💕 <u>*Fontes:*<u/>
+💕 <u>*Fontes:*</u>
 
 [REGULAMENTO DE ESTÁGIO](https://s3.amazonaws.com/public-cdn.ibmec.br/portalibmec-content/public/arquivos/bh/Graduacao/regulamento_estagio_ibmec_2022.pdf)
 
