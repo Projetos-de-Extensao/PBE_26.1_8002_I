@@ -117,7 +117,7 @@ O backend deve contemplar:
 ---
 
 ### 7. Carga horária, jornada e integralização
-A legislação geral trata do estágio em termos de jornada e formalização, enquanto a exigência de **carga horária mínima obrigatória** para integralização depende do curso e do PPC. Ou seja: a lei define a estrutura geral do instituto do estágio, mas a regra acadêmica concreta de conclusão do curso depende das DCNs e da organização curricular da instituição.
+A legislação geral trata do estágio em termos de jornada e formalização, enquanto a exigência de **carga horária mínima obrigatória** para integralização depende do curso e do PPC. Ou seja, como dito anteriormente: a lei define a estrutura geral do instituto do estágio, mas a regra acadêmica concreta de conclusão do curso depende das DCNs e da organização curricular da instituição.
 
 #### Impacto no software
 O sistema deve separar:
@@ -137,33 +137,4 @@ Para a construção do software, os pontos mais relevantes não são apenas conc
 3. **As regras específicas variam por curso**, pois dependem das DCNs e do PPC.  
 4. **As atividades devem ser compatíveis com a formação do aluno**, e isso deve ser verificável no sistema.  
 5. **Há múltiplos atores com papéis distintos**, exigindo controle de permissões e aprovações.  
-6. **A oficialização depende de documentos e acompanhamento**, o que exige rastreabilidade e gestão documental.  
-
----
-
-### 9. Aplicação no Ibmec RJ
-Além da Lei nº 11.788/2008, o sistema deve observar as regras acadêmicas e operacionais definidas pelo próprio **Ibmec RJ**, especialmente o **Manual do Aluno**, o **regulamento de estágio**, o **PPC do curso** e eventuais normas complementares da coordenação.
-
-Essas normas locais são relevantes porque podem definir:
-
-- fluxos de aprovação;
-- documentos obrigatórios;
-- responsáveis institucionais;
-- prazos de entrega;
-- critérios de validação de carga horária;
-- particularidades por curso.
-
-Para a documentação técnica, recomenda-se registrar que a solução deve ser preparada para incorporar regras institucionais específicas do Ibmec RJ, evitando o uso de uma regra fixa para todos os cursos.
-
----
-
-### 10. Resumo técnico para o projeto
-Do ponto de vista de sistema, a documentação deve assumir que a oficialização do estágio depende da combinação entre **norma legal geral**, **regra acadêmica do curso** e **processo interno da instituição**. Por isso, o software precisa ser modelado para:
-
-- diferenciar modalidades de estágio;
-- validar vínculo acadêmico;
-- registrar plano de atividades;
-- controlar documentos obrigatórios;
-- acompanhar carga horária e relatórios;
-- permitir aprovação por orientador e supervisor;
-- parametrizar regras por curso, matriz e instituição.
+6. **A oficialização depende de documentos e acompanhamento**, o que exige rastreabilidade e gestão documental.
