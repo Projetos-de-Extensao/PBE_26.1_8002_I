@@ -58,12 +58,12 @@ A pesquisa foi feita tendo como base as três maiores plataformas de estágios d
 -   Gupy
 -   Eureca
 
-💕 <u>*Fontes:*<u/>
+💕 <u>*Fontes:*</u>
 
 Resumos de cada aplicação: Adaptações das descrições presentes nos sites oficiais.
 
 [CIEE](https://portal.ciee.org.br)
-[Super Estágios](www.superestagios.com.br)
+[Super Estágios](https://www.superestagios.com.br)
 [IEL](https://iel.portaldaindustria.com.br/para-voce/vagas-de-estagio)
 
 Certificações e premoações:
