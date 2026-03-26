@@ -115,13 +115,19 @@ Resumos de cada aplicação: Adaptações das descrições presentes nos sites o
 [IEL](https://iel.portaldaindustria.com.br/para-voce/vagas-de-estagio)
 
 Certificações e premoações:
+
 [CIEE](https://portal.ciee.org.br/conheca-o-ciee/quem-somos/)
+
 Super Estágios: Publicações oficiais em suas redes sociais
+
 [IEL](https://iel.portaldaindustria.com.br/institucional/premio-iel-de-talentos)
 
 App: As pesquisas foram feitas com base nas avaliações disponíveis na Play Store (android) e App Store (IOS).
 
 Site: As pesquisas foram feitas com base nas respostas e avaliações realizadas pelos usuários no Reclame Aqui.
+
 [CIEE](https://iel.portaldaindustria.com.br/institucional/premio-iel-de-talentos)
+
 [Super estágios](https://www.reclameaqui.com.br/empresa/super-estagios/)
+
 [IEL](https://www.reclameaqui.com.br/empresa/iel-instituto-euvaldo-lodi/)
