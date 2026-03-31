@@ -37,7 +37,7 @@ Validar o Coeficiente de Rendimento
 
 Comprovar matrícula e frequência
 
-##### <u>*Fontes:*<u/>
+##### <u>*Fontes:*</u>
 
 Gupy (https://www.gupy.io/blog/contratacao-estagiario)
 Exame (https://exame.com/carreira/guia-de-carreira/quais-documentos-sao-necessarios-para-comecar-um-estagio)
