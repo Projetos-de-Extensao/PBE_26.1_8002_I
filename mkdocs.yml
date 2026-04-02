@@ -14,11 +14,17 @@ nav:
       - CodeSpace: Disciplina/codespace.md
       - Avaliações: Disciplina/avaliacoes.md
   - Iniciação: 
-      - Index: Iniciacao/index.md
-      - Pesquisa: Iniciacao/pesquisa.md
+      - index: Iniciacao/index.md
+      - Pesquisa:
+          - Visão Geral: Iniciacao/pesquisa-detalhes/index.md
+          - Legislação Trabalhista: Iniciacao/pesquisa-detalhes/legislacao_trabalhista.md
+          - Legislação MEC - DCN: Iniciacao/pesquisa-detalhes/legislacao_mec_dcn.md
+          - Normas Acadêmicas do IBMEC: Iniciacao/pesquisa-detalhes/normas_academicas_ibmec.md
+          - Pesquisa Aplicações: Iniciacao/pesquisa-detalhes/pesquisa_aplicacoes.md
+          - Validação de Documentos: Iniciacao/pesquisa-detalhes/validacao_documentos.md
       - 5w2h: Iniciacao/5w2h.md
       - Design Thinking: Iniciacao/design_thinking.md
-      - Brainstorming: Iniciacao/brainstorm.md
+      - Brainstorming: Iniciacao/Brainstorm.md
       - Mapa Mental: Iniciacao/mapa_mental.md
       - Prototipagem Baixa Fidelidade: Iniciacao/prototipo_baixa_fidelidade.md
   - Elaboração:
