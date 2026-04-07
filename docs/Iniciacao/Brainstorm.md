@@ -1,100 +1,87 @@
----
-id: brainstorm
-title: Brainstorm
----
+# 🌸 Brainstorm para o Site de Gerenciamento de Estágios 🌸
  
-## Introdução
+## 🎀 Introdução
 <p align = "justify">
 O brainstorm é uma técnica de elicitação de requisitos que consiste em reunir a equipe e discutir sobre diversos tópicos gerais do projeto apresentados no documento problema de negócio. No brainstorm o diálogo é incentivado e críticas são evitadas para permitir que todos colaborem com suas próprias ideias.
 </p>
  
-## Metodologia
+## 🎀 Metodologia
 <p align = "justify">
-A equipe se reuniu para debater ideias gerais sobre o projeto via..., começou .... e terminou..., onde o XXXX XXXX foi o moderador, direcionando a equipe com questões pré-elaboradas, e transcrevendo as respostas para o documento.
+A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, começou 07/04/2026 e terminou [preencher],onde a equipe decidiu em conjunto as perguntas e as respostas foram transcritas para o documento.
 </p>
  
-## Brainstorm
+## 🎀 Perguntas
  
-## Versão 1.0
- 
-## Perguntas
- 
-### 1. Qual o objetivo principal da aplicação?
+### 💕 1. Qual o objetivo principal da aplicação?
  
 <p align = "justify">
-<b>XXXX</b> - Deve ser uma plataforma onde qualquer pessoa possa...
+<b>Letícia</b> - Deve ser uma plataforma onde qualquer pessoa possa...
 </p>
  
-<b>ZZZ</b> - A plataforma deve fornece...
+<b>Roger</b> - A plataforma deve fornece...
  
-<b>YYYY</b> - O objetivo da aplicação é....
+<b>João Gabriel</b> - O objetivo da aplicação é....
  
-<b>WWWW</b> - O principal objetivo da aplicação é a...
+<b>Lucas</b> - O principal objetivo da aplicação é simplificar, organizar 
  
-<b>KKKK</b> - A plataforma deve gerenciar...
+<b>Vinicius</b> - A plataforma deve gerenciar...
 </p>
  
 ---
  
-### 2. Como será o processo para cadastrar um novo cliente?
+### 💕 2. Como será o processo para cadastrar um novo cliente?
  
 <p align = "justify">
-<b>XXXX</b> - O moderador deverá fazer login e...
+<b>Letícia</b> - Deve ser uma plataforma onde qualquer pessoa possa...
+</p>
  
-<b>YYYY</b> - O cliente...
+<b>Roger</b> - A plataforma deve fornece...
  
-<b>WWWW</b> - Com o usuário logado, ele deverá...
-
-<b>ZZZZ</b> - O cliente...
+<b>João Gabriel</b> - O objetivo da aplicação é....
  
-<b>KKK</b> - O cliente...
+<b>Lucas</b> - O principal objetivo da aplicação é a...
+ 
+<b>Vinicius</b> - A plataforma deve gerenciar...
+</p>
  
 ---
  
-### 3. Como será a forma de adicionar produtos?
+### 💕 3. Como será a forma de adicionar produtos?
  
 <p align = "justify">
-<b>XXXX</b> - O cliente ao cadastrar...
+<b>Letícia</b> - Deve ser uma plataforma onde qualquer pessoa possa...
 </p>
  
-<p align = "justify">
-<b>YYYYY</b> - O produto tem...
+<b>Roger</b> - A plataforma deve fornece...
+ 
+<b>João Gabriel</b> - O objetivo da aplicação é....
+ 
+<b>Lucas</b> - O principal objetivo da aplicação é a...
+ 
+<b>Vinicius</b> - A plataforma deve gerenciar...
 </p>
- 
-<b>ZZZZ</b> - O produto....
- 
-<b>XXXX</b> - O produto....
-
  
 ---
  
-### 4. Outras perguntas pertinentes ao contexto
+### 💕 4. Outras perguntas pertinentes ao contexto
 
 <p align = "justify">
-<b>XXXX</b> - Com a localização...
+<b>Letícia</b> - Deve ser uma plataforma onde qualquer pessoa possa...
+</p>
  
-<b>YYYY</b> - O cliente...
+<b>Roger</b> - A plataforma deve fornece...
  
-<b>ZZZ</b> - O cliente...
+<b>João Gabriel</b> - O objetivo da aplicação é....
+ 
+<b>Lucas</b> - O principal objetivo da aplicação é a...
+ 
+<b>Vinicius</b> - A plataforma deve gerenciar...
+</p>
  
 ---
  
-### 5. "Outras perguntas pertinentes ao contexto", Como seria a forma de adicionar do cliente adicionar os produtos ?
-<p align = "justify">
-<b>XXX</b> - O cliente....
-</p>
  
-### 6. Quais informações seriam interessante para o cliente?
-<p align = "justify">
-   <b>XXX</b> - Informações...
-   
-   <b>ZZZZ</b> - O cliente usuário poderá acessar informações...
-
-   <b>WWWWs</b> - O usuário poderá ver scouts de partidas do torneio, ver as regras dos torneios, locais e data das partidas.
-   
-</p>
- 
-### Requisitos elicitados
+### 💕 Requisitos elicitados
  
 |ID|Descrição|
 |----|-------------|
@@ -114,16 +101,20 @@ A equipe se reuniu para debater ideias gerais sobre o projeto via..., começou .
 |BS14| O produto...|
 |BS15| O produto...|
  
-## Conclusão
+## 🎀 Conclusão
 <p align = "justify">
 Através da aplicação da técnica, foi possível elicitar alguns dos primeiros requisitos do projeto.
 </p>
-## Referências Bibliográficas
+
+## 🎀 Referências Bibliográficas
  
 > BARBOSA, S. D. J; DA SILVA, B. S. Interação humano-computador. Elsevier, 2010.
  
  
-## Autor(es)
+## 🎀 Autor(es)
 | Data | Versão | Descrição | Autor(es) |
 | -- | -- | -- | -- |
-| DD/MM/YYYY | 1.0 | Criação do documento | XXX XXXX, XXXX XXXX, YYY YYYY e ZZZ XXXX |
+| 07/04/2026 | 1.0 | Criação do documento | Letícia Valladão, Roger Pires, Lucas Alcântara, João Gabriel de Oliveira |
+
+## 🎀 Dados do Documento
+> id: Brainstorm-Estagios <br/> title: Brainstorm do Site para Gerenciamento de Estágios para a IBMEC
