@@ -15,16 +15,16 @@ A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, c
 ### 💕 1. Qual o objetivo principal da aplicação?
  
 <p align = "justify">
-<b>Letícia</b> - Deve ser uma plataforma onde qualquer pessoa possa...
+<b>Letícia</b> - Deve ser uma plataforma onde os coordenadores tenham mais facilidade para gerenciar estágio.
 </p>
  
-<b>Roger</b> - A plataforma deve fornece...
+<b>Roger</b> - A plataforma deve fornecer um ambiente de gerenciamento de estágios para os coordenadores e alunos do IBMEC.
  
-<b>João Gabriel</b> - O objetivo da aplicação é....
+<b>João Gabriel</b> - O objetivo da aplicação é facilitar  e padronizar a formalização de contratos de estágio referentes aos alunos do IBMEC.
  
-<b>Lucas</b> - O principal objetivo da aplicação é simplificar, organizar 
+<b>Lucas</b> - O principal objetivo da aplicação é simplificar, organizar e facilitar o gerenciamento de estagios do IBMEC em um só lugar.
  
-<b>Vinicius</b> - A plataforma deve gerenciar...
+<b>Vinicius</b> - A plataforma deve gerenciar as documentações necessárias para aplicação à vaga de estágio.
 </p>
  
 ---
