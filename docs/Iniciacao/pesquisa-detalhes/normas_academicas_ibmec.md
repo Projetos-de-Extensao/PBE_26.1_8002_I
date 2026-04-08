@@ -38,12 +38,6 @@
 
 -   Apenas o TCE não basta, é exigido também um termo de cooperação entre a empresa concedente do estágio e o IBMEC, que exige que o Estágio Supervisionado deve ser cumprido em organizações conveniadas;
    
-💕 <u>*Fontes:*</u>
+## 🎀 Fontes:
 
-[REGULAMENTO DE ESTÁGIO](https://s3.amazonaws.com/public-cdn.ibmec.br/portalibmec-content/public/arquivos/bh/Graduacao/regulamento_estagio_ibmec_2022.pdf)
-
-[MANUAL DO ALUNO](https://d1v1kp8opafsrk.cloudfront.net/ibmec/comunicados/202307_ibmec/manualcompletograduacao.pdf)
-
-[Relatório de Autoavaliação Institucional](https://cdn.portal.estacio.br/CPA_documentos_e70f28170b.pdf)
-
-[Manual Do Aluno](https://docs.google.com/document/d/1-EBnCU-gWHCVcA6gCT13AO1B996HvPrHwVn0lN1X354/edit?pli=1&tab=t.ocph83xikpdx#heading=h.5l9jxhy2j1lx)
+> [REGULAMENTO DE ESTÁGIO](https://s3.amazonaws.com/public-cdn.ibmec.br/portalibmec-content/public/arquivos/bh/Graduacao/regulamento_estagio_ibmec_2022.pdf) <br/> [MANUAL DO ALUNO](https://d1v1kp8opafsrk.cloudfront.net/ibmec/comunicados/202307_ibmec/manualcompletograduacao.pdf) <br/> [Relatório de Autoavaliação Institucional](https://cdn.portal.estacio.br/CPA_documentos_e70f28170b.pdf)<br/> [Manual Do Aluno](https://docs.google.com/document/d/1-EBnCU-gWHCVcA6gCT13AO1B996HvPrHwVn0lN1X354/edit?pli=1&tab=t.ocph83xikpdx#heading=h.5l9jxhy2j1lx)
