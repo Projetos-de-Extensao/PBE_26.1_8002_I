@@ -114,14 +114,14 @@ theme:
         name: Switch to light mode
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: light pink
+      primary: rose
       accent: black
       toggle:
         icon: material/toggle-switch-off
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: light pink
+      primary: rose
       accent: amber
       toggle:
         icon: material/toggle-switch-off
