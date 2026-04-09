@@ -29,13 +29,13 @@ A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, c
  
 ---
  
-### 💕 2. Como será o processo para cadastrar um novo cliente?
+### 💕 2. Como será o processo para cadastrar uma nova empresa?
  
 <p align = "justify">
 <b>Letícia</b> - Deve ser uma plataforma onde qualquer pessoa possa...
 </p>
  
-<b>Roger</b> - A plataforma deve fornece...
+<b>Roger</b> - Simples e intuitivo mas que atenda todas a necessidades legais para o cadastro de uma empresa.
  
 <b>João Gabriel</b> - O objetivo da aplicação é....
  
@@ -46,13 +46,13 @@ A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, c
  
 ---
  
-### 💕 3. Como será a forma de adicionar produtos?
+### 💕 3. Como será a forma de adicionar vagas de estágios?
  
 <p align = "justify">
 <b>Letícia</b> - Deve ser uma plataforma onde qualquer pessoa possa...
 </p>
  
-<b>Roger</b> - A plataforma deve fornece...
+<b>Roger</b> - O processo deve ser extenso para que não haja ambiguidade nos objetivos do estágio, tenha todas as informações que convenham para os interessados e ter autenticação não somente automática, como humana.
  
 <b>João Gabriel</b> - O objetivo da aplicação é....
  
@@ -63,13 +63,11 @@ A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, c
  
 ---
  
-### 💕 4. Outras perguntas pertinentes ao contexto
+### 💕 4. Como será o processo de aprovação do estágio?
 
 <p align = "justify">
 <b>Letícia</b> - Deve ser uma plataforma onde qualquer pessoa possa...
 </p>
- 
-<b>Roger</b> - A plataforma deve fornece...
  
 <b>João Gabriel</b> - O objetivo da aplicação é....
  
