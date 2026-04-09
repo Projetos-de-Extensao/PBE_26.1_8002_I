@@ -106,30 +106,30 @@ plugins:
 theme:
   name: material
   logo: assets/ibmec_logo.png
-   language: pt-BR
-   favicon: images/favicon.png
-  
+  language: pt-BR
+  favicon: images/favicon.png
+
   palette:
-    
     - media: "(prefers-color-scheme)"
       toggle:
         icon: material/toggle-switch
         name: Switch to light mode
+
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: rose
-      accent: black
+      primary: pink
+      accent: pink
       toggle:
         icon: material/toggle-switch-off
         name: Switch to dark mode
+
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: rose
-      accent: amber
+      primary: pink
+      accent: pink
       toggle:
         icon: material/toggle-switch-off
         name: Switch to system preference
-  
     
   features:
     - content.code.copy
