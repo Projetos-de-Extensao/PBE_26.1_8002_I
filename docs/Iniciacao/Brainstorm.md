@@ -49,16 +49,16 @@ A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, c
 ### 💕 3. Como será a forma de adicionar vagas de estágios?
  
 <p align = "justify">
-<b>Letícia</b> - Deve ser uma plataforma onde qualquer pessoa possa...
+<b>Letícia</b> - A empresa deve fornecer todas as informações requeridas pelo sistema com base nas necessidades de cada curso.
 </p>
  
 <b>Roger</b> - O processo deve ser extenso para que não haja ambiguidade nos objetivos do estágio, tenha todas as informações que convenham para os interessados e ter autenticação não somente automática, como humana.
  
-<b>João Gabriel</b> - O objetivo da aplicação é....
+<b>João Gabriel</b> - Deve ser burocrático, com envio de documentações pertinentes à vaga de estágio, alinhada com os padrões do MEC e relacionado com os requerimentos pesquisados. Talvez com uma análise se vai ser aceito ou não em relação à documentação.
  
-<b>Lucas</b> -  Deverá ser um processo rígido, onde a empresa explicita o objetivo da vaga, a parte de documentos deve ser analisada, os representantes de curso devem autorizar ou não o cadastro de vaga e deverá estar de acordo com os requisitos.
+<b>Lucas</b> - Deverá ser um processo rígido, onde a empresa explicita o objetivo da vaga, a parte de documentos deve ser analisada, os representantes de curso devem autorizar ou não o cadastro de vaga e deverá estar de acordo com os requisitos.
  
-<b>Vinicius</b> - A plataforma deve gerenciar...
+<b>Vinicius</b> - Se tiver algum processo seletivo deverá informar como será o processo, a empresa deve informar características da vaga como carga horária, modalidade de trabalho, se é ou não presencial, localização(no caso de ser presencial), valor do salário e informações que seriam úteis para quem vai aplicar para a vaga.
 </p>
  
 ---
