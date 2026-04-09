@@ -45,7 +45,7 @@ nav:
   - Bibliografia: Disciplina/bibliografia.md
 
 extra_css:
-  - css/extra.css
+  - docs/css/extra.css
 
 markdown_extensions:
   # Tooltips
