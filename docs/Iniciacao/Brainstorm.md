@@ -32,16 +32,16 @@ A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, c
 ### 💕 2. Como será o processo para cadastrar uma nova empresa?
  
 <p align = "justify">
-<b>Letícia</b> - Deve ser uma plataforma onde qualquer pessoa possa...
+<b>Letícia</b> - Deve ser um processo prático e intuitivo onde a  empresa deve estar de acordo com a legislação e as normas requeridas pela IBMEC.
 </p>
  
-<b>Roger</b> - Simples e intuitivo mas que atenda todas a necessidades legais para o cadastro de uma empresa.
+<b>Roger</b> - Deve ser simples e intuitivo mas que atenda todas a necessidades legais para o cadastro de uma empresa.
  
-<b>João Gabriel</b> - O objetivo da aplicação é....
+<b>João Gabriel</b> - Imagino uma tela de login exclusiva para a empresa, com campos específicos e direcionados com o que é importante para o cadastro da empresa e campos de validação de documentos.
  
-<b>Lucas</b> - O principal objetivo da aplicação é a...
+<b>Lucas</b> - O processo deve validar o CNPJ, verificar se a empresa está de acordo com a legislação trabalhista, normas da IBMEC e normas do MEC e deve requerer aprovação dos coordenadores da IBMEC e conter informações importantes sobre a empresa.
  
-<b>Vinicius</b> - A plataforma deve gerenciar...
+<b>Vinicius</b> - Captar a visão geral sobre a empresa, valores da empresa, área de atuação, lugares onde a empresa é sediada.
 </p>
  
 ---
@@ -56,7 +56,7 @@ A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, c
  
 <b>João Gabriel</b> - O objetivo da aplicação é....
  
-<b>Lucas</b> - O principal objetivo da aplicação é a...
+<b>Lucas</b> -  Deverá ser um processo rígido, onde a empresa explicita o objetivo da vaga, a parte de documentos deve ser analisada, os representantes de curso devem autorizar ou não o cadastro de vaga e deverá estar de acordo com os requisitos.
  
 <b>Vinicius</b> - A plataforma deve gerenciar...
 </p>
@@ -69,11 +69,8 @@ A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, c
 <b>Letícia</b> - Deve ser uma plataforma onde qualquer pessoa possa...
 </p>
  
-<b>João Gabriel</b> - O objetivo da aplicação é....
- 
 <b>Lucas</b> - O principal objetivo da aplicação é a...
  
-<b>Vinicius</b> - A plataforma deve gerenciar...
 </p>
  
 ---
