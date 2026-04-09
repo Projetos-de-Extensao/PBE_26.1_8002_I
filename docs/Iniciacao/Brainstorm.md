@@ -20,7 +20,7 @@ A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, c
  
 <b>Roger</b> - A plataforma deve fornecer um ambiente de gerenciamento de estágios para os coordenadores e alunos do IBMEC.
  
-<b>João Gabriel</b> - O objetivo da aplicação é facilitar  e padronizar a formalização de contratos de estágio referentes aos alunos do IBMEC.
+<b>João Gabriel</b> - O objetivo da aplicação é facilitar  e padronizar a formalização de contratos de estágio referentes aos alunos do IBMEC com empresas externas.
  
 <b>Lucas</b> - O principal objetivo da aplicação é simplificar, organizar e facilitar o gerenciamento de estagios do IBMEC em um só lugar.
  
@@ -66,11 +66,12 @@ A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, c
 ### 💕 4. Como será o processo de aprovação do estágio?
 
 <p align = "justify">
-<b>Letícia</b> - Deve ser uma plataforma onde qualquer pessoa possa...
+<b>Letícia</b> - O sistema deve validar os documentos requeridos, seguido da a´rovação do coordenador e do professor responsável.
 </p>
  
-<b>Lucas</b> - O principal objetivo da aplicação é a...
+<b>Lucas</b> O coordenador e o professor responsável pelo aluno devem aprovar o estágio e supervisionar durante o período de atuação.
  
+<b>João Gabriel</b> Deverá conectar os três atores importantes: Estudante, Empresa e Instituição de ensino. Imagino tendo o uso mínimo de papel, com toda a verificação feita pelo próprio site via PDFs junto de assinaturas digitais, junto do uso de `Termos de Compromisso` presentes nos sistma. Além disso, campos de status sobre o estagio (ex: em andamento, concluido, aprovado, pendente).
 </p>
  
 ---
