@@ -3,9 +3,10 @@
     font-weight:bold;
 }
 :root {
-
-    --md-primary-fg-color: #ffb6c1 !important;
-    --md-primary-fg-color--dark: #e47fb5 !important;
-    --md-primary-fg-color--light: #ffc9e6 !important;
-        
+    
+     --md-accent-fg-color: #ff69b4;
+     --md-primary-fg-color: #ffb6c1;
+     --md-primary-fg-color--light: #ffc9e6;
+     --md-primary-fg-color--dark: #e47fb5;
+    --md-default-bg-color: #fff0f6;
 }
