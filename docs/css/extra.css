@@ -2,3 +2,9 @@
     color:red;
     font-weight:bold;
 }
+:root {
+    
+    --md-primary-fg-color--dark: #e47fb5;
+    --md-primary-fg-color--light: #ffc9e6;
+        
+}
