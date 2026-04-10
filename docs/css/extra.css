@@ -2,58 +2,65 @@
     color:red;
     font-weight:bold;
 }
-/* --- CORES BASE (Rosa Claro para o Topo) --- */
+/* --- DEFINIÇÃO DE CORES --- */
 :root {
-    /* Um rosa levemente mais saturado para o header no modo claro */
-    --rosa-header-claro: #f4b0c7; 
-    --rosa-destaque: #e47fb5;
+    --rosa-pastel: #ffb6c1;       /* O rosa claro do header */
+    --rosa-leitura: #bf4080;      /* Rosa mais escuro para links e textos (mais legível) */
+    --rosa-escuro-header: #f4b0c7; /* Rosa um tiquinho mais fechado */
 }
 
 /* --- AJUSTES PARA O MODO CLARO (DEFAULT) --- */
 [data-md-color-scheme="default"] {
-    --md-primary-fg-color: var(--rosa-header-claro) !important;
-    --md-accent-fg-color: var(--rosa-destaque) !important;
+    --md-primary-fg-color: var(--rosa-escuro-header) !important;
+    --md-accent-fg-color: var(--rosa-leitura) !important;
     
-    /* Escurecendo o texto da lateral no modo claro */
-    --md-nav-link-color: #2c2c2c !important; 
-    --md-nav-link-active-color: #d1619a !important;
+    /* Texto das laterais e corpo em preto absoluto */
+    --md-nav-link-color: #000000 !important;
+    --md-typeset-color: #000000 !important;
 }
 
 /* --- AJUSTES PARA O MODO ESCURO (SLATE) --- */
 [data-md-color-scheme="slate"] {
-    --md-primary-fg-color: #ffb6c1 !important; /* Mantém o rosa bebê no topo */
-    --md-accent-fg-color: #ffb6c1 !important;
-    
-    /* No escuro, o texto lateral precisa ser clarinho */
-    --md-nav-link-color: #ffffff !important;
+    --md-primary-fg-color: var(--rosa-pastel) !important;
+    --md-accent-fg-color: var(--rosa-pastel) !important;
 }
 
-/* --- APLICAÇÃO NOS ELEMENTOS --- */
-
-/* Header e Tabs sempre com o rosa ajustado */
+/* --- APLICAÇÃO NO HEADER (PARA AMBOS OS MODOS) --- */
+/* Forçamos o texto do topo a ser SEMPRE PRETO, pois o fundo é sempre rosa claro */
 .md-header, .md-tabs {
     background-color: var(--md-primary-fg-color) !important;
 }
 
-/* Texto e ícones do topo sempre bem escuros para ler no rosa */
-.md-header__title, .md-header__button, .md-tabs__link {
-    color: #1a1a1a !important;
+.md-header__title, 
+.md-header__button, 
+.md-tabs__link,
+.md-header__button.md-icon svg,
+.md-header__source .md-source__icon svg,
+.md-source__repository {
+    color: #000000 !important;
+    fill: #000000 !important;
 }
 
-/* Menus Laterais (Navegação) */
-.md-nav__link {
-    color: var(--md-nav-link-color) !important;
+/* --- TEXTO ROSA NO CORPO (LINKS E ÍNDICES) --- */
+
+/* Links no meio do texto */
+.md-typeset a {
+    color: var(--rosa-leitura) !important;
 }
 
-/* Item ativo (onde você está no momento) */
+/* Item ativo nos menus e no índice da direita */
 .md-nav__link--active, 
 .md-nav__item--active > .md-nav__link {
-    color: var(--rosa-destaque) !important;
-    font-weight: 700 !important;
+    color: var(--rosa-leitura) !important;
+    font-weight: 800 !important;
 }
 
-/* Índice da Direita (TOC) - Escurecendo a linha e o texto ativo */
+/* Linha lateral do índice da direita */
 .md-sidebar--secondary .md-nav__link--active {
-    border-left: 2.5px solid var(--rosa-destaque) !important;
-    color: var(--rosa-destaque) !important;
+    border-left: 2.5px solid var(--rosa-leitura) !important;
+}
+
+/* No modo escuro, mantemos o menu lateral (esquerda) branco, exceto quando ativo */
+[data-md-color-scheme="slate"] .md-nav__link:not(.md-nav__link--active) {
+    color: #ffffff !important;
 }
