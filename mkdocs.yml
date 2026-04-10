@@ -23,7 +23,6 @@ nav:
           - Pesquisa Aplicações: Iniciacao/pesquisa-detalhes/pesquisa_aplicacoes.md
           - Validação de Documentos: Iniciacao/pesquisa-detalhes/validacao_documentos.md
       - 5w2h: Iniciacao/5w2h.md
-      - Design Thinking: Iniciacao/design_thinking.md
       - Brainstorming: Iniciacao/Brainstorm.md
       - Mapa Mental: Iniciacao/mapa_mental.md
       - Prototipagem Baixa Fidelidade: Iniciacao/prototipo_baixa_fidelidade.md
@@ -32,7 +31,6 @@ nav:
       - Requisitos: Elaboracao/das.md
       - Casos de Uso: Elaboracao/casos_de_uso.md
       - Diagrama de Classes: Elaboracao/diagrama_de_classes.md
-      - Diagrama de Sequência: Elaboracao/diagrama_de_sequencia.md
       - Protótipo de Alta Fidelidade: Elaboracao/prototipo_alta_fidelidade.md
   - Construção:
       - Index: Construcao/index.md
@@ -45,7 +43,7 @@ nav:
   - Bibliografia: Disciplina/bibliografia.md
 
 extra_css:
-  - docs/css/extra.css
+  - css/extra.css
 
 markdown_extensions:
   # Tooltips
