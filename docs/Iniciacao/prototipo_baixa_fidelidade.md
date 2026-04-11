@@ -145,7 +145,7 @@ title Página de detalhes do Processo - Empresa
 @endsalt
 ```
 
-### Página de Processos - Coordenador
+### Página do coordenador
 ```plantuml
 @startsalt
 title Página de Processos - Coordenador
