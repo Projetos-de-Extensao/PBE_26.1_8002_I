@@ -42,7 +42,7 @@ title Página de login - Geral
 @endsalt
 ```
 
-### Tela Cadastro de empresa
+### Tela Cadastro - Empresa
 
 ```plantuml
 @startsalt
