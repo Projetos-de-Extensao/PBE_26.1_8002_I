@@ -61,7 +61,8 @@ A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, c
 <b>Vinicius</b> - Se tiver algum processo seletivo deverá informar como será o processo, a empresa deve informar características da vaga como carga horária, modalidade de trabalho, se é ou não presencial, localização(no caso de ser presencial), valor do salário e informações que seriam úteis para quem vai aplicar para a vaga.
 </p>
 
- *** Depois de responder à pergunta paramos para pensar que nao teria adição de vagas na plataforma pela empresa, então desconsideraremos essa pergunta
+> A pergunta foi desconsiderada para a elicitação de requisitos pois percebemos que as vagas não seriam encontradas pelo nosso sistema
+
 ---
  
 ### 💕 4. Como será o processo de aprovação do estágio?
