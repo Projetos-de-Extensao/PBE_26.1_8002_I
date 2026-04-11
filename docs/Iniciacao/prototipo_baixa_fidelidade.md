@@ -77,6 +77,49 @@ title Página de Cadastro - Empresa
 @endsalt
 ```
 
+### Página de inscrição de vaga de estágio
+
+```plantuml
+@startsalt
+title Página de Cadastro - Empresa
+{
+  {+
+    **Cadastrar vaga de estágio:**
+    ==
+    Nome da vaga:
+    "                                       "
+    .
+    Áreas academicas:
+    "                                       "
+    .
+    Periodo:
+    {Min | ^0^^ | Max. | ^0^}
+    .
+    Ano de formação:
+    {| ^2026^}
+    .
+    Faixa salarial:
+    "                                       "
+    .
+    Local:
+    {| ^UF^ | ^Cidade^ }
+    {CEP: | "                "}
+    {Número: | "             "}
+    {| Complemento: | "         "}
+    .
+    Modalidade e Carga Horária:
+    { ^Presencial^ | ^6 horas/dia^ }
+    .
+    Anexar documento complementar (PDF):
+    [ Procurar arquivo...]
+    .
+    [         Enviar vaga para análise      ]
+  
+  }
+}
+@endsalt
+```
+
 ### Página de Documentos - Coordenador
 ```plantuml
 @startsalt
