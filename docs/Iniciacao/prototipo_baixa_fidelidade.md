@@ -77,27 +77,40 @@ title Página de Cadastro - Empresa
 @endsalt
 ```
 
-### Página de Processo - Coordenador
+### Página de Documentos - Coordenador
 ```plantuml
 @startsalt
-title Página de Processo - Coordenador
+title Página de Documentos - Coordenador
 {
+    {+
+  **Nome do Aluno** | **Matrícula do Aluno**
+  **E-mail do Aluno**| [Mais informações]
+    
+    }
   {+
-    **Detalhes do Processo**
+    **Detalhes do Processo**                                  **<u>67%</u> de conformidade atual**
     --
     {
-       "🔎Buscar:   "| [Filtrar ⌄]
+       "🔎Buscar:                                 "| [ Filtrar ⌄]
     }
     --
+    {#
+      **Nome** | **Status** | **Ações**
+
+      Documento #1 📄 | Validado ✅| {[Visualizar 👁️] | [Alterar Status✏️]}
+      
+      Documento #2 📄 | Em análise ⏳| {[Visualizar 👁️] | [Alterar Status✏️]}
+
+      Documento #3 📄 |  Negado ❌| {[Visualizar 👁️] | [Alterar Status✏️]}
+    }
+  }
+    -------
     {
-      {# Documento #1 | [ Abrir ] }
-      --
-      {# Documento #2 | [ Abrir ] }
-    }
-    --
+    {#
     **Documentos Aprovados:** 8
-    **Documentos em Aberto:** 3
+    **Documentos em Análise:** 3
     **Documentos Faltantes:** 5
+    }
   }
 }
 @endsalt
@@ -198,17 +211,11 @@ A partir da elaboração do protótipo foi possível ter uma noção inicial da 
 
 ## Referências
 
-> Material Design Color Tool. Disponível em:  https://material.io/resources/color/#!/?view.left=0&view.right=0
-
-> PMI. Um guia do conhecimento em gerenciamento de projetos. Guia PMBOK® 5a. ed. EUA: Project Management Institute, 2013.
-
-> Ferramenta Figma. Disponível em https://www.figma.com
-
 ## Autor(es)
 
 | Data     | Versão | Descrição                            | Autor(es)                                                                            |
 | -------- | ------- | -------------------------------------- | ------------------------------------------------------------------------------------ |
-| 07/09/20 | 1.0     | Criação do documento                 | Lucas Alexandre e Matheus Estanislau                                                 |
-| 07/09/20 | 1.1     | Adicionado as imagens do protótipo    | Lucas Alexandre e Matheus Estanislau                                                 |
-| 07/09/20 | 1.2     | Adicionado conclusão e referências   | Lucas Alexandre e Matheus Estanislau                                                 |
-| 26/10/20 | 2.0     | Adicionada a versão 2.0 do protótipo | João Pedro, Lucas Alexandre, Matheus Estanislau, Moacir Mascarenha e Renan Cristyan |
+| | 1.0 | | |
+| | 1.1 | | |
+| | 1.2 | | |
+| | 2.0 | | |
