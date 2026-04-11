@@ -120,6 +120,31 @@ title Página de Cadastro - Empresa
 @endsalt
 ```
 
+### Página de Processos - Empresa
+```plantuml
+@startsalt
+title Página de Processos - Coordenador
+{
+  {+       
+    {# **Vagas disponibilizadas:** { "**4**" }}
+   --
+    {
+       "🔎Buscar por nome da vaga:                                     "|^Filtros^
+    }
+    --
+    
+    {# 
+      **Vaga**| **Curso** | **Status** | **Ações**
+      Estágio como analísta de processos juridicos | Direito, Adiministração | Aceito ✅ |{[Visualizar 👁️] | [Remover ❌] | [Editar vaga ✏]}
+      Estágio em análize de dados |  Ciência de Dados e IA, Analize de dados | Em análise ⏳ |{[Visualizar 👁️] | [Remover ❌] | [Editar vaga ✏]}
+      Estágio em manutenção de bancos de dados |Eng de Software, Eng. se Computação | Negado ❌ |{[Visualizar 👁️] | [Remover ❌] | [Editar vaga ✏]}
+      Estágio em controle de midea | Publicidade e Propaganda| Em análise ⏳ |{[Visualizar 👁️] | [Remover ❌] | [Editar vaga ✏]}
+    }
+}
+}
+@endsalt
+```
+
 ### Página de Processos - Coordenador
 ```plantuml
 @startsalt
