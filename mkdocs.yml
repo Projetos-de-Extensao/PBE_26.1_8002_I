@@ -6,13 +6,6 @@ copyright: Copyright ©️ 2025, PBE_26.1_8002_I
 
 nav: 
   - Home: index.md
-  - Disciplina:
-      - Aulas: Disciplina/aulas.md
-      - Ambiente: Disciplina/ambiente.md
-      - Github: Disciplina/github.md
-      - Mkdocs: Disciplina/mkdocs.md
-      - CodeSpace: Disciplina/codespace.md
-      - Avaliações: Disciplina/avaliacoes.md
   - Iniciação: 
       - index: Iniciacao/index.md
       - Pesquisa:
@@ -30,7 +23,7 @@ nav:
       - Index: Elaboracao/index.md
       - Requisitos: Elaboracao/das.md
       - Casos de Uso: Elaboracao/casos_de_uso.md
-      - Diagrama de Classes: Elaboracao/diagrama_de_classes.md
+      - Diagrama de Classes: Elaboracao/diagrma_de_classes.md
       - Protótipo de Alta Fidelidade: Elaboracao/prototipo_alta_fidelidade.md
   - Construção:
       - Index: Construcao/index.md
@@ -40,7 +33,6 @@ nav:
   - Transição:
       - Index: Transicao/index.md
 
-  - Bibliografia: Disciplina/bibliografia.md
 
 extra_css:
   - css/extra.css
@@ -97,6 +89,8 @@ markdown_extensions:
       permalink: true
 
 plugins:
+  - plantuml:
+      puml_url: https://www.plantuml.com/plantuml/
   - minify:
       minify_html: true
   - search
