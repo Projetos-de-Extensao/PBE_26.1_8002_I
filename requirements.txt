@@ -23,6 +23,7 @@ pathspec==1.0.4
 platformdirs==4.9.2
 Pygments==2.19.2
 pymdown-extensions==10.21
+mkdocs_puml==2.3.0
 python-dateutil==2.9.0.post0
 python-markdown-math==0.8
 PyYAML==6.0.3

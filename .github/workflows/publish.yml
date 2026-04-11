@@ -20,5 +20,5 @@ jobs:
           path: .cache
           restore-keys: |
             mkdocs-material-
-      - run: pip install mkdocs-material mkdocs-minify-plugin # Instala o tema e o plugin que você citou no seu yml
+      - run: pip install -r requirements.txt
       - run: mkdocs gh-deploy --force 
