@@ -43,10 +43,10 @@ A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, c
  
 <b>Vinicius</b> - Captar a visão geral sobre a empresa, valores da empresa, área de atuação, lugares onde a empresa é sediada.
 </p>
- 
----
- 
-### 💕 3. Como será a forma de adicionar vagas de estágios?
+
+--- 
+
+### 💕 3. Como será a forma de adicionar vagas de estágios?(Desconsiderada)
  
 <p align = "justify">
 <b>Letícia</b> - A empresa deve fornecer todas as informações requeridas pelo sistema com base nas necessidades de cada curso.
@@ -60,13 +60,14 @@ A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, c
  
 <b>Vinicius</b> - Se tiver algum processo seletivo deverá informar como será o processo, a empresa deve informar características da vaga como carga horária, modalidade de trabalho, se é ou não presencial, localização(no caso de ser presencial), valor do salário e informações que seriam úteis para quem vai aplicar para a vaga.
 </p>
- 
+
+ *** Depois de responder à pergunta paramos para pensar que nao teria adição de vagas na plataforma pela empresa, então desconsideraremos essa pergunta
 ---
  
 ### 💕 4. Como será o processo de aprovação do estágio?
 
 <p align = "justify">
-<b>Letícia</b> - O sistema deve validar os documentos requeridos, seguido da a´rovação do coordenador e do professor responsável.
+<b>Letícia</b> - O sistema deve validar os documentos requeridos, seguido da aprovação do coordenador e do professor responsável.
 </p>
  
 <b>Lucas</b> O coordenador e o professor responsável pelo aluno devem aprovar o estágio e supervisionar durante o período de atuação.
@@ -75,27 +76,47 @@ A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, c
 </p>
  
 ---
- 
- 
-### 💕 Requisitos elicitados
+  
+## 🎀 Requisitos elicitados
+
+### 💕 Requisitos Funcionais 
  
 |ID|Descrição|
 |----|-------------|
-|BS01| O cliente...|
-|BS02| O cliente...|
-|BS03| O cliente...|
-|BS04| O cliente...|
-|BS05| O cliente...|
-|BS06| O cliente...|
-|BS07| O cliente...|
-|BS08| O cliente...|
-|BS09| O cliente...|
-|BS10| O produto...|
-|BS11| O produto...|
-|BS12| O produto...|
-|BS13| O produto...|
-|BS14| O produto...|
-|BS15| O produto...|
+|RF01| **Autenticação Institucional**	O sistema deve permitir login via e-mail institucional|
+|RF02| **Controle de Acesso**	O sistema deve possuir perfis distintos (Aluno, Coordenador, Empresa)|
+|RF03| **Gestão de Privilégios** O sistema deve aplicar permissões diferentes por perfil, restringindo visualização, edição e validações |
+|RF04| **Checklist Dinâmico**	O sistema deve validar requisitos específicos para cada curso |
+|RF05| **Upload de Documentos**	O sistema deve permitir envio de arquivos|
+|RF06| **Repositório de Templates**	O sistema deve fornecer modelos de documentos |
+|RF07| **Validação Automática**	O sistema deve validar dados com base em regras legais/acadêmicas|
+|RF08| **Análise automatizada**	O sistema deve analisar documentos e gerar score de conformidade|
+|RF09| **Gestão de Status**	O sistema deve gerenciar estados do processo para acompanhamento em tempo real |
+|RF10| **Aprovação/Reprovação**	O sistema valida e o coordenador tem a possibilidade de interferir na decisão caso necessário |
+|RF11| **Justificativa Obrigatória**	O sistema deve exigir justificativa em caso de rejeição|
+|RF12| **Notificações**	O sistema deve notificar usuários sobre mudanças|
+|RF13| **Histórico**	O sistema deve armazenar histórico completo com data e assinatura de usuário |
+|RF14| **Reenvio de Documentos**	O sistema deve permitir correções e reenvios |
+|RF15| **Cálculo de Horas**	O sistema deve contabilizar automaticamente horas |
+|RF16| **Validação de Jornada**	O sistema deve verificar limites legais de carga horária|
+|RF17| **Assinatura de Documentos**	O sistema deve permitir assinatura digital|
+|RF18| **Abertura de Solicitação**	O aluno deve iniciar o processo informando a vaga que ele pretende preencher |
+|RF19| **Filtros de Pesquisa** O sistema deve permitir filtros por curso, empresa, aluno, status, período e situação documental. |
+
+### 💕 Requisitos Não funcionais 
+
+|ID|Descrição|
+|----|-------------|
+|RNF01| **Segurança	Autenticação**	O sistema deve exigir autenticação segura para acesso às áreas protegidas.|
+|RNF02| **Segurança	Proteção de Dados**	Os dados devem ser armazenados de forma segura|
+|RNF03| **Desempenho	Escalabilidade**	O sistema deve suportar múltiplos usuários simultâneos |
+|RNF04| **Usabilidade	Interface**	A interface e fluxo devem ser intuitivos e de fácil uso |
+|RNF05| **Legal	Conformidade**	O sistema deve seguir a Lei 11.788/08|
+|RNF06| **Disponibilidade	Sistema**	O sistema deve ter alta disponibilidade |
+|RNF07| **Manutenibilidade	Código**	O sistema deve ser modular e de fácil manutenção|
+|RNF08| **Extensibilidade	Arquitetura**	O sistema deve permitir futuras integrações|
+|RNF09| **Controle de Acesso** O sistema deve permitir acesso à documentos e dados pessoais apenas a perfis autorizados. |
+|RNF10| **Controle de Fluxo** O fluxo deve ser guiado por etapas, reduzindo erros de preenchimento.|
  
 ## 🎀 Conclusão
 <p align = "justify">
@@ -104,13 +125,14 @@ Através da aplicação da técnica, foi possível elicitar alguns dos primeiros
 
 ## 🎀 Referências Bibliográficas
  
-> BARBOSA, S. D. J; DA SILVA, B. S. Interação humano-computador. Elsevier, 2010.
- 
+> BARBOSA, S. D. J; DA SILVA, B. S. Interação humano-computador. Elsevier, 2010.<br/>
+> [Brainstorm da Letícia Completo](https://docs.google.com/document/d/1eNMFFYWj68dkVEnu3udgYlSfP6tqbN3NqCS5GpkvDrg/edit?usp=sharing)
  
 ## 🎀 Autor(es)
 | Data | Versão | Descrição | Autor(es) |
 | -- | -- | -- | -- |
 | 07/04/2026 | 1.0 | Criação do documento | Letícia Valladão, Roger Pires, Lucas Alcântara, João Gabriel de Oliveira |
+| 11/04/2026 | 2.0 | Adicionado os requisitos | Letícia Valladão |
 
 ## 🎀 Dados do Documento
 > id: Brainstorm-Estagios <br/> title: Brainstorm do Site para Gerenciamento de Estágios para a IBMEC
