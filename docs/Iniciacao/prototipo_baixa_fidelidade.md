@@ -102,11 +102,6 @@ title Página de Processo - Coordenador
 }
 @endsalt
 ```
-
-### Tela do Feed
-
-### Tela Feed com configurações
-
 ### Tela de documentos - Aluno
 
 ```plantuml
@@ -132,23 +127,6 @@ title Página de Documentos - Aluno
 }
 @endsalt
 ```
-
-
-### Tela Cadastrar torneio 1
-
-
-### Tela Cadastrar torneio 2
-
-### Tela Cadastrar torneio 3
-
-
-### Tela Cadastrar torneio 4
-
-
-### Tela com meus torneios
-
-### Tela de inscrição em torneio
-
 
 <p align = "justify">
 Na primeira versão do protótipo utilizamos a ferramenta <a href="https://material.io/resources/color/#!/?view.left=0&view.right=0">Material Design Color Tool</a>  para auxiliar na criação da paleta de cores do aplicativo, definimos as cores base do aplicativo mas as cores definidas para as telas 12 e 13 ainda não foram decididas.
