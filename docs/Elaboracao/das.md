@@ -1,150 +1,120 @@
----
-id: documento_de_arquitetura
-title: Documento de Arquitetura
----
-# Documento de Arquitetura de Software (DAS)
+#  🌸 Documento de Arquitetura de Software (DAS) —  **Sistema de Gestão e Mediação de Estágios Obrigatórios  - IBMEC RJ** 🌸
 
-# "Nome do Projeto"
+## 🎀 Introdução
 
-# Introdução
-
-## Proposta
+### 💕 Proposta
 
 <p align = "justify">
-Este documento apresenta uma visão geral da arquitetura do sistema, utilizando diferentes visões arquiteturais para destacar diferentes aspectos do sistema. É utilizado para capturar as decisões arquiteturais significativas que fizeram parte do sistema.
+Este documento tem como objetivo consolidar a elicitação inicial de requisitos do sistema, alinhando problema, escopo, funcionalidades, regras de negócio, restrições e requisitos não funcionais que deverão orientar análise, modelagem, desenvolvimento e validação.
 </p>
 
-## Escopo
+### 💕 Escopo
 
 <p align = "justify">
-A aplicação "XXXX" tem o objetivo fornecer...
+O sistema deverá cobrir:
+
+- Cadastro e autenticação dos atores (Aluno,Empresa e coordenadores/professores) do processo;
+- Abertura de solicitação de estágio obrigatório;
+- Submissão, armazenamento e versionamento de documentos;
+- Geração ou registro do TCE e documentos correlatos;
+- Validação acadêmica e institucional;
+- Fluxo de aprovação por perfil;
+- Acompanhamento do estágio por status, eventos, horas e relatórios;
+- Gestão de pendências, aditivos, rescisão e encerramento;
+- Notificações e histórico do processo;
+- Status em tempo real do processo;
+- Relatórios operacionais e gerenciais.
 </p>
 
-## Definições, Acrônimos e Abreviações
 
-- MVC -
-- MVT -
-- SIGLA PARA O APP - Nome do Aplicativo
-
-## Visão Geral
+### 💕 Visão Geral
 
 <p align = "justify">
-O Documento de Arquitetura de Software (DAS) trata-se de uma visão geral de toda a arquitetura do sistema, observando diferentes aspectos do mesmo. Neste documento serão abordadas as seguintes visões da aplicação TCM:
-</p>
+O projeto propõe uma plataforma web para centralizar a formalização, validação e acompanhamento dos estágios obrigatórios do IBMEC, conectando aluno, empresa concedente, coordenação/secretaria e professor orientador em um fluxo único, com rastreabilidade documental, regras acadêmicas por curso e menor dependência de processos manuais. A proposta técnica atual do projeto considera back-end em Django, banco relacional e uma API com motor de regras para validar exigências acadêmicas e operacionais.
 
-- Caso de Uso;
-- Lógica;
-- Implantação;
-- Implementação;
-- Dados;
+Pela base normativa usada pelo grupo, o estágio deve ser tratado como ****ato educativo supervisionado****, não apenas como vínculo administrativo. Isso impacta diretamente o sistema: a solução precisa considerar matrícula e frequência regulares, compatibilidade entre estágio e formação acadêmica, professor orientador, supervisor da concedente, documentação obrigatória, jornada compatível com aulas, acompanhamento institucional e controle da carga horária validada para integralização curricular. 
 
-# Representação Arquitetural
 
-## Cliente-Servidor
 
-<p align = "justify">
-Cliente-Servidor é um modelo de arquitetura...
-</p>
+## 🎀 Representação Arquitetural
 
-Cliente (Frontend):
+### 💕 Cliente-Servidor
+<p align = "justify"> O sistema utiliza o modelo Cliente-Servidor, onde o processamento é distribuído entre o fornecedor de um serviço (servidor) e o requerente do serviço (cliente). No contexto deste projeto, o servidor centraliza as regras de negócio acadêmicas e a persistência de dados, enquanto o cliente provê a interface para os diferentes perfis de usuários (Aluno, Empresa, Orientador e Coordenação). </p>
 
-- View: Consiste.....
+**Cliente :**
 
-Servidor (Backend):
+-   **View :**  Interface desenvolvida para permitir que o  **Aluno**  inicie solicitações, envie documentos e tenha acesso ao status em tempo real, a  **Empresa**  envie documentos e a  **Coordenação**  realize validações. A interface é responsável por coletar os inputs (como o upload de documentos do  **RF-15**) e exibir o status do workflow (conforme o  **RF-29**).
+    
+**Servidor :**
 
-- Controller: faz a conexão entre as camadas...
-- Service: Responsável pela lógica...
-- Model: Responsável pela persistência...
+-   **Controller :**  Atua como o ponto de entrada das requisições da API. Ele recebe as solicitações do frontend, gerencia a autenticação baseada em perfis (**RNF-02**) e direciona as chamadas para os serviços corretos, retornando as respostas em formato compatível com a integração (**RNF-21**).
 
-# Objetivos de Arquitetura e Restrições
+-   **Service :**  Camada onde reside o  **Motor de Regras**  mencionado na visão geral do projeto. É responsável pela lógica de negócio complexa, como validar se a jornada é compatível com as aulas (**RN-07**), verificar se o aluno está apto para o estágio (**RF-06**) e processar a mudança de estados do workflow (conforme o  **RNF-19**).    
 
-## Objetivos
+-   **Model :**  Representa a estrutura de dados definida na  **Seção 13.1**  do DAR. Gerencia a persistência das entidades no banco de dados relacional, garantindo a integridade transacional (**RNF-12**) e mantendo a trilha de auditoria e o histórico de ações dos usuários (**RF-04**).
+## 🎀 Objetivos de Arquitetura e Restrições
+
+### 💕  Objetivos
 
 <p align = "justify">
-Segurança:
-   -
-Persistência:
-   - 
-Privacidade:
-   - Middlewares: Foi usado middlewares...
-Desempenho:
-   Requisições...
-Reusabilidade:
-   Componentes no Frontend...
-</p>
 
-## Restrições
+-  O sistema deve garantir que o acesso a documentos e dados sensíveis seja restrito via autenticação e autorização baseada em perfis (RBAC), protegendo uploads e downloads contra acessos indevidos. <strong>Persistência:</strong>
+  
+  -   Utilização de um banco de dados relacional para garantir a integridade transacional das aprovações e o armazenamento do histórico completo de auditoria de cada processo de estágio. <strong>Privacidade:</strong>
+ -   Tratamento de dados pessoais e documentos seguindo os princípios de minimização e necessidade, com retenção segura conforme as normas institucionais. <strong>Middlewares:</strong>
+  -   Uso de middlewares no Backend para interceptar requisições, validando tokens de autenticação e garantindo que apenas usuários autorizados acessem rotas críticas antes de chegarem à lógica de negócio. <strong>Desempenho:</strong>
+ -   As operações de consulta de processos e carregamento de listas devem responder em tempo adequado para o uso administrativo, com feedback visual (progress bar) durante o upload de documentos pesados. <strong>Reusabilidade:</strong>
+-   No Frontend, uso de componentes modulares para formulários e cards de status. No Backend, a lógica de validação acadêmica é centralizada em módulos/serviços reutilizáveis por diferentes tipos de curso. </p>
+    
 
-<p align = "justify">
-Tamanho da tela:...
+### 💕 Restrições
 
-Portabilidade:...
+<p align = "justify"> <strong>Tamanho da tela:</strong> A aplicação deve ser responsiva, priorizando o uso em desktops para perfis administrativos e alunos, mas adaptável para visualização de status em dispositivos móveis.
+
+<strong>Portabilidade:</strong> O sistema deve ser acessível via navegadores modernos, sem necessidade de instalação de plugins locais.
+
 
 | IE | Edge  | Firefox | Chrome | Safari | Googlebot |
 | -- | ----- | ------- | ------ | ------ | --------- |
 | 11 | >= 14 | >= 52   | >= 49  | >= 10  | Sim       |
 
-Serviços: Os serviços oferecidos....
 
-Acesso a internet: A aplicação está limitada apenas a conexão com internet
+<strong>Serviços:</strong> Os serviços oferecidos dependem da disponibilidade da API Django e do serviço de armazenamento de arquivos (Media Storage) para os documentos.
+
+<strong>Acesso à internet:</strong> A aplicação está limitada apenas à conexão com internet, não possuindo modo offline funcional devido à necessidade de validação de documentos em tempo real.
 
 </p>
 
-## Ferramentas Utilizadas
+### 💕 Ferramentas Utilizadas
 
-- XXX: Ambiente de execução...
-- XXXX: Linguagem de programação...
-  Typescript: XXXX
-- XXXX: XXXX
-- XXX: XXXX
-- XXXX: XXXX
-- XXXX: XXXX
-- XXXX: XXXX
-- XXXXX: XXXX.
+-   **Python**: Linguagem de programação robusta utilizada no desenvolvimento do Back-end.
+   -   **Django**: Framework web de alto nível para o desenvolvimento ágil da API e do motor de regras acadêmicas.
+   -   **PostgreSQL/MySQL**: Banco de dados relacional utilizado para persistência e integridade dos dados.
+-   **Figma**: Ferramenta utilizada para o design de interface (UI) e prototipagem do fluxo do usuário.
+-   **Git/GitHub**: Sistema de controle de versão para colaboração do time e versionamento do código-fonte.
 
-# Visão de Caso de Uso
+## 🎀 Visão de Caso de Uso
 
 <p align = "justify">
-O primeiro caso de uso descreve a ação...
+>> a inserir
 </p>
 
-![Caso de uso 1](../assets/Casos_de_Uso/Exemplocaso_de_uso_1.png)
+## 🎀 Visão de Implementação
 
-![Caso de uso 2](../assets/Casos_de_Uso/Exemplocaso_de_uso_1.png)
+<p align = "justify"> A implementação do sistema segue o paradigma de Orientação a Objetos, utilizando o ORM (Object-Relational Mapping) do Django para mapear as classes de domínio para o banco de dados relacional. Abaixo, o Diagrama de Classes detalha a estrutura das entidades, seus atributos e os métodos principais que regem o ciclo de vida do estágio. </p>
+>>inserir diagrama de classes
 
-# Visão Lógica
+## 🎀 Visão de Dados
+A persistência utiliza um **banco de dados relacional** para garantir a integridade das transações (como a aprovação de um documento que altera o status do processo). O sistema gerencia não apenas dados textuais, mas também o versionamento e armazenamento de arquivos (PDFs) vinculados a cada etapa do estágio (**RF-18**).
 
-# Visão de Implantação
+## 🎀 Tamanho e Desempenho
+O sistema é projetado para suportar múltiplos processos simultâneos sem perda de consistência (**RNF-11**). As consultas de status e listagens são otimizadas para o uso administrativo diário, e o sistema de upload deve gerenciar arquivos de documentação sem travar a interface do usuário (**RNF-10**).
 
-# Visão de Implementação
+## 🎀 Qualidade
+A qualidade é assegurada pela **rastreabilidade total** (cada alteração de status registra quem a fez e quando) e pela **validade normativa**. O sistema impede que processos avancem sem os documentos obrigatórios (**RF-21**), reduzindo erros operacionais e garantindo que o IBMEC esteja sempre em conformidade com a Lei do Estágio.
 
-## Visão Geral
+## 🎀 Dados do Documento
+> id: DAR-Estagios <br/> title: DAR do Site para Gerenciamento de Estágios para a IBMEC
 
-![Diagrama de Componentes](../assets/Casos_de_Uso/Exemplocaso_de_uso_1.png)
 
-# Visão de Dados
-
-## Modelo Entidade Relacionamento (MER)
-
-#### Entidades e Relacionamentos:
-
-## Diagrama Entidade Relacionamento (DER)
-
-# Tamanho e Desempenho
-
-# Qualidade
-
-</p>
-
-# Referências Bibliográficas
-
-# Histórico de Versão
-
-| Data       | Versão | Descrição                                                            | Autor(es)                                   |
-| ---------- | ------- | ---------------------------------------------------------------------- | ------------------------------------------- |
-| 08/11/2020 | 1.0     | Criada estrutura básica do documento                                  | xxx xxx, xxx xx, xxx xx, xxx xxx e xxx xxxx |
-| 15/11/2020 | 1.1     | Representação arquitetural e objetivos e restrições arquiteturais. | Autores                                     |
-| 19/11/2020 | 1.2     | Adição dos diagramas, visões, tamanho e desempenho e qualidade      | Autores                                     |
-| 20/11/2020 | 1.3     | Adição da descrição de MER e DER                                   | Autores                                     |
-| 20/11/2020 | 1.4     | Adição do tópico de qualidade                                       | Autores                                     |
-| 20/11/2020 | 1.5     | Revisão                                                               | Autores                                     |
+                     
