@@ -111,3 +111,89 @@ COO -- G6
 - Os relacionamentos `<<include>>` e `<<extend>>` são detalhados nas visões específicas de cada fase.
 
 ---
+
+## Visão 1. Cadastro e regularização
+
+Cobre a abertura do processo de estágio, a validação de pré-condições acadêmicas, o cadastro da empresa e a parametrização das regras por curso.
+
+```plantuml
+@startuml visao_1_cadastro_regularizacao
+
+left to right direction
+
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 12
+skinparam shadowing false
+skinparam backgroundColor white
+
+skinparam actor {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+skinparam usecase {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+  FontSize 12
+}
+skinparam rectangle {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+  FontSize 14
+}
+skinparam ArrowColor black
+skinparam ArrowFontColor black
+skinparam ArrowFontSize 11
+
+actor "Aluno"                  as ALU
+actor "Empresa / Supervisor"   as EMP
+actor "Coordenacao/Secretaria" as COO
+
+rectangle "Cadastro e Regularizacao" {
+  usecase "Autenticar\nno Sistema"             as UC_AUTH
+  usecase "Abrir Solicitacao\nde Estagio"      as UC_ABRIR
+  usecase "Validar Pre-condicoes\nAcademicas"  as UC_PREC
+  usecase "Registrar Plano\nde Atividades"     as UC_PLANO
+  usecase "Cadastrar Empresa\nConcedente"      as UC_EMP
+  usecase "Validar Situacao\nda Empresa"       as UC_VEMP
+  usecase "Cadastrar Supervisor\nda Empresa"   as UC_SUP
+  usecase "Parametrizar Regras\npor Curso"     as UC_REGRAS
+  usecase "Visualizar Painel\nde Pendencias"   as UC_PAINEL
+}
+
+ALU -- UC_AUTH
+ALU -- UC_ABRIR
+ALU -- UC_EMP
+ALU -- UC_PLANO
+ALU -- UC_PAINEL
+
+EMP -- UC_AUTH
+EMP -- UC_EMP
+EMP -- UC_SUP
+EMP -- UC_PAINEL
+
+COO -- UC_AUTH
+COO -- UC_REGRAS
+COO -- UC_PAINEL
+
+UC_ABRIR .> UC_AUTH  : <<include>>
+UC_ABRIR .> UC_PREC  : <<include>>
+UC_ABRIR .> UC_PLANO : <<include>>
+UC_ABRIR .> UC_EMP   : <<include>>
+
+UC_EMP .> UC_VEMP : <<include>>
+UC_EMP .> UC_SUP  : <<include>>
+
+@enduml
+```
+
+### Leitura da visão
+
+- `Abrir Solicitacao de Estagio` agrega obrigatoriamente quatro dependências: autenticação, pré-condições, plano de atividades e cadastro de empresa.
+- `Validar Pre-condicoes Academicas` é executado pelo sistema automaticamente e verifica matrícula e frequência regulares (RN-02).
+- `Validar Situacao da Empresa` verifica se a concedente possui situação documental e institucional apta, conforme RN-11.
+- `Parametrizar Regras por Curso` é exclusivo da Coordenação/Secretaria, pois as regras variam por PPC e DCN (RN-04).
+
+---
