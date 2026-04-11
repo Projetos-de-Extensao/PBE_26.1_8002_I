@@ -22,12 +22,12 @@ Iniciamos o projeto através dos levantamentos iniciais da equipe, após discuss
 
 ```plantuml
 @startsalt
-title Pagina de login
+title Página de login - Geral
 {
   {+
-    **Realize o Login**
+    **Login com e-mail**
     ==
-    Email:
+    E-mail:
     "                     "
     .
     Senha:
@@ -46,10 +46,10 @@ title Pagina de login
 
 ```plantuml
 @startsalt
-title Pagina de Cadastro de empresa
+title Página de Cadastro - Empresa
 {
   {+
-    **Cadastrar empresa**
+    **Cadastrar empresa:**
     ==
     CNPJ:
     "                         "
@@ -69,68 +69,6 @@ title Pagina de Cadastro de empresa
     Possúi convênio com a faculdade?
     [] Sim 
     [] Não
-    .
-    [         Continuar      ]
-  
-  }
-}
-@endsalt
-```
-
-### Tela Cadastro de aluno
-
-```plantuml
-@startsalt
-title Pagina de Cadastro de aluno
-{
-  {+
-    **Cadastrar Aluno**
-    ==
-    Nome:
-    "                         "
-    .
-    CPF:
-    "                         "
-    .
-    Matrícula:
-    "                         "
-    .
-    Email:
-    "                         "
-    .
-    Senha:
-    "                         "
-    .
-    [         Continuar      ]
-  
-  }
-}
-@endsalt
-```
-
-### Página de cadastro de coordenador
-
-```plantuml
-@startsalt
-title Pagina de Cadastro de coordenador
-{
-  {+
-    **Cadastrar coordenador**
-    ==
-    Nome:
-    "                         "
-    .
-    CPF:
-    "                         "
-    .
-    Matrícula:
-    "                         "
-    .
-    Email:
-    "                         "
-    .
-    Senha:
-    "                         "
     .
     [         Continuar      ]
   
