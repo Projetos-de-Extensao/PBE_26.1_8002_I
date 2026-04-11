@@ -1,87 +1,113 @@
 ---
-id: diagrama_de_casos de uso
+id: diagrama_de_casos_de_uso
 title: Diagrama de Casos de Uso
 ---
 
-## Casos de Uso
+# Diagrama de Casos de Uso
 
-### Descrição:
+## Objetivo
 
-- Contas
-	- Criação
-	- Entrada
-	- Alteração
-	- Recuperar Senha
-	- Exclusão Lógica
-	- Visualização
+Este documento apresenta os Diagramas de Casos de Uso do Sistema de Gestão e Mediação de Estágios Obrigatórios do IBMEC RJ. A modelagem foi derivada do arquivo `documento_elicitacao_requisitos_estagio_ibmec.md` e do documento de especificação de casos de uso. Os diagramas foram divididos por fase do ciclo de vida do processo para manter a legibilidade dos atores e dos casos de uso.
 
-- Perfis
-	- Edição
-	- Pesquisar
-	- Visualização
-	- Seguir/Deixar de Seguir
+## Premissas de modelagem
 
-- Postagens (Público) 	 	
-	- Criação
-	- Exclusão
-	- Interação
-	- Visualização
+- O escopo cobre exclusivamente o fluxo de estágio obrigatório.
+- Os diagramas foram separados em sete visões correspondentes ao ciclo de vida: Visão Geral, Cadastro e Regularização, Submissão Documental, Validação e Aprovação, Monitoramento, Encerramento e Relatórios e Auditoria.
+- Relacionamentos `<<include>>` representam dependências obrigatórias entre casos de uso.
+- Relacionamentos `<<extend>>` representam fluxos condicionais ou opcionais.
+- Atores que não participam de uma fase não aparecem naquele diagrama, mantendo o foco visual.
+- `Coordenacao/Secretaria` é tratada como um único ator até validação formal do papel junto ao cliente.
 
-- Mensagens (Privado)
-	- Criação
-	- Exclusão
-	- Visualização
+## Visão geral dos diagramas propostos
 
-- Galerias
-	- Albuns
-- Blogs
-- Grupos
+| Visão | Foco | Atores envolvidos |
+| --- | --- | --- |
+| Visão 0 — Geral | Mapa completo de atores e grupos de UC | Todos |
+| Visão 1 — Cadastro | Abertura do processo e regularização | Aluno, Empresa/Supervisor, Coord./Secretaria |
+| Visão 2 — Documentos | Submissão e controle documental | Aluno, Empresa/Supervisor |
+| Visão 3 — Validação | Análise, parecer e aprovação | Prof. Orientador, Coord./Secretaria |
+| Visão 4 — Monitoramento | Acompanhamento do estágio ativo | Aluno, Empresa/Supervisor, Prof. Orientador |
+| Visão 5 — Encerramento | Relatório final e conclusão | Aluno, Empresa/Supervisor, Prof. Orientador, Coord./Secretaria |
+| Visão 6 — Auditoria | Relatórios operacionais e trilha | Coord./Secretaria |
 
-### Criação de uma conta no sistema
+---
 
-* Atores:
+## Visão 0. Mapa geral de casos de uso
 
-	- Usuário
-	- Sistema
+Visão panorâmica que posiciona os quatro atores e os grupos funcionais do sistema, sem detalhar os relacionamentos internos de cada fase.
 
-- Pré-Condições:
-	- Nenhuma
+```plantuml
+@startuml visao_0_mapa_geral
 
-* Fluxo Básico:
-    1. Usuário fornece e-mail, senha e confirmações
-    2. Dados do Usuário são validados pelo Sistema
-    3. Dados do Usuário são encriptados pelo Sistema
-    4. Dados do Usuário são persistidos pelo Sistema
-    5. Sistema gera um link com prazo de expiração
-    6. Sistema envia e-mail de verificação, com o link, para o Usuário
-    7. Usuário confirma o e-mail antes do link expirar
-    8. Sistema confirma que o Cadastro do Usuário foi realizado com sucesso
-    9. Sistema redireciona o Usuário para a página de Entrada
+left to right direction
 
-- Fluxos Alternativos:
-	- 2a. E-mail do Usuário é inválido
-		2a1. Sistema exibe mensagem de erro
-	- 2b. Senha do Usuário não respeita regras de segurança
-		- 2b1. Sistema exibe mensagem de erro
-	- 3a. Usuário tenta confirmar o e-mail depois de o link expirar
-		- 3a1. Sistema sugere que o Usuário realize um novo Cadastro
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 12
+skinparam shadowing false
+skinparam backgroundColor white
 
-### Entrada do usuário no sistema
+skinparam actor {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+skinparam usecase {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+  FontSize 12
+}
+skinparam rectangle {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+  FontSize 14
+}
+skinparam ArrowColor black
+skinparam ArrowFontColor black
+skinparam ArrowFontSize 11
 
-- Atores:
-	- Usuário
-	- Sistema
+actor "Aluno"                  as ALU
+actor "Empresa / Supervisor"   as EMP
+actor "Prof. Orientador"       as ORI
+actor "Coordenacao/Secretaria" as COO
 
-- Pré-Condições:
-	Usuário deve estar cadastrado
+rectangle "Sistema de Gestao de Estagios IBMEC RJ" {
+  usecase "Cadastro e\nRegularizacao"  as G1
+  usecase "Submissao\nDocumental"      as G2
+  usecase "Validacao e\nAprovacao"     as G3
+  usecase "Monitoramento\ndo Estagio"  as G4
+  usecase "Encerramento\ndo Processo"  as G5
+  usecase "Relatorios\ne Auditoria"    as G6
+}
 
-- Fluxo Básico:
-    - 1. Usuário fornece e-mail e senha
-	- 2. Sistema autentica o Usuário
-	- 3. Sistema redireciona o Usuário para a página inicial
+ALU -- G1
+ALU -- G2
+ALU -- G4
+ALU -- G5
 
-- Fluxos Alternativos:
-	- 2a. Dados do Usuário Inválidos
-		- 2a1. Sistema exibe mensagem de erro
-	- 3a. Primeio acesso do Usuário
-		- 3a1. Sistema redireciona o Usuário para a página de edição de perfil
+EMP -- G1
+EMP -- G2
+EMP -- G4
+EMP -- G5
+
+ORI -- G3
+ORI -- G4
+ORI -- G5
+
+COO -- G1
+COO -- G3
+COO -- G4
+COO -- G5
+COO -- G6
+
+@enduml
+```
+
+### Leitura da visão
+
+- A visão geral serve como índice visual: cada elipse representa um grupo de casos de uso detalhado nas visões seguintes.
+- Todos os atores aparecem simultaneamente para evidenciar as fronteiras de responsabilidade de cada perfil.
+- Os relacionamentos `<<include>>` e `<<extend>>` são detalhados nas visões específicas de cada fase.
+
+---
