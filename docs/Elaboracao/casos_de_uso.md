@@ -271,3 +271,82 @@ UC_CORRDOC .> UC_UPDOC  : <<extend>>
 - Tanto o Aluno quanto a Empresa participam do fluxo documental, pois o TCE exige participação de ambas as partes.
 
 ---
+
+## Visão 3. Validação e aprovação
+
+Cobre a análise da documentação, a validação da aderência acadêmica pelo professor orientador, a emissão de pareceres e o fluxo de aprovação ou devolução pela coordenação.
+
+```plantuml
+@startuml visao_3_validacao_aprovacao
+
+left to right direction
+
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 12
+skinparam shadowing false
+skinparam backgroundColor white
+
+skinparam actor {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+skinparam usecase {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+  FontSize 12
+}
+skinparam rectangle {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+  FontSize 14
+}
+skinparam ArrowColor black
+skinparam ArrowFontColor black
+skinparam ArrowFontSize 11
+
+actor "Prof. Orientador"       as ORI
+actor "Coordenacao/Secretaria" as COO
+
+rectangle "Validacao e Aprovacao" {
+  usecase "Autenticar\nno Sistema"             as UC_AUTH
+  usecase "Analisar Documentacao\ndo Processo" as UC_ANALDOC
+  usecase "Validar Aderencia\nAcademica"       as UC_ADER
+  usecase "Emitir Parecer\nou Pendencia"       as UC_PARECER
+  usecase "Devolver Processo\npara Correcao"   as UC_DEV
+  usecase "Aprovar\nEstagio"                   as UC_APROV
+  usecase "Rejeitar\nEstagio"                  as UC_REJ
+}
+
+ORI -- UC_AUTH
+ORI -- UC_ADER
+ORI -- UC_PARECER
+
+COO -- UC_AUTH
+COO -- UC_ANALDOC
+COO -- UC_PARECER
+COO -- UC_DEV
+COO -- UC_APROV
+COO -- UC_REJ
+
+UC_ANALDOC .> UC_AUTH    : <<include>>
+UC_ADER    .> UC_AUTH    : <<include>>
+UC_APROV   .> UC_ANALDOC : <<include>>
+UC_APROV   .> UC_ADER    : <<include>>
+
+UC_DEV .> UC_PARECER : <<extend>>
+UC_REJ .> UC_PARECER : <<extend>>
+
+@enduml
+```
+
+### Leitura da visão
+
+- `Aprovar Estagio` inclui obrigatoriamente `Analisar Documentacao do Processo` e `Validar Aderencia Academica` — a aprovação só é possível após ambas as validações (RF-27, RN-10).
+- `Devolver Processo para Correcao` e `Rejeitar Estagio` estendem `Emitir Parecer ou Pendencia`, pois ambos são desdobramentos condicionais do parecer negativo (RF-25, RF-26).
+- O Professor Orientador é responsável exclusivo pela validação acadêmica; a Coordenação/Secretaria é responsável pela análise institucional e pela decisão final de aprovação.
+
+---
+
