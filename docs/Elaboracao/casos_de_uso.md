@@ -529,3 +529,90 @@ UC_AVALFIN .> UC_ENCERRAR : <<extend>>
 - `Anexar Termo de Realizacao` e `Registrar Avaliacao Final do Supervisor` estendem o encerramento — são documentos complementares exigidos conforme regras do curso (RF-45, RF-46).
 - `Calcular Carga Horaria p/ Integralizacao` é executado automaticamente pelo sistema para verificar se a carga mínima foi atingida antes de permitir a conclusão (RN-08).
 - `Consultar Historico do Processo` está disponível para todos os atores ao final, garantindo rastreabilidade e auditabilidade completa do ciclo (RF-58).
+
+---
+
+## Visão 6. Relatórios e auditoria
+
+Cobre a geração de relatórios operacionais e gerenciais, a aplicação de filtros, a identificação de processos em atraso e a consulta à trilha de auditoria.
+
+```plantuml
+@startuml visao_6_relatorios_auditoria
+
+left to right direction
+
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 12
+skinparam shadowing false
+skinparam backgroundColor white
+
+skinparam actor {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+skinparam usecase {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+  FontSize 12
+}
+skinparam rectangle {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+  FontSize 14
+}
+skinparam ArrowColor black
+skinparam ArrowFontColor black
+skinparam ArrowFontSize 11
+
+actor "Coordenacao/Secretaria" as COO
+
+rectangle "Relatorios e Auditoria" {
+  usecase "Autenticar\nno Sistema"                as UC_AUTH
+  usecase "Gerar Relatorios\nOperacionais"        as UC_RELOP
+  usecase "Filtrar Processos\npor Criterio"       as UC_FILT
+  usecase "Identificar Processos\nem Atraso"      as UC_ATRASO
+  usecase "Consultar Trilha\nde Auditoria"        as UC_AUDIT
+  usecase "Visualizar Carga Horaria\nConsolidada" as UC_CHCONS
+}
+
+COO -- UC_AUTH
+COO -- UC_RELOP
+COO -- UC_FILT
+COO -- UC_ATRASO
+COO -- UC_AUDIT
+COO -- UC_CHCONS
+
+UC_RELOP .> UC_AUTH  : <<include>>
+UC_AUDIT .> UC_AUTH  : <<include>>
+
+UC_FILT   .> UC_RELOP : <<extend>>
+UC_ATRASO .> UC_RELOP : <<extend>>
+UC_CHCONS .> UC_RELOP : <<extend>>
+
+@enduml
+```
+
+### Leitura da visão
+
+- `Gerar Relatorios Operacionais` é o UC base desta fase; `Filtrar Processos por Criterio`, `Identificar Processos em Atraso` e `Visualizar Carga Horaria Consolidada` são especializações condicionais que o estendem (RF-53, RF-54, RF-55).
+- `Consultar Trilha de Auditoria` é independente dos relatórios operacionais e serve para revisão de ações críticas com identificação de responsável, data e hora (RF-56, RF-57, RN-09).
+- Esta visão é exclusiva da Coordenação/Secretaria, pois envolve dados consolidados de múltiplos processos e alunos, acessíveis apenas pelo perfil gerencial (RF-52, RNF-02).
+
+---
+
+## Decisões de modelagem que ainda dependem de validação
+
+- Confirmar se `Coordenacao` e `Secretaria` devem ser atores separados, com responsabilidades distintas em etapas específicas do fluxo.
+- Validar se o `Supervisor da Empresa` terá acesso independente ao sistema ou sempre operará via perfil vinculado à `Empresa Concedente`.
+- Decidir se `Registrar Aditivo de Estagio` exige fluxo de aprovação próprio (com parecer da coordenação) ou apenas registro direto.
+- Verificar se haverá casos de uso específicos para integração futura com sistemas acadêmicos (consulta de matrícula, frequência e histórico).
+- Refinar se `Receber Notificacoes` deve ser desdobrado por tipo (e-mail, painel interno, push) em iterações futuras.
+
+---
+
+## Síntese
+
+Os sete diagramas acima cobrem o ciclo completo do estágio obrigatório do IBMEC RJ, da abertura do processo ao encerramento auditável. A divisão por fase de ciclo de vida mantém os atores, as elipses de casos de uso e os relacionamentos legíveis em cada contexto, sem sobrecarregar um único diagrama com todos os 37 UCs e 4 atores simultaneamente. Os relacionamentos `<<include>>` e `<<extend>>` foram aplicados de forma consistente com a especificação de casos de uso detalhada no documento complementar.
