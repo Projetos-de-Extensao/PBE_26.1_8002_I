@@ -197,3 +197,77 @@ UC_EMP .> UC_SUP  : <<include>>
 - `Parametrizar Regras por Curso` é exclusivo da Coordenação/Secretaria, pois as regras variam por PPC e DCN (RN-04).
 
 ---
+
+## Visão 2. Submissão documental
+
+Cobre o envio, versionamento e validação de documentos, incluindo a geração ou registro do TCE e a correção de documentos devolvidos.
+
+```plantuml
+@startuml visao_2_submissao_documental
+
+left to right direction
+
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 12
+skinparam shadowing false
+skinparam backgroundColor white
+
+skinparam actor {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+skinparam usecase {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+  FontSize 12
+}
+skinparam rectangle {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+  FontSize 14
+}
+skinparam ArrowColor black
+skinparam ArrowFontColor black
+skinparam ArrowFontSize 11
+
+actor "Aluno"                as ALU
+actor "Empresa / Supervisor" as EMP
+
+rectangle "Submissao Documental" {
+  usecase "Autenticar\nno Sistema"              as UC_AUTH
+  usecase "Enviar\nDocumentos"                  as UC_UPDOC
+  usecase "Validar Obrigatoriedade\nDocumental" as UC_VALDOC
+  usecase "Gerar e\nRegistrar TCE"              as UC_TCE
+  usecase "Consultar Status\ndos Documentos"    as UC_STSDOC
+  usecase "Corrigir e Reenviar\nDocumentos"     as UC_CORRDOC
+}
+
+ALU -- UC_AUTH
+ALU -- UC_UPDOC
+ALU -- UC_TCE
+ALU -- UC_CORRDOC
+ALU -- UC_STSDOC
+
+EMP -- UC_AUTH
+EMP -- UC_TCE
+EMP -- UC_STSDOC
+
+UC_UPDOC   .> UC_AUTH   : <<include>>
+UC_UPDOC   .> UC_VALDOC : <<include>>
+UC_TCE     .> UC_UPDOC  : <<include>>
+UC_CORRDOC .> UC_UPDOC  : <<extend>>
+
+@enduml
+```
+
+### Leitura da visão
+
+- `Enviar Documentos` sempre inclui `Validar Obrigatoriedade Documental`, garantindo que documentos obrigatórios por etapa não sejam ignorados (RF-16, RF-21).
+- `Gerar e Registrar TCE` inclui `Enviar Documentos` porque o TCE é tratado como um documento do processo com versionamento próprio (RF-19).
+- `Corrigir e Reenviar Documentos` estende `Enviar Documentos` — só ocorre quando um documento foi rejeitado ou marcado como pendente (RF-17, RF-18).
+- Tanto o Aluno quanto a Empresa participam do fluxo documental, pois o TCE exige participação de ambas as partes.
+
+---
