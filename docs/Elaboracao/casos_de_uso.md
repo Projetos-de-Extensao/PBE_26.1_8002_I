@@ -350,3 +350,182 @@ UC_REJ .> UC_PARECER : <<extend>>
 
 ---
 
+## Visão 4. Monitoramento do estágio
+
+Cobre o acompanhamento do estágio ativo: controle de jornada e carga horária, envio de relatórios periódicos, avaliações de desempenho, pareceres periódicos e eventos de aditivo e rescisão.
+
+```plantuml
+@startuml visao_4_monitoramento
+
+left to right direction
+
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 12
+skinparam shadowing false
+skinparam backgroundColor white
+
+skinparam actor {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+skinparam usecase {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+  FontSize 12
+}
+skinparam rectangle {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+  FontSize 14
+}
+skinparam ArrowColor black
+skinparam ArrowFontColor black
+skinparam ArrowFontSize 11
+
+actor "Aluno"                  as ALU
+actor "Empresa / Supervisor"   as EMP
+actor "Prof. Orientador"       as ORI
+actor "Coordenacao/Secretaria" as COO
+
+rectangle "Monitoramento do Estagio" {
+  usecase "Autenticar\nno Sistema"              as UC_AUTH
+  usecase "Acompanhar Status\ndo Processo"      as UC_STATUS
+  usecase "Controlar Jornada\ne Carga Horaria"  as UC_CH
+  usecase "Enviar Relatorios\nPeriodicos"       as UC_RELPER
+  usecase "Enviar Avaliacao\nde Desempenho"     as UC_AVAL
+  usecase "Emitir Parecer\nAcademico Periodico" as UC_PARPER
+  usecase "Receber\nNotificacoes"               as UC_NOTIF
+  usecase "Registrar Aditivo\nde Estagio"       as UC_ADIT
+  usecase "Registrar Rescisao\nAntecipada"      as UC_RESC
+}
+
+ALU -- UC_AUTH
+ALU -- UC_STATUS
+ALU -- UC_CH
+ALU -- UC_RELPER
+ALU -- UC_NOTIF
+
+EMP -- UC_AUTH
+EMP -- UC_AVAL
+EMP -- UC_NOTIF
+
+ORI -- UC_AUTH
+ORI -- UC_STATUS
+ORI -- UC_PARPER
+ORI -- UC_RELPER
+ORI -- UC_NOTIF
+
+COO -- UC_AUTH
+COO -- UC_STATUS
+COO -- UC_ADIT
+COO -- UC_RESC
+COO -- UC_NOTIF
+
+UC_RELPER .> UC_AUTH   : <<include>>
+UC_RELPER .> UC_STATUS : <<include>>
+UC_CH     .> UC_STATUS : <<include>>
+
+UC_AVAL   .> UC_RELPER : <<extend>>
+UC_PARPER .> UC_RELPER : <<extend>>
+UC_ADIT   .> UC_STATUS : <<extend>>
+UC_RESC   .> UC_STATUS : <<extend>>
+
+@enduml
+```
+
+### Leitura da visão
+
+- `Enviar Relatorios Periodicos` inclui `Acompanhar Status do Processo` porque o envio só é válido com o estágio em status **Ativo** (RF-37).
+- `Enviar Avaliacao de Desempenho` e `Emitir Parecer Academico Periodico` estendem `Enviar Relatorios Periodicos` — são eventos complementares opcionais atrelados ao ciclo de relatórios (RF-38, RF-39).
+- `Registrar Aditivo de Estagio` e `Registrar Rescisao Antecipada` estendem `Acompanhar Status do Processo` — são eventos excepcionais que alteram o curso do processo ativo (RN-12).
+- `Receber Notificacoes` é compartilhado por todos os atores, pois o sistema dispara alertas de pendências, prazos e mudanças de status para todos os perfis envolvidos (RF-49).
+
+---
+
+## Visão 5. Encerramento do processo
+
+Cobre o envio do relatório final, a anexação do termo de realização, as avaliações finais, o parecer institucional e o registro do encerramento com cálculo de carga horária.
+
+```plantuml
+@startuml visao_5_encerramento
+
+left to right direction
+
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 12
+skinparam shadowing false
+skinparam backgroundColor white
+
+skinparam actor {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+}
+skinparam usecase {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+  FontSize 12
+}
+skinparam rectangle {
+  BackgroundColor white
+  BorderColor black
+  FontColor black
+  FontSize 14
+}
+skinparam ArrowColor black
+skinparam ArrowFontColor black
+skinparam ArrowFontSize 11
+
+actor "Aluno"                  as ALU
+actor "Empresa / Supervisor"   as EMP
+actor "Prof. Orientador"       as ORI
+actor "Coordenacao/Secretaria" as COO
+
+rectangle "Encerramento do Processo" {
+  usecase "Autenticar\nno Sistema"                   as UC_AUTH
+  usecase "Enviar Relatorio\nFinal"                  as UC_RELFIN
+  usecase "Anexar Termo\nde Realizacao"              as UC_TERMO
+  usecase "Registrar Avaliacao\nFinal do Supervisor" as UC_AVALFIN
+  usecase "Emitir Parecer\nFinal Institucional"      as UC_PARFIN
+  usecase "Calcular Carga Horaria\np/ Integralizacao" as UC_CALCCH
+  usecase "Registrar\nEncerramento"                  as UC_ENCERRAR
+  usecase "Consultar Historico\ndo Processo"         as UC_HIST
+}
+
+ALU -- UC_AUTH
+ALU -- UC_RELFIN
+ALU -- UC_HIST
+
+EMP -- UC_AUTH
+EMP -- UC_TERMO
+EMP -- UC_AVALFIN
+
+ORI -- UC_AUTH
+ORI -- UC_PARFIN
+ORI -- UC_HIST
+
+COO -- UC_AUTH
+COO -- UC_ENCERRAR
+COO -- UC_HIST
+
+UC_ENCERRAR .> UC_AUTH   : <<include>>
+UC_ENCERRAR .> UC_CALCCH : <<include>>
+UC_ENCERRAR .> UC_RELFIN : <<include>>
+UC_ENCERRAR .> UC_PARFIN : <<include>>
+
+UC_TERMO   .> UC_ENCERRAR : <<extend>>
+UC_AVALFIN .> UC_ENCERRAR : <<extend>>
+
+@enduml
+```
+
+### Leitura da visão
+
+- `Registrar Encerramento` é o UC central desta fase e inclui obrigatoriamente: autenticação, cálculo de carga horária, relatório final e parecer final institucional (RF-47, RF-48).
+- `Anexar Termo de Realizacao` e `Registrar Avaliacao Final do Supervisor` estendem o encerramento — são documentos complementares exigidos conforme regras do curso (RF-45, RF-46).
+- `Calcular Carga Horaria p/ Integralizacao` é executado automaticamente pelo sistema para verificar se a carga mínima foi atingida antes de permitir a conclusão (RN-08).
+- `Consultar Historico do Processo` está disponível para todos os atores ao final, garantindo rastreabilidade e auditabilidade completa do ciclo (RF-58).
