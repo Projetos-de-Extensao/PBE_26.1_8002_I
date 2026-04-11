@@ -145,10 +145,10 @@ title Página de detalhes do Processo - Empresa
 @endsalt
 ```
 
-### Página do coordenador
+### Painel do Coordenador
 ```plantuml
 @startsalt
-title Página de Processos - Coordenador
+title Painel do Coordenador
 {
   {+       
     {# **Processos Abertos:** { "**15**" }}
