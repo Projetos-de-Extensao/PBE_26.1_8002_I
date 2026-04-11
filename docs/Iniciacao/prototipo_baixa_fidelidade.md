@@ -120,10 +120,10 @@ title Página de Cadastro - Empresa
 @endsalt
 ```
 
-### Página de Processos - Empresa
+### Página de detalhes do Processo - Empresa
 ```plantuml
 @startsalt
-title Página de Processos - Coordenador
+title Página de detalhes do Processo - Empresa
 {
   {+       
     {# **Vagas disponibilizadas:** { "**4**" }}
