@@ -169,7 +169,31 @@ title Página de Processo - Coordenador
 
 ### Tela Feed com configurações
 
-### Tela Perfil
+### Tela de documentos - Aluno
+
+```plantuml
+@startsalt
+title Página de Documentos - Aluno
+{
+  {+       
+    **Meus Documentos**                             **<u>67%</u> de conformidade atual**
+  
+    --
+    {# 
+      **Nome** | **Status** | **Ações**
+      Documento #1 📄 | Validado ✅| {[Visualizar 👁️] | [Alterar ✏️]}
+      Documento #2 📄| Em análise ⏳| {[Visualizar 👁️] | [Alterar ✏️]}
+      Documento #3 📄 | Negado ❌| {[Visualizar 👁️] | [Alterar ✏️]}
+    }
+
+    --
+    {
+                   {[ Anexar novo documento 📎] }
+    }
+  }
+}
+@endsalt
+```
 
 
 ### Tela Cadastrar torneio 1
