@@ -20,11 +20,124 @@ Iniciamos o projeto através dos levantamentos iniciais da equipe, após discuss
 
 ### Tela Login
 
-### Tela Cadastro 1
+```plantuml
+@startsalt
+title Pagina de login
+{
+  {+
+    **Realize o Login**
+    ==
+    Email:
+    "                     "
+    .
+    Senha:
+    "                     "
+    .
+    [] Manter Login
+    .
+    [       Continuar      ]
+  
+  }
+}
+@endsalt
+```
 
+### Tela Cadastro de empresa
 
-### Tela Cadastro 2
+```plantuml
+@startsalt
+title Pagina de Cadastro de empresa
+{
+  {+
+    **Cadastrar empresa**
+    ==
+    CNPJ:
+    "                         "
+    .
+    Razão social:
+    "                         "
+    .
+    Nome fantasia:
+    "                         "
+    .
+    Email:
+    "                         "
+    .
+    Senha:
+    "                         "
+    .
+    Possúi convênio com a faculdade?
+    [] Sim 
+    [] Não
+    .
+    [         Continuar      ]
+  
+  }
+}
+@endsalt
+```
 
+### Tela Cadastro de aluno
+
+```plantuml
+@startsalt
+title Pagina de Cadastro de aluno
+{
+  {+
+    **Cadastrar Aluno**
+    ==
+    Nome:
+    "                         "
+    .
+    CPF:
+    "                         "
+    .
+    Matrícula:
+    "                         "
+    .
+    Email:
+    "                         "
+    .
+    Senha:
+    "                         "
+    .
+    [         Continuar      ]
+  
+  }
+}
+@endsalt
+```
+
+### Página de cadastro de coordenador
+
+```plantuml
+@startsalt
+title Pagina de Cadastro de coordenador
+{
+  {+
+    **Cadastrar coordenador**
+    ==
+    Nome:
+    "                         "
+    .
+    CPF:
+    "                         "
+    .
+    Matrícula:
+    "                         "
+    .
+    Email:
+    "                         "
+    .
+    Senha:
+    "                         "
+    .
+    [         Continuar      ]
+  
+  }
+}
+@endsalt
+```
 
 ### Página de Processo - Coordenador
 ```plantuml
