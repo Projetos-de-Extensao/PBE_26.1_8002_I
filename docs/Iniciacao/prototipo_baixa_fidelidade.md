@@ -120,10 +120,36 @@ title Página de Cadastro - Empresa
 @endsalt
 ```
 
-### Página de Documentos - Coordenador
+### Página de Processos - Coordenador
 ```plantuml
 @startsalt
-title Página de Documentos - Coordenador
+title Página de Processos - Coordenador
+{
+  {+       
+    {# **Processos Abertos:** { "**15**" }}
+   --
+    {
+       "🔎Buscar por nome do Aluno:                                     "|[ Filtrar ▼]
+    }
+    --
+    
+    {# 
+      **Nome do Aluno**|**Matrícula**| **Curso** | **Conformidade** | **Ações**
+      Breno L. Jordan |202000000000 | Direito | 67% |{[Visualizar 👁️] | [Remover ❌]}
+      César Cohen |202000000000 | Engenharia de Software | 69% |{[Visualizar 👁️] | [Remover ❌]}
+      Elizabeth Webber |202000000000 | Ciência de Dados e IA | 24% |{[Visualizar 👁️] | [Remover ❌]}
+      Arthur Cervero |202000000000 | Publicidade e Propaganda| 22% |{[Visualizar 👁️] | [Remover ❌]}
+      Beatrice Portinari |202000000000 | Engenharia de Computação| 71% |{[Visualizar 👁️] | [Remover ❌]}
+    }
+}
+}
+@endsalt
+```
+
+### Página de detalhes do Processo - Coordenador
+```plantuml
+@startsalt
+title Página de detalhes do Processo - Coordenador
 {
     {+
   **Nome do Aluno** | **Matrícula do Aluno**
@@ -158,6 +184,7 @@ title Página de Documentos - Coordenador
 }
 @endsalt
 ```
+
 ### Tela de documentos - Aluno
 
 ```plantuml
