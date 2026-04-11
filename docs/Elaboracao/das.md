@@ -40,28 +40,28 @@ Pela base normativa usada pelo grupo, o estágio deve ser tratado como ****ato e
 
 **Cliente :**
 
--   **View :**  Interface desenvolvida para permitir que o  **Aluno**  inicie solicitações, envie documentos e tenha acesso ao status em tempo real, a  **Empresa**  envie documentos e a  **Coordenação**  realize validações. A interface é responsável por coletar os inputs (como o upload de documentos do  **RF-15**) e exibir o status do workflow (conforme o  **RF-29**).
+-   **View :**  Interface desenvolvida para permitir que o  **Aluno**  inicie solicitações, envie documentos e tenha acesso ao status em tempo real, a  **Empresa**  envie documentos e a  **Coordenação**  realize validações. A interface é responsável por coletar os inputs (como o upload de documentos do  **RF05**) e exibir o status do workflow (conforme o  **RF09**).
     
 **Servidor :**
 
--   **Controller :**  Atua como o ponto de entrada das requisições da API. Ele recebe as solicitações do frontend, gerencia a autenticação baseada em perfis (**RNF-02**) e direciona as chamadas para os serviços corretos, retornando as respostas em formato compatível com a integração (**RNF-21**).
+-   **Controller :**  Atua como o ponto de entrada das requisições da API. Ele recebe as solicitações do frontend, gerencia a autenticação baseada em perfis (**RNF01**) e direciona as chamadas para os serviços corretos, retornando as respostas em formato compatível com a integração.
 
--   **Service :**  Camada onde reside o  **Motor de Regras**  mencionado na visão geral do projeto. É responsável pela lógica de negócio complexa, como validar se a jornada é compatível com as aulas (**RN-07**), verificar se o aluno está apto para o estágio (**RF-06**) e processar a mudança de estados do workflow (conforme o  **RNF-19**).    
+-   **Service :**  Camada onde reside o  **Motor de Regras**  mencionado na visão geral do projeto. É responsável pela lógica de negócio complexa, como validar se a jornada é compatível com as aulas, verificar se o aluno está apto para o estágio (**RF07**) e processar a mudança de estados do workflow (conforme o  **RNF09**).    
 
--   **Model :**  Representa a estrutura de dados definida na  **Seção 13.1**  do DAR. Gerencia a persistência das entidades no banco de dados relacional, garantindo a integridade transacional (**RNF-12**) e mantendo a trilha de auditoria e o histórico de ações dos usuários (**RF-04**).
+-   **Model :**  Gerencia a persistência das entidades no banco de dados relacional, garantindo a integridade transacional e mantendo a trilha de auditoria e o histórico de ações dos usuários (**RF13**).
 ## 🎀 Objetivos de Arquitetura e Restrições
 
 ### 💕  Objetivos
 
 <p align = "justify">
 
--  O sistema deve garantir que o acesso a documentos e dados sensíveis seja restrito via autenticação e autorização baseada em perfis (RBAC), protegendo uploads e downloads contra acessos indevidos. <strong>Persistência:</strong>
+-  <strong>Segurança:</strong> O sistema deve garantir que o acesso a documentos e dados sensíveis seja restrito via autenticação e autorização baseada em perfis (RBAC), protegendo uploads e downloads contra acessos indevidos. 
   
-  -   Utilização de um banco de dados relacional para garantir a integridade transacional das aprovações e o armazenamento do histórico completo de auditoria de cada processo de estágio. <strong>Privacidade:</strong>
- -   Tratamento de dados pessoais e documentos seguindo os princípios de minimização e necessidade, com retenção segura conforme as normas institucionais. <strong>Middlewares:</strong>
-  -   Uso de middlewares no Backend para interceptar requisições, validando tokens de autenticação e garantindo que apenas usuários autorizados acessem rotas críticas antes de chegarem à lógica de negócio. <strong>Desempenho:</strong>
- -   As operações de consulta de processos e carregamento de listas devem responder em tempo adequado para o uso administrativo, com feedback visual (progress bar) durante o upload de documentos pesados. <strong>Reusabilidade:</strong>
--   No Frontend, uso de componentes modulares para formulários e cards de status. No Backend, a lógica de validação acadêmica é centralizada em módulos/serviços reutilizáveis por diferentes tipos de curso. </p>  
+  -   <strong>Persistência:</strong> Utilização de um banco de dados relacional para garantir a integridade transacional das aprovações e o armazenamento do histórico completo de auditoria de cada processo de estágio. 
+ -   <strong>Privacidade:</strong> Tratamento de dados pessoais e documentos seguindo os princípios de minimização e necessidade, com retenção segura conforme as normas institucionais. 
+  -   <strong>Middlewares:</strong> Uso de middlewares no Backend para interceptar requisições, validando tokens de autenticação e garantindo que apenas usuários autorizados acessem rotas críticas antes de chegarem à lógica de negócio. 
+ -   <strong>Desempenho:</strong> As operações de consulta de processos e carregamento de listas devem responder em tempo adequado para o uso administrativo, com feedback visual (progress bar) durante o upload de documentos pesados. 
+-  <strong>Reusabilidade:</strong> No Frontend, uso de componentes modulares para formulários e cards de status. No Backend, a lógica de validação acadêmica é centralizada em módulos/serviços reutilizáveis por diferentes tipos de curso. </p>  
 
 ### 💕 Restrições
 
@@ -99,13 +99,13 @@ Pela base normativa usada pelo grupo, o estágio deve ser tratado como ****ato e
 >>inserir diagrama de classes
 
 ## 🎀 Visão de Dados
-A persistência utiliza um **banco de dados relacional** para garantir a integridade das transações (como a aprovação de um documento que altera o status do processo). O sistema gerencia não apenas dados textuais, mas também o versionamento e armazenamento de arquivos (PDFs) vinculados a cada etapa do estágio (**RF-18**).
+A persistência utiliza um **banco de dados relacional** para garantir a integridade das transações (como a aprovação de um documento que altera o status do processo). O sistema gerencia não apenas dados textuais, mas também o versionamento e armazenamento de arquivos (PDFs) vinculados a cada etapa do estágio (**RF20**).
 
 ## 🎀 Tamanho e Desempenho
-O sistema é projetado para suportar múltiplos processos simultâneos sem perda de consistência (**RNF-11**). As consultas de status e listagens são otimizadas para o uso administrativo diário, e o sistema de upload deve gerenciar arquivos de documentação sem travar a interface do usuário (**RNF-10**).
+O sistema é projetado para suportar múltiplos processos simultâneos sem perda de consistência (**RNF03**). As consultas de status e listagens são otimizadas para o uso administrativo diário, e o sistema de upload deve gerenciar arquivos de documentação sem travar a interface do usuário (**RNF03**).
 
 ## 🎀 Qualidade
-A qualidade é assegurada pela **rastreabilidade total** (cada alteração de status registra quem a fez e quando) e pela **validade normativa**. O sistema impede que processos avancem sem os documentos obrigatórios (**RF-21**), reduzindo erros operacionais e garantindo que o IBMEC esteja sempre em conformidade com a Lei do Estágio.
+A qualidade é assegurada pela **rastreabilidade total** (cada alteração de status registra quem a fez e quando) e pela **validade normativa**. O sistema impede que processos avancem sem os documentos obrigatórios (**RF07**), reduzindo erros operacionais e garantindo que o IBMEC esteja sempre em conformidade com a Lei do Estágio.
 
 ## 🎀 Autor(es)
 | Data | Versão | Descrição | Autor(es) |
