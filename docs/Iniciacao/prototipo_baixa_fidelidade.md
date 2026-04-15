@@ -117,7 +117,7 @@ title Página de cadastro de vaga de estágio - Empresa
 ### Painel Empresa
 ```plantuml
 @startsalt
-title Página de detalhes do Processo - Empresa
+title Painel Empresa
 {
   {+       
     {# **Vagas disponibilizadas:** { "**4**" }}
