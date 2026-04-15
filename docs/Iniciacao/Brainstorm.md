@@ -103,6 +103,7 @@ A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, c
 |RF17| **Assinatura de Documentos**	O sistema deve permitir assinatura digital|
 |RF18| **Abertura de Solicitação**	O aluno deve iniciar o processo informando a vaga que ele pretende preencher |
 |RF19| **Filtros de Pesquisa** O sistema deve permitir filtros por curso, empresa, aluno, status, período e situação documental. |
+|RF20| **Armazenamento de documentos** O sistema deve armazenar e versionar os documentos vinculados a cada etapa do processo. |
 
 ### 💕 Requisitos Não funcionais 
 
@@ -110,7 +111,7 @@ A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, c
 |----|-------------|
 |RNF01| **Segurança	Autenticação**	O sistema deve exigir autenticação segura para acesso às áreas protegidas.|
 |RNF02| **Segurança	Proteção de Dados**	Os dados devem ser armazenados de forma segura|
-|RNF03| **Desempenho	Escalabilidade**	O sistema deve suportar múltiplos usuários simultâneos |
+|RNF03| **Desempenho	Escalabilidade**	O sistema deve suportar múltiplos usuários e processos simultâneos |
 |RNF04| **Usabilidade	Interface**	A interface e fluxo devem ser intuitivos e de fácil uso |
 |RNF05| **Legal	Conformidade**	O sistema deve seguir a Lei 11.788/08|
 |RNF06| **Disponibilidade	Sistema**	O sistema deve ter alta disponibilidade |
