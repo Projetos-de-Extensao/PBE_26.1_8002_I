@@ -142,7 +142,7 @@ title Página de detalhes do Processo - Empresa
 }
 @endsalt
 ```
-### Página de Detalhes do Processo
+### Página de Detalhes do Processo - Empresa
 ```plantuml
 @startsalt
 title Página de Detalhes do Processo - Empresa
