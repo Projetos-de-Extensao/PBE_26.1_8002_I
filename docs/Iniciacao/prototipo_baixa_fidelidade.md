@@ -118,7 +118,7 @@ title Página de cadastro de vaga de estágio - Empresa
 @endsalt
 ```
 
-### Página de detalhes do Processo - Empresa
+### Painel Empresa
 ```plantuml
 @startsalt
 title Página de detalhes do Processo - Empresa
@@ -139,6 +139,41 @@ title Página de detalhes do Processo - Empresa
       Estágio em controle de midea | Publicidade e Propaganda| Em análise ⏳ |{[Visualizar 👁️] | [Remover ❌] | [Editar vaga ✏]}
     }
 }
+}
+@endsalt
+```
+### Página de Detalhes do Processo
+```plantuml
+@startsalt
+title Página de Detalhes do Processo - Empresa
+{
+  {+       
+    **Documentos do Estagiário**               **<u>67%</u> de conformidade atual**
+  
+    --
+    {# 
+      **Nome** | **Status** | **Ações**
+      Documento #1 📄 | Validado ✅| {[Visualizar 👁️]}
+      Documento #2 📄| Em análise ⏳| {[Visualizar 👁️]}
+      Documento #3 📄 | Negado ❌| {[Visualizar 👁️]}
+    }
+
+    --
+    **Documentos da Empresa**                 **<u>69%</u> de conformidade atual**
+  
+    --
+    {# 
+      **Nome** | **Status** | **Ações**
+      Documento #1 📄 | Validado ✅| {[Visualizar 👁️] | [Alterar ✏️]}
+      Documento #2 📄| Em análise ⏳| {[Visualizar 👁️] | [Alterar ✏️]}
+      Documento #3 📄 | Negado ❌| {[Visualizar 👁️] | [Alterar ✏️]}
+    }
+
+    --
+    {
+                   {[ Anexar novo documento 📎] }
+    }
+  }
 }
 @endsalt
 ```
