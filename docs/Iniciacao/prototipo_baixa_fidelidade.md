@@ -1,7 +1,3 @@
----
-id: prototipobaixa
-title: Protótipo Baixa Fidelidade
----
 ## Introdução
 
 <p align = "justify">
@@ -281,4 +277,7 @@ A partir da elaboração do protótipo foi possível ter uma noção inicial de 
 
 | Data     | Versão | Descrição                            | Autor(es)                                                                            |
 | -------- | ------- | -------------------------------------- | ------------------------------------------------------------------------------------ |
-| 15/04/2026 | 1.0 | Criação do Documento | Roger Pires e Vinicius Martinez |
+| 15/04/2026 | 1.0 | Criação do Documento | Roger Pires e Vinicius Machado |
+
+## Dados do Documento
+>id: prototipobaixafidelidade-Estágios <br/> title: Protótipo Baixa Fidelidade para Gerenciamento de Estágios para a IBMEC
