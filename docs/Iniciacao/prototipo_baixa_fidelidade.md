@@ -234,15 +234,10 @@ title Página de Documentos - Aluno
 @endsalt
 ```
 
-<p align = "justify">
-Na primeira versão do protótipo utilizamos a ferramenta <a href="https://material.io/resources/color/#!/?view.left=0&view.right=0">Material Design Color Tool</a>  para auxiliar na criação da paleta de cores do aplicativo, definimos as cores base do aplicativo mas as cores definidas para as telas 12 e 13 ainda não foram decididas.
-</p>
-
-
 ## Conclusão
 
 <p align = "justify">
-A partir da elaboração do protótipo foi possível ter uma noção inicial da interface do usuário, definindo fluxo, paleta de cores, botões, app bars e diversas outras funcionalidades
+A partir da elaboração do protótipo foi possível ter uma noção inicial de como é a ideia do software e como deve ser traduzida para código.
 </p>
 
 ## Referências
@@ -251,7 +246,4 @@ A partir da elaboração do protótipo foi possível ter uma noção inicial da 
 
 | Data     | Versão | Descrição                            | Autor(es)                                                                            |
 | -------- | ------- | -------------------------------------- | ------------------------------------------------------------------------------------ |
-| | 1.0 | | |
-| | 1.1 | | |
-| | 1.2 | | |
-| | 2.0 | | |
+| 15/04/2026 | 1.0 | Criação do Documento | Roger Pires e Vinicius Martinez |
