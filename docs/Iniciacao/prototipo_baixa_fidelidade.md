@@ -265,6 +265,38 @@ title Página de Documentos - Aluno
 @endsalt
 ```
 
+### Página de Processos - Aluno
+```plantuml
+@startsalt
+title Página de Processos - Aluno
+{
+    {+
+  **Nome do Aluno**:Julho Souza
+  **Matrícula do Aluno**: 202569019487
+  **E-mail do Aluno**: JulhoS@gmail.com 
+    
+    }
+  {+
+    **Vagas do aluno**
+    --
+    
+    {#
+      **Nome da empresa** | **Área*** | **Status** | **Ações**
+
+      Microsoft | Analise de dados |Aceito ✅ | {[Visualizar 👁️]}
+      
+      Assaí | Suporte técnico | Recusado ❌ | {[Visualizar 👁️]}
+
+      TMG Racing | Sistemas embarcados|  Recusado ❌| {[Visualizar 👁️]}
+    }
+  }
+    -------
+    {
+  }
+}
+@endsalt
+```
+
 ## Conclusão
 
 <p align = "justify">
