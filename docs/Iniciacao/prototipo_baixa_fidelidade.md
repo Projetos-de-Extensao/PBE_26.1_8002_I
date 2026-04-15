@@ -1,18 +1,18 @@
-## Introdução
+## 🌸 Introdução 🌸
 
 <p align = "justify">
 A construção do protótipo de baixa fidelidade auxilia a equipe de desenvolvimento a alcançar uma visualização simples do software para que tenham um norte na hora de passar para código.
 </p>
 
-## Metodologia
+## 🎀 Metodologia
 
 <p align = "justify">
 Iniciamos o projeto através dos levantamentos iniciais da equipe, após discussões a ferramenta PlantUML foi a selecionada para a confecção das diferentes páginas desse processo.
 </p>
 
-## Protótipo de baixa fidelidade
+## 🎀 Protótipo de baixa fidelidade
 
-### Tela Login - Geral
+### 💕 Tela Login - Geral
 
 ```plantuml
 @startsalt
@@ -36,7 +36,7 @@ title Página de login - Geral
 @endsalt
 ```
 
-### Página de Cadastro - Empresa
+### 💕 Página de Cadastro - Empresa
 
 ```plantuml
 @startsalt
@@ -71,7 +71,7 @@ title Página de Cadastro - Empresa
 @endsalt
 ```
 
-### Página de cadastro de vaga de estágio - Empresa
+### 💕 Página de cadastro de vaga de estágio - Empresa
 
 ```plantuml
 @startsalt
@@ -114,7 +114,7 @@ title Página de cadastro de vaga de estágio - Empresa
 @endsalt
 ```
 
-### Painel Empresa
+### 💕 Painel Empresa
 ```plantuml
 @startsalt
 title Painel Empresa
@@ -138,7 +138,7 @@ title Painel Empresa
 }
 @endsalt
 ```
-### Página de Detalhes do Processo - Empresa
+### 💕 Página de Detalhes do Processo - Empresa
 ```plantuml
 @startsalt
 title Página de Detalhes do Processo - Empresa
@@ -174,7 +174,7 @@ title Página de Detalhes do Processo - Empresa
 @endsalt
 ```
 
-### Painel do Coordenador
+### 💕 Painel do Coordenador
 ```plantuml
 @startsalt
 title Painel do Coordenador
@@ -200,7 +200,7 @@ title Painel do Coordenador
 @endsalt
 ```
 
-### Página de detalhes do Processo - Coordenador
+### 💕 Página de detalhes do Processo - Coordenador
 ```plantuml
 @startsalt
 title Página de detalhes do Processo - Coordenador
@@ -239,7 +239,7 @@ title Página de detalhes do Processo - Coordenador
 @endsalt
 ```
 
-### Página de detalhes do Processo - Aluno
+### 💕 Página de detalhes do Processo - Aluno
 
 ```plantuml
 @startsalt
@@ -265,7 +265,7 @@ title Página de Documentos - Aluno
 @endsalt
 ```
 
-### Página de Processos - Aluno
+### 💕 Página de Processos - Aluno
 ```plantuml
 @startsalt
 title Página de Processos - Aluno
@@ -297,19 +297,17 @@ title Página de Processos - Aluno
 @endsalt
 ```
 
-## Conclusão
+## 🎀 Conclusão
 
 <p align = "justify">
 A partir da elaboração do protótipo foi possível ter uma noção inicial de como é a ideia do software e como deve ser traduzida para código.
 </p>
 
-## Referências
-
-## Autor(es)
+## 🎀 Autor(es)
 
 | Data     | Versão | Descrição                            | Autor(es)                                                                            |
 | -------- | ------- | -------------------------------------- | ------------------------------------------------------------------------------------ |
 | 15/04/2026 | 1.0 | Criação do Documento | Roger Pires e Vinicius Machado |
 
-## Dados do Documento
+## 🎀 Dados do Documento
 >id: prototipobaixafidelidade-Estágios <br/> title: Protótipo Baixa Fidelidade para Gerenciamento de Estágios para a IBMEC
