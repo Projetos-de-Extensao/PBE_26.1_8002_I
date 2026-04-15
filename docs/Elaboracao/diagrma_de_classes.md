@@ -14,22 +14,31 @@ Este documento apresenta o modelo de classes conceitual do Sistema de Gestão e 
 - O recorte considera somente o fluxo de estágio obrigatório.
 - As classes foram organizadas em três blocos para manter legibilidade: identidade e atores, núcleo do processo e acompanhamento/auditoria.
 - Estados, permissões detalhadas e campos internos não aparecem como classes neste momento.
-- `CoordenacaoSecretaria` foi mantida como uma única classe até a validação do papel exato de coordenação e secretaria junto ao cliente.
+- `Usuario` foi mantida como classe abstrata para representar dados e comportamentos comuns de autenticação, identificação e rastreabilidade.
+- `Perfil` não foi mantida como classe neste recorte conceitual. As permissões continuam existindo, mas são tratadas como regras associadas ao tipo de usuário.
+- `CoordenadorCurso` representa o responsável acadêmico pelo estágio. No contexto do IBMEC, essa classe também cobre a função de orientação que antes poderia ser atribuída a um professor orientador separado.
+- Secretaria e demais apoios administrativos não foram modelados como classes centrais nesta versão; se necessário, podem ser tratados futuramente como permissões operacionais de usuário.
 - TCE, convênio, termo de realização e demais artefatos legais continuam representados por `Documento` e `TipoDocumento`, evitando especializações prematuras.
 
 ## Visão geral das classes propostas
 
 | Bloco | Classes |
 | --- | --- |
-| Identidade e atores | `Usuario`, `Perfil`, `Aluno`, `ProfessorOrientador`, `CoordenacaoSecretaria`, `SupervisorEmpresa`, `EmpresaConcedente`, `Curso`, `RegraCurso` |
+| Identidade e atores | `Usuario`, `Aluno`, `CoordenadorCurso`, `SupervisorEmpresa`, `EmpresaConcedente`, `Curso`, `RegraCurso` |
 | Núcleo do processo | `ProcessoEstagio`, `PlanoAtividades`, `Documento`, `TipoDocumento`, `Aprovacao`, `Pendencia`, `HistoricoStatus`, `Aditivo`, `Rescisao` |
 | Acompanhamento e governança | `RegistroCargaHoraria`, `RelatorioPeriodico`, `RelatorioFinal`, `AvaliacaoDesempenho`, `ParecerAcademico`, `Notificacao`, `LogAuditoria` |
+
+## Fluxo conceitual representado
+
+O modelo parte da solicitação aberta pelo `Aluno` e organiza o restante do fluxo em torno de `ProcessoEstagio`. O processo aplica uma `RegraCurso`, recebe documentos, vincula a empresa concedente, registra o supervisor da empresa e atribui um `CoordenadorCurso` como responsável acadêmico.
+
+Durante a análise, o `CoordenadorCurso` valida a compatibilidade do estágio com o curso, emite aprovações, registra pendências e produz pareceres acadêmicos. O `SupervisorEmpresa` permanece responsável pelo acompanhamento do aluno dentro da concedente e pela avaliação de desempenho. Ao longo do ciclo, o sistema registra documentos, relatórios, carga horária, histórico de status, notificações e logs de auditoria.
 
 ## Visão 1. Identidade, atores e contexto acadêmico
 
 Para reduzir cruzamentos, padronizar a escala visual e evitar rótulos sobre linhas, a visão de identidade foi dividida em recortes menores com layout mais controlado.
 
-### Visão 1A. Hierarquia de usuários e perfis
+### Visão 1A. Hierarquia de usuários
 
 ```puml
 @startuml
@@ -42,23 +51,17 @@ skinparam ranksep 70
 skinparam Padding 20
 skinparam ArrowFontSize 12
 
-class Perfil
 abstract class Usuario
 class Aluno
-class ProfessorOrientador
-class CoordenacaoSecretaria
+class CoordenadorCurso
 class SupervisorEmpresa
 
-Usuario "1..*" -- "1..*" Perfil : assume
 Usuario <|-- Aluno
-Usuario <|-- ProfessorOrientador
-Usuario <|-- CoordenacaoSecretaria
+Usuario <|-- CoordenadorCurso
 Usuario <|-- SupervisorEmpresa
 
-Perfil -[hidden]- Usuario
-Aluno -[hidden]- ProfessorOrientador
-ProfessorOrientador -[hidden]- CoordenacaoSecretaria
-CoordenacaoSecretaria -[hidden]- SupervisorEmpresa
+Aluno -[hidden]- CoordenadorCurso
+CoordenadorCurso -[hidden]- SupervisorEmpresa
 @enduml
 ```
 
@@ -76,21 +79,18 @@ skinparam Padding 20
 skinparam ArrowFontSize 12
 
 class Aluno
-class ProfessorOrientador
-class CoordenacaoSecretaria
+class CoordenadorCurso
 class Curso
 class RegraCurso
 class EmpresaConcedente
 class SupervisorEmpresa
 
 Aluno "1" --> "1" Curso : matricula
-ProfessorOrientador "0..*" --> "0..*" Curso : atua
-CoordenacaoSecretaria "0..*" --> "0..*" Curso : administra
+CoordenadorCurso "1" --> "1..*" Curso : coordena e orienta
 Curso "1" o-- "1..*" RegraCurso : regras
 EmpresaConcedente "1" o-- "1..*" SupervisorEmpresa : designa
 
-Aluno -[hidden]- ProfessorOrientador
-ProfessorOrientador -[hidden]- CoordenacaoSecretaria
+Aluno -[hidden]- CoordenadorCurso
 Curso -[hidden]- EmpresaConcedente
 RegraCurso -[hidden]- SupervisorEmpresa
 @enduml
@@ -98,8 +98,9 @@ RegraCurso -[hidden]- SupervisorEmpresa
 
 ### Leitura da visão
 
-- `Aluno`, `ProfessorOrientador`, `CoordenacaoSecretaria` e `SupervisorEmpresa` continuam como especializações de `Usuario`, mas agora aparecem isolados do contexto acadêmico para facilitar leitura.
-- `Perfil` permanece separado para refletir o requisito de permissões por papel e permitir evolução futura do controle de acesso.
+- `Aluno`, `CoordenadorCurso` e `SupervisorEmpresa` continuam como especializações de `Usuario`, mas aparecem isolados do contexto acadêmico para facilitar leitura.
+- `Usuario` concentra a noção comum de conta autenticável. Permissões específicas não aparecem como classe própria, pois são regras derivadas do tipo de usuário.
+- `CoordenadorCurso` acumula a coordenação do curso e a responsabilidade de orientação acadêmica do estágio, conforme a regra institucional assumida para o IBMEC.
 - `EmpresaConcedente` foi separada da hierarquia de usuários porque é uma organização do domínio, não uma conta base do sistema.
 - `Curso` e `RegraCurso` ficaram em um diagrama próprio para evidenciar as regras acadêmicas sem poluir a visão de autenticação.
 
@@ -145,14 +146,14 @@ skinparam ArrowFontSize 12
 class ProcessoEstagio
 class EmpresaConcedente
 class SupervisorEmpresa
-class ProfessorOrientador
+class CoordenadorCurso
 
 ProcessoEstagio "1" --> "1" EmpresaConcedente : empresa
 ProcessoEstagio "1" --> "1" SupervisorEmpresa : supervisor
-ProcessoEstagio "1" --> "1" ProfessorOrientador : orientador
+ProcessoEstagio "1" --> "1" CoordenadorCurso : responsavel academico
 
 EmpresaConcedente -[hidden]down- SupervisorEmpresa
-SupervisorEmpresa -[hidden]down- ProfessorOrientador
+SupervisorEmpresa -[hidden]down- CoordenadorCurso
 @enduml
 ```
 
@@ -195,17 +196,17 @@ skinparam ranksep 70
 skinparam Padding 20
 skinparam ArrowFontSize 12
 
-abstract class Usuario
+class CoordenadorCurso
 class ProcessoEstagio
 class Aprovacao
 class Pendencia
 
-Usuario "1" --> "0..*" Aprovacao : emite
-Usuario "1" --> "0..*" Pendencia : registra
+CoordenadorCurso "1" --> "0..*" Aprovacao : emite
+CoordenadorCurso "1" --> "0..*" Pendencia : registra
 ProcessoEstagio "1" *-- "0..*" Aprovacao : aprovacoes
 ProcessoEstagio "1" *-- "0..*" Pendencia : pendencias
 
-Usuario -[hidden]- ProcessoEstagio
+CoordenadorCurso -[hidden]- ProcessoEstagio
 Aprovacao -[hidden]down- Pendencia
 @enduml
 ```
@@ -240,6 +241,7 @@ Aditivo -[hidden]down- Rescisao
 ### Leitura da visão
 
 - `ProcessoEstagio` continua como agregado principal, mas os relacionamentos foram separados por intenção: abertura, vínculos institucionais, documentação, aprovação e encerramento.
+- `CoordenadorCurso` aparece como responsável acadêmico do processo e concentra as ações de aprovação e registro de pendências.
 - `PlanoAtividades`, `Documento` e `TipoDocumento` ficaram em um recorte dedicado para destacar a estrutura documental sem misturar atores externos.
 - `Aprovacao`, `Pendencia`, `HistoricoStatus`, `Aditivo` e `Rescisao` foram repartidos em blocos menores para reduzir cruzamentos e sobreposição de rótulos.
 - O layout foi padronizado com setas mais curtas, rótulos menores e caminhos menos tortuosos.
@@ -294,16 +296,16 @@ skinparam ArrowFontSize 12
 
 class ProcessoEstagio
 class SupervisorEmpresa
-class ProfessorOrientador
+class CoordenadorCurso
 class AvaliacaoDesempenho
 class ParecerAcademico
 
 SupervisorEmpresa "1" --> "0..*" AvaliacaoDesempenho : emite
-ProfessorOrientador "1" --> "0..*" ParecerAcademico : emite
+CoordenadorCurso "1" --> "0..*" ParecerAcademico : emite
 ProcessoEstagio "1" *-- "0..*" AvaliacaoDesempenho : consolida
 ProcessoEstagio "1" *-- "0..*" ParecerAcademico : consolida
 
-SupervisorEmpresa -[hidden]down- ProfessorOrientador
+SupervisorEmpresa -[hidden]down- CoordenadorCurso
 AvaliacaoDesempenho -[hidden]down- ParecerAcademico
 @enduml
 ```
@@ -369,18 +371,18 @@ Notificacao -[hidden]- LogAuditoria
 ### Leitura da visão
 
 - `RegistroCargaHoraria`, `RelatorioPeriodico` e `RelatorioFinal` foram mantidos juntos porque representam o acompanhamento operacional do aluno.
-- `AvaliacaoDesempenho` e `ParecerAcademico` ficaram em um recorte separado para destacar os emissores distintos e evitar sobreposição com relatórios do aluno.
+- `AvaliacaoDesempenho` e `ParecerAcademico` ficaram em um recorte separado para destacar os emissores distintos: a avaliação operacional vem do `SupervisorEmpresa`, enquanto o parecer acadêmico vem do `CoordenadorCurso`.
 - As especializações de `Documento` foram agrupadas em um diagrama próprio, mais simples, para deixar a herança clara sem cruzar setas com o restante do fluxo.
-- `Notificacao` e `LogAuditoria` ganharam um recorte independente para representar a camada institucional sem poluir as relações de acompanhamento.
+- `Notificacao` e `LogAuditoria` ganharam um recorte independente para representar a camada de rastreabilidade sem poluir as relações de acompanhamento.
 
 ## Decisões de modelagem que ainda dependem de validação
 
-- Confirmar se `CoordenacaoSecretaria` deve ser quebrada em duas classes distintas.
 - Validar se `SupervisorEmpresa` é o único representante autenticado da empresa ou se haverá um papel adicional para cadastro institucional.
 - Decidir se `Convenio` ou `TermoCooperacao` precisam virar classes próprias em vez de permanecerem como tipos documentais.
-- Refinar se `Aprovacao` continuará genérica ou se será desdobrada em classes mais específicas de análise institucional e análise acadêmica.
+- Refinar se `Aprovacao` continuará genérica ou se será desdobrada em classes mais específicas, como aprovação documental, aprovação acadêmica e aprovação de encerramento.
 - Verificar se `RegistroCargaHoraria` será um lançamento manual recorrente ou uma consolidação derivada de relatórios.
+- Confirmar se, em versões futuras, secretaria e apoio administrativo precisarão de classes próprias ou se continuarão como permissões operacionais associadas a `Usuario`.
 
 ## Síntese
 
-O modelo proposto posiciona `ProcessoEstagio` como centro do domínio e distribui o restante das classes entre três preocupações principais: identidade dos atores, formalização do processo e acompanhamento auditável do estágio. Esse recorte é suficiente para orientar a próxima etapa de detalhamento do back-end sem antecipar atributos, métodos ou decisões de persistência que ainda dependem de validação com o cliente.
+O modelo proposto posiciona `ProcessoEstagio` como centro do domínio e distribui o restante das classes entre três preocupações principais: identidade dos atores, formalização do processo e acompanhamento auditável do estágio. O `CoordenadorCurso` passa a ser o responsável acadêmico único dentro do IBMEC, acumulando a validação antes associada ao professor orientador. Esse recorte é suficiente para orientar a próxima etapa de detalhamento do back-end sem antecipar atributos, métodos ou decisões de persistência que ainda dependem de validação com o cliente.
