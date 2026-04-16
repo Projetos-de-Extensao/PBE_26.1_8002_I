@@ -1,10 +1,10 @@
-# 🌸 Legislação Trabalhista – Lei do Estágio 🌸
+#  Legislação Trabalhista – Lei do Estágio 
 
 **Autor:** Lucas de Souza Alcantara  
 
 ---
 
-## 🎀 Introdução
+##  Introdução
 
 A legislação trabalhista brasileira estabelece normas específicas para a realização de estágios, definindo direitos, deveres e limites para estudantes, instituições de ensino e concedentes.  
 O estágio é considerado um ato educativo supervisionado, com o objetivo de preparar o estudante para o trabalho e para a vida profissional, sem caracterizar vínculo empregatício quando realizado conforme a lei.
@@ -13,11 +13,11 @@ Este artigo apresenta um resumo organizado dos principais pontos da Lei do Está
 
 ---
 
-## 🎀 Definição de Estágio
+##  Definição de Estágio
 
 O estágio é um ato educativo escolar supervisionado, desenvolvido no ambiente de trabalho, que visa ao aprendizado de competências profissionais e ao desenvolvimento do estudante para a vida cidadã e para o trabalho.
 
-### 💕 Tipos de estágio
+###  Tipos de estágio
 
 - **Estágio obrigatório**  
   É definido no projeto pedagógico do curso e é requisito para aprovação e obtenção do diploma.
@@ -25,7 +25,7 @@ O estágio é um ato educativo escolar supervisionado, desenvolvido no ambiente 
 - **Estágio não obrigatório**  
   É uma atividade opcional, realizada além da carga horária obrigatória do curso.
 
-### 💕 Vínculo empregatício
+###  Vínculo empregatício
 
 O estágio **não cria vínculo empregatício**, desde que sejam cumpridos os seguintes requisitos:
 
@@ -38,7 +38,7 @@ Caso a lei não seja cumprida, pode ser caracterizado vínculo de emprego.
 
 ---
 
-## 🎀 Responsabilidades da Instituição de Ensino
+##  Responsabilidades da Instituição de Ensino
 
 A instituição de ensino possui diversas obrigações no acompanhamento do estágio:
 
@@ -54,7 +54,7 @@ A instituição também pode firmar convênios com empresas, mas isso não subst
 
 ---
 
-## 🎀 Responsabilidades do Estagiário
+##  Responsabilidades do Estagiário
 
 O estagiário deve cumprir algumas obrigações para manter a validade do estágio:
 
@@ -68,7 +68,7 @@ O descumprimento das regras pode levar ao cancelamento do estágio.
 
 ---
 
-## 🎀 Responsabilidades da Parte Concedente (Empresa ou Órgão)
+##  Responsabilidades da Parte Concedente (Empresa ou Órgão)
 
 A empresa ou órgão que oferece o estágio deve:
 
@@ -80,7 +80,7 @@ A empresa ou órgão que oferece o estágio deve:
 - Entregar termo de realização ao final do estágio
 - Garantir saúde e segurança no trabalho
 
-### 💕 Bolsa e benefícios
+###  Bolsa e benefícios
 
 - Obrigatória em estágio não obrigatório:
   - Bolsa-auxílio
@@ -88,7 +88,7 @@ A empresa ou órgão que oferece o estágio deve:
 
 - Benefícios extras não geram vínculo empregatício.
 
-### 💕 Recesso
+###  Recesso
 
 - 30 dias de recesso a cada 1 ano de estágio
 - Proporcional se menor que 1 ano
@@ -96,7 +96,7 @@ A empresa ou órgão que oferece o estágio deve:
 
 ---
 
-## 🎀 Jornada de Estágio
+##  Jornada de Estágio
 
 A carga horária deve ser compatível com a escola.
 
@@ -118,7 +118,7 @@ Regras adicionais:
 
 ---
 
-## 🎀 Limite de Estagiários por Empresa
+##  Limite de Estagiários por Empresa
 
 Número máximo permitido:
 
@@ -138,7 +138,7 @@ Regras:
 
 ---
 
-## 🎀 Fiscalização
+##  Fiscalização
 
 Se a lei não for cumprida:
 
@@ -150,7 +150,7 @@ A penalidade vale apenas para a unidade onde ocorreu o erro.
 
 ---
 
-## 🎀 Conclusão
+##  Conclusão
 
 A Lei do Estágio existe para garantir que o estágio seja uma atividade educativa e não uma forma de trabalho irregular.  
 Ela protege o estudante, define responsabilidades para a instituição de ensino e estabelece regras claras para as empresas.

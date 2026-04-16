@@ -1,8 +1,8 @@
-# 🌸 Pesquisa de aplicações 🌸
+#  Pesquisa de aplicações 
 
 A pesquisa foi feita tendo como base as três maiores plataformas de estágios de acordo com o google (CIEE, Super estágios e IEL). A pesquisa é dividida em: Resumo inicial, Certificações e/ou premiações, avaliações do aplicativo móvel e avaliação do site na web.
 
-## 🎀 CIEE:
+##  CIEE:
 
 É uma associação filantrópica brasileira sem fins lucrativos, pioneira na inserção de jovens no mercado de trabalho. Ele atua como uma ponte entre estudantes e empresas/órgãos públicos, oferecendo vagas gratuitas de estágio e Jovem Aprendiz para capacitação profissional.
 
@@ -19,7 +19,7 @@ A pesquisa foi feita tendo como base as três maiores plataformas de estágios d
 
   O Site da empresa aparenta funcionar bem, houveram 7016 avaliações das quais 3915 deram notas, a nota média do site é de 8.25. Nessa pesquisa estão inclusas todas as áreas de atuação do site, não apenas a busca por estágios.
 
-## 🎀 Super Estágios:
+##  Super Estágios:
 
 É uma agência que integra talentos, empresas e instituições de ensino, começando pelo recrutamento, passando pela seleção e toda a gestão do programa de estágio, alinhando tecnologia com a humanização nos atendimentos, personalizando de acordo com a necessidade da sua empresa.
 
@@ -37,7 +37,7 @@ A pesquisa foi feita tendo como base as três maiores plataformas de estágios d
 
   O programa que faz o manuseamento e certificação de documentos parece ter falhas críticas, no geral o site é classificado como bom, das 738 avaliações 81 deram notas para o site, ficando com uma média de 7.3.
 
-## 🎀 IEL (Intituto Euvaldo Lodi):
+##  IEL (Intituto Euvaldo Lodi):
 
 É uma entidade de direito privado ligada à Confederação Nacional da Indústria, focada em promover a interação entre o setor produtivo e os centros de conhecimento. Ele atua como um elo entre estudantes, instituições de ensino e o mercado de trabalho, com forte presença em indústrias e grandes empresas corporativas.
 
@@ -53,12 +53,12 @@ A pesquisa foi feita tendo como base as três maiores plataformas de estágios d
 
   O site aparenta ser bem robusto e funcionar bem, o maior problema é não cobrir todos os estados do país. Dos 26 estados, apenas 17 e o Distrito Federal têm vagas ofertadas (o Rio de Janeiro é um dos estados para os quais não há vagas ofertadas). Além disso, a maioria das vagas é para engenharias, e as que não são, ainda assim, são ligadas à indústria. Não tem muitas reclamações no Reclame Aqui, e as poucas que tem não estão respondidas.
 
-## 🎀 Outras aplicações:
+##  Outras aplicações:
 
 -   Gupy
 -   Eureca
 
-💕 <u>*Fontes:*</u>
+ <u>*Fontes:*</u>
 
 Resumos de cada aplicação: Adaptações das descrições presentes nos sites oficiais.
 

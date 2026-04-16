@@ -1,18 +1,18 @@
-# 🌸 Brainstorm para o Site de Gerenciamento de Estágios 🌸
+#  Brainstorm para o Site de Gerenciamento de Estágios 
  
-## 🎀 Introdução
+##  Introdução
 <p align = "justify">
 O brainstorm é uma técnica de elicitação de requisitos que consiste em reunir a equipe e discutir sobre diversos tópicos gerais do projeto apresentados no documento problema de negócio. No brainstorm o diálogo é incentivado e críticas são evitadas para permitir que todos colaborem com suas próprias ideias.
 </p>
  
-## 🎀 Metodologia
+##  Metodologia
 <p align = "justify">
 A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, começou 07/04/2026 e terminou [preencher],onde a equipe decidiu em conjunto as perguntas e as respostas foram transcritas para o documento.
 </p>
  
-## 🎀 Perguntas
+##  Perguntas
  
-### 💕 1. Qual o objetivo principal da aplicação?
+###  1. Qual o objetivo principal da aplicação?
  
 <p align = "justify">
 <b>Letícia</b> - Deve ser uma plataforma onde os coordenadores tenham mais facilidade para gerenciar estágio.
@@ -29,7 +29,7 @@ A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, c
  
 ---
  
-### 💕 2. Como será o processo para cadastrar uma nova empresa?
+###  2. Como será o processo para cadastrar uma nova empresa?
  
 <p align = "justify">
 <b>Letícia</b> - Deve ser um processo prático e intuitivo onde a  empresa deve estar de acordo com a legislação e as normas requeridas pela IBMEC.
@@ -46,7 +46,7 @@ A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, c
 
 --- 
 
-### 💕 3. Como será a forma de adicionar vagas de estágios?(Desconsiderada)
+###  3. Como será a forma de adicionar vagas de estágios?(Desconsiderada)
  
 <p align = "justify">
 <b>Letícia</b> - A empresa deve fornecer todas as informações requeridas pelo sistema com base nas necessidades de cada curso.
@@ -65,7 +65,7 @@ A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, c
 
 ---
  
-### 💕 4. Como será o processo de aprovação do estágio?
+###  4. Como será o processo de aprovação do estágio?
 
 <p align = "justify">
 <b>Letícia</b> - O sistema deve validar os documentos requeridos, seguido da aprovação do coordenador e do professor responsável.
@@ -78,9 +78,9 @@ A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, c
  
 ---
   
-## 🎀 Requisitos elicitados
+##  Requisitos elicitados
 
-### 💕 Requisitos Funcionais 
+###  Requisitos Funcionais 
  
 |ID|Descrição|
 |----|-------------|
@@ -105,7 +105,7 @@ A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, c
 |RF19| **Filtros de Pesquisa** O sistema deve permitir filtros por curso, empresa, aluno, status, período e situação documental. |
 |RF20| **Armazenamento de documentos** O sistema deve armazenar e versionar os documentos vinculados a cada etapa do processo. |
 
-### 💕 Requisitos Não funcionais 
+###  Requisitos Não funcionais 
 
 |ID|Descrição|
 |----|-------------|
@@ -120,21 +120,21 @@ A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, c
 |RNF09| **Controle de Acesso** O sistema deve permitir acesso à documentos e dados pessoais apenas a perfis autorizados. |
 |RNF10| **Controle de Fluxo** O fluxo deve ser guiado por etapas, reduzindo erros de preenchimento.|
  
-## 🎀 Conclusão
+##  Conclusão
 <p align = "justify">
 Através da aplicação da técnica, foi possível elicitar alguns dos primeiros requisitos do projeto.
 </p>
 
-## 🎀 Referências Bibliográficas
+##  Referências Bibliográficas
  
 > BARBOSA, S. D. J; DA SILVA, B. S. Interação humano-computador. Elsevier, 2010.<br/>
 > [Brainstorm da Letícia Completo](https://docs.google.com/document/d/1eNMFFYWj68dkVEnu3udgYlSfP6tqbN3NqCS5GpkvDrg/edit?usp=sharing)
  
-## 🎀 Autor(es)
+##  Autor(es)
 | Data | Versão | Descrição | Autor(es) |
 | -- | -- | -- | -- |
 | 07/04/2026 | 1.0 | Criação do documento | Letícia Valladão, Roger Pires, Lucas Alcântara, João Gabriel de Oliveira |
 | 11/04/2026 | 2.0 | Adicionado os requisitos | Letícia Valladão |
 
-## 🎀 Dados do Documento
+##  Dados do Documento
 > id: Brainstorm-Estagios <br/> title: Brainstorm do Site para Gerenciamento de Estágios para a IBMEC
