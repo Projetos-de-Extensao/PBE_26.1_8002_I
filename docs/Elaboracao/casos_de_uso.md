@@ -47,6 +47,7 @@ left to right direction
 
 actor Aluno
 actor Coordenadores
+actor Empresa
 
 rectangle "Sistema de Gestão de Estágios IBMEC RJ" {
 
@@ -61,6 +62,7 @@ rectangle "Sistema de Gestão de Estágios IBMEC RJ" {
 
 Aluno -- UC1
 Coordenadores -- UC1
+Empresa -- UC1
 
 UC1 ..> UC2 : <<include>>
 UC1 ..> UC3 : <<include>>
