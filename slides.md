@@ -6,7 +6,7 @@ O presente arquivo tem como objetivo principal formalizar a apresentação de sl
 ## 🎀 Acesso aos Slides
 Abaixo encontra-se o acesso rápido aos slides com a apresentação visual do projeto:
 
-*[🔗 Clique aqui para acessar a apresentação de slides da AP1](#)*
+*[🔗 Clique aqui para acessar a apresentação de slides da AP1](#)* (https://www.canva.com/design/DAHGr4U7UTE/8JJ6yyk9recvy9OWehPnGg/edit)
 
 ## 🎀 Autor(es)
 | Data | Versão | Descrição | Autor(es) |
