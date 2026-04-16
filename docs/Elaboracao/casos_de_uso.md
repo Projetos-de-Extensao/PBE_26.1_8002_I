@@ -1,87 +1,479 @@
 ---
-id: diagrama_de_casos de uso
+id: diagrama_de_casos_de_uso
 title: Diagrama de Casos de Uso
 ---
 
-## Casos de Uso
+# Diagrama de Casos de Uso
 
-### Descrição:
+## Objetivo
 
-- Contas
-	- Criação
-	- Entrada
-	- Alteração
-	- Recuperar Senha
-	- Exclusão Lógica
-	- Visualização
+Este documento apresenta os Diagramas de Casos de Uso do Sistema de Gestão de Estágios do IBMEC RJ. O sistema tem como objetivo organizar, facilitar e automatizar o processo documental de estágio entre Aluno e Secretaria, considerando que o aluno já foi aprovado na vaga.
 
-- Perfis
-	- Edição
-	- Pesquisar
-	- Visualização
-	- Seguir/Deixar de Seguir
+Os diagramas foram modelados de forma simples e didática, representando o ciclo básico do processo de estágio.
 
-- Postagens (Público) 	 	
-	- Criação
-	- Exclusão
-	- Interação
-	- Visualização
+---
 
-- Mensagens (Privado)
-	- Criação
-	- Exclusão
-	- Visualização
+## Premissas de modelagem
 
-- Galerias
-	- Albuns
-- Blogs
-- Grupos
+- O sistema inicia após o aluno já ter sido aprovado em uma vaga de estágio.
+- O foco está na gestão documental e acompanhamento do processo.
+- Relacionamentos `<<include>>` representam ações obrigatórias.
+- Relacionamentos `<<extend>>` representam fluxos alternativos ou opcionais.
+- O sistema não é representado como ator.
+- Diagramas simples, voltados para fácil compreensão.
 
-### Criação de uma conta no sistema
+---
 
-* Atores:
+## Visão geral dos casos de uso
 
-	- Usuário
-	- Sistema
+| Fase | Casos de Uso |
+|------|-------------|
+| Acesso | Login |
+| Início | Abrir Novo Processo |
+| Documentação | Adicionar Documentos |
+| Validação | Validar Contrato |
+| Execução | Enviar Relatório |
+| Monitoramento | Acompanhar Status |
+| Comunicação | Notificações |
+| Encerramento | Encerrar Processo |
 
-- Pré-Condições:
-	- Nenhuma
+---
 
-* Fluxo Básico:
-    1. Usuário fornece e-mail, senha e confirmações
-    2. Dados do Usuário são validados pelo Sistema
-    3. Dados do Usuário são encriptados pelo Sistema
-    4. Dados do Usuário são persistidos pelo Sistema
-    5. Sistema gera um link com prazo de expiração
-    6. Sistema envia e-mail de verificação, com o link, para o Usuário
-    7. Usuário confirma o e-mail antes do link expirar
-    8. Sistema confirma que o Cadastro do Usuário foi realizado com sucesso
-    9. Sistema redireciona o Usuário para a página de Entrada
+# 1. Login
 
-- Fluxos Alternativos:
-	- 2a. E-mail do Usuário é inválido
-		2a1. Sistema exibe mensagem de erro
-	- 2b. Senha do Usuário não respeita regras de segurança
-		- 2b1. Sistema exibe mensagem de erro
-	- 3a. Usuário tenta confirmar o e-mail depois de o link expirar
-		- 3a1. Sistema sugere que o Usuário realize um novo Cadastro
+```puml
+@startuml
+left to right direction
+
+actor Aluno
+actor Coordenadores
+
+rectangle "Sistema de Gestão de Estágios IBMEC RJ" {
+  usecase "Fazer Login" as UC1
+  usecase "Autenticar Credenciais" as UC2
+  usecase "Exibir Erro de Login" as UC3
+  usecase "Redefinir Senha (1º Acesso)" as UC4
+}
+
+Aluno -- UC1
+Coordenadores -- UC1
+
+UC1 ..> UC2 : <<include>>
+UC3 ..> UC1 : <<extend>>
+UC4 ..> UC1 : <<extend>>
+
+@enduml
+
+```
 
 ### Entrada do usuário no sistema
 
 - Atores:
-	- Usuário
-	- Sistema
+	- Aluno
+	- Coordenação
 
 - Pré-Condições:
-	Usuário deve estar cadastrado
+	Usuário deve ter cadastrado
 
 - Fluxo Básico:
-    - 1. Usuário fornece e-mail e senha
-	- 2. Sistema autentica o Usuário
-	- 3. Sistema redireciona o Usuário para a página inicial
+    - 1. Usuário acessa a página inicial.
+	- 2. Usuário informa credenciais.
+	- 3. Sistema valida login.
+  - 4. Sistema redireciona ao dashboard.
 
 - Fluxos Alternativos:
-	- 2a. Dados do Usuário Inválidos
-		- 2a1. Sistema exibe mensagem de erro
-	- 3a. Primeio acesso do Usuário
-		- 3a1. Sistema redireciona o Usuário para a página de edição de perfil
+	- Erro de login → exibe mensagem
+	- Primeiro acesso → redefinição de senha
+
+ 
+# 2. Novo Processo
+
+```puml
+  @startuml
+left to right direction
+
+actor Aluno
+actor Secretaria
+
+rectangle "Sistema de Gestão de Estágios IBMEC RJ" {
+
+  usecase "Iniciar Processo de Estágio" as UC1
+  usecase "Preencher Dados do Estágio" as UC2
+  usecase "Anexar Documento (TCE)" as UC3
+  usecase "Validar Informações" as UC4
+  usecase "Exibir Erro de Arquivo" as UC5
+  usecase "Exibir Erro de Campos Obrigatórios" as UC6
+
+}
+
+Aluno -- UC1
+Secretaria -- UC1
+
+UC1 ..> UC2 : <<include>>
+UC1 ..> UC3 : <<include>>
+UC1 ..> UC4 : <<include>>
+
+UC5 ..> UC1 : <<extend>>
+UC6 ..> UC1 : <<extend>>
+
+@enduml
+
+```
+### Entrada do usuário no sistema
+
+- Atores:
+	- Aluno
+	- Coordenação
+
+- Pré-Condições:
+	Usuário deve ter cadastrado
+
+- Fluxo Básico:
+    - 1. Usuário acessa a página inicial.
+	- 2. Usuário informa credenciais.
+	- 3. Sistema valida login.
+  - 4. Sistema redireciona ao dashboard.
+
+- Fluxos Alternativos:
+	- Erro de login → exibe mensagem
+	- Primeiro acesso → redefinição de senha
+
+
+# 3. Novo Processo
+
+```puml
+@startuml
+left to right direction
+
+actor Aluno
+actor Secretaria
+
+rectangle "Sistema de Gestão de Estágios IBMEC RJ" {
+
+  usecase "Iniciar Processo de Estágio" as UC1
+  usecase "Preencher Dados do Estágio" as UC2
+  usecase "Anexar Documento (TCE)" as UC3
+  usecase "Validar Informações" as UC4
+  usecase "Exibir Erro de Arquivo" as UC5
+  usecase "Exibir Erro de Campos Obrigatórios" as UC6
+
+}
+
+Aluno -- UC1
+Secretaria -- UC1
+
+UC1 ..> UC2 : <<include>>
+UC1 ..> UC3 : <<include>>
+UC1 ..> UC4 : <<include>>
+
+UC5 ..> UC1 : <<extend>>
+UC6 ..> UC1 : <<extend>>
+
+@enduml
+
+```
+### Entrada do usuário no sistema
+
+- Atores:
+	- Aluno
+	- Coordenação
+
+- Pré-Condições:
+	Usuário logado e sem processo ativo
+
+- Fluxo Básico:
+    - 1. Usuário inicia processo.
+	- 2. Preenche dados.
+	- 3. Anexa documento.
+  - 4. Sistema valida e salva.
+
+- Fluxos Alternativos:
+	- Erro de arquivo
+	- Campos obrigatórios não preenchidos
+
+
+# 3. Add Documentos 
+
+```puml
+@startuml
+left to right direction
+
+actor Usuario
+
+rectangle "Sistema de Gestão de Estágios IBMEC RJ" {
+
+  usecase "Anexar Documentos (.pdf)" as UC1
+  usecase "Selecionar Arquivo" as UC2
+  usecase "Validar Arquivo (tipo e tamanho)" as UC3
+  usecase "Exibir Erro de Tamanho" as UC4
+
+}
+
+Usuario -- UC1
+
+UC1 ..> UC2 : <<include>>
+UC1 ..> UC3 : <<include>>
+
+UC4 ..> UC1 : <<extend>>
+
+@enduml
+
+```
+### Adicionar Documentos
+- Atores:
+	- Aluno
+	- Coordenação
+
+- Pré-Condições:
+	Processo existente.
+
+- Fluxo Básico:
+    - 1. Seleciona arquivo
+	- 2. Valida arquivo
+	- 3. Salva arquivo
+
+- Fluxos Alternativos:
+	- Arquivo inválido
+	
+  
+# 4. Validar Contrato 
+
+```puml
+@startuml
+left to right direction
+
+actor Secretaria
+
+rectangle "Sistema de Gestão de Estágios IBMEC RJ" {
+
+  usecase "Validar Contrato" as UC1
+  usecase "Visualizar Contrato" as UC2
+  usecase "Aprovar Contrato" as UC3
+  usecase "Reprovar com Justificativa" as UC4
+  usecase "Notificar Aluno" as UC5
+
+}
+
+Secretaria -- UC1
+
+UC1 ..> UC2 : <<include>>
+UC1 ..> UC3 : <<include>>
+UC1 ..> UC5 : <<include>>
+
+UC4 ..> UC1 : <<extend>>
+
+@enduml
+
+```
+### Validar contrato
+- Atores:
+	- Coordenação
+
+
+- Fluxo Básico:
+    - 1. Seleciona contrato
+	- 2. Analisa contrato
+	- 3. Aprova contrato
+
+- Fluxos Alternativos:
+	- Reprovação com justificativa
+
+
+# 5. Enviar Relatório
+
+```puml
+@startuml
+left to right direction
+
+actor Aluno
+
+rectangle "Sistema de Gestão de Estágios IBMEC RJ" {
+
+  usecase "Enviar Relatório de Horas" as UC1
+  usecase "Preencher Dados do Relatório" as UC2
+  usecase "Anexar Documento" as UC3
+  usecase "Salvar Relatório" as UC4
+  usecase "Registrar Envio Fora do Prazo" as UC5
+
+}
+
+Aluno -- UC1
+
+UC1 ..> UC2 : <<include>>
+UC1 ..> UC3 : <<include>>
+UC1 ..> UC4 : <<include>>
+
+UC5 ..> UC1 : <<extend>>
+
+@enduml
+
+```
+### Enviar relatório
+
+- Atores:
+	- Aluno
+
+
+- Fluxo Básico:
+    - 1. Preenche o relatório
+	- 2. Anexa arquivos
+	- 3. Envia relatório
+  - 4. Sistema valida e salva.
+
+- Fluxos Alternativos:
+	- Envio fora do prazo
+	- Campos obrigatórios não preenchidos
+
+# 6. Acompanhar status
+
+```puml
+@startuml
+left to right direction
+
+actor Aluno
+actor Secretaria
+
+rectangle "Sistema de Gestão de Estágios IBMEC RJ" {
+
+  usecase "Acompanhar Status do Processo" as UC1
+  usecase "Visualizar Lista de Processos" as UC2
+  usecase "Visualizar Detalhes do Processo" as UC3
+  usecase "Exibir Mensagem Sem Processos" as UC4
+  usecase "Fazer Download do Documento" as UC5
+
+}
+
+Aluno -- UC1
+Secretaria -- UC1
+
+UC1 ..> UC2 : <<include>>
+UC1 ..> UC3 : <<include>>
+
+UC4 ..> UC1 : <<extend>>
+UC5 ..> UC1 : <<extend>>
+
+@enduml
+
+```
+
+### Acompanhar status
+
+- Atores:
+	- Aluno
+	- Coordenação
+
+- Pré-Condições:
+	Usuário deve estar logado
+
+- Fluxo Básico:
+    - 1. Usuário acessa a página visualizar status
+	- 2. Visualiza listas e ocorrencias pendentes
+	- 3. Acessa detalhes
+
+- Fluxos Alternativos:
+	- Sem processos
+	- Download de documento
+
+# 7. Notificações
+
+```puml
+@startuml
+left to right direction
+
+actor Aluno
+actor Secretaria
+
+rectangle "Sistema de Gestão de Estágios IBMEC RJ" {
+
+  usecase "Receber Notificações" as UC1
+  usecase "Visualizar Notificações" as UC2
+  usecase "Exibir Detalhe da Notificação" as UC3
+  usecase "Exibir Sem Notificações" as UC4
+  usecase "Acessar Processo Relacionado" as UC5
+
+}
+
+Aluno -- UC1
+Secretaria -- UC1
+
+UC1 ..> UC2 : <<include>>
+UC1 ..> UC3 : <<include>>
+
+UC4 ..> UC1 : <<extend>>
+UC5 ..> UC1 : <<extend>>
+
+@enduml
+
+```
+
+### Notificações
+
+- Atores:
+	- Aluno
+	- Coordenação
+
+
+- Fluxo Básico:
+    - 1. Usuário acessa a página de notificações
+	- 2. Visualiza notificações
+	- 3. Abre a aba detalhes
+  - 4. Sistema redireciona ao dashboard.
+
+- Fluxos Alternativos:
+	- Sem notificações
+	- Acesso ao processo
+
+
+# 8. Encerrar Processo
+
+```puml
+@startuml
+left to right direction
+
+actor Aluno
+actor Secretaria
+
+rectangle "Sistema de Gestão de Estágios IBMEC RJ" {
+
+  usecase "Finalizar Processo de Estágio" as UC1
+  usecase "Verificar Requisitos para Encerramento" as UC2
+  usecase "Registrar Encerramento" as UC3
+  usecase "Notificar Usuário" as UC4
+  usecase "Encerramento com Pendências" as UC5
+  usecase "Gerar Termo de Encerramento" as UC6
+
+}
+
+Aluno -- UC1
+Secretaria -- UC1
+
+UC1 ..> UC2 : <<include>>
+UC1 ..> UC3 : <<include>>
+UC1 ..> UC4 : <<include>>
+
+UC5 ..> UC1 : <<extend>>
+UC6 ..> UC1 : <<extend>>
+
+@enduml
+
+
+```
+
+### Notificações
+
+- Atores:
+	- Aluno
+	- Coordenação
+
+- Pré-Condições:
+	Usuário deve ter concluído todas as etapas
+
+- Fluxo Básico:
+    - 1. Verifica requisitos
+	- 2. Informa a conclusão do processo
+	- 3. Encerra o processo
+  - 4. Notifica o encerramento do processo
+
+- Fluxos Alternativos:
+	- Ainda há Pendências
+	- Geração de termo de conclusão
