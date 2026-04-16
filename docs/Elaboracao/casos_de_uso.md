@@ -68,6 +68,9 @@ UC4 ..> UC1 : <<extend>>
 
 ### Login
 
+- Descrição:
+  - Permite que o usuário acesse o sistema por meio da validação de suas credenciais institucionais, garantindo segurança e controle de acesso.
+
 - Atores:
 	- Aluno
 	- Coordenação
@@ -123,6 +126,9 @@ UC6 ..> UC1 : <<extend>>
 ```
 ### Novo Processo
 
+- Descrição:
+  - Permite ao usuário criar um novo processo de estágio, informando os dados necessários e anexando o Termo de Compromisso de Estágio (TCE) para análise.
+
 - Atores:
 	- Aluno
 	- Coordenação
@@ -171,6 +177,10 @@ UC4 ..> UC1 : <<extend>>
 
 ```
 ### Adicionar Documentos
+
+- Descrição: 
+  - Permite ao usuário adicionar documentos complementares ao processo de estágio, garantindo que estejam no formato e tamanho adequados.
+
 - Atores:
 	- Aluno
 	- Coordenação
@@ -219,6 +229,10 @@ UC4 ..> UC1 : <<extend>>
 
 ```
 ### Validar contrato
+
+- Descrição: 
+  - Permite à Secretaria analisar e decidir sobre a aprovação ou reprovação de contratos de estágio submetidos.
+
 - Atores:
 	- Coordenação
 
@@ -265,6 +279,9 @@ UC5 ..> UC1 : <<extend>>
 
 ```
 ### Enviar relatório
+
+- Descrição: 
+  - Permite ao aluno registrar e enviar relatórios periódicos de atividades realizadas durante o estágio.
 
 - Atores:
 	- Aluno
@@ -317,6 +334,9 @@ UC5 ..> UC1 : <<extend>>
 ```
 
 ### Acompanhar status
+
+- Descrição:
+  - Permite ao usuário visualizar o andamento do processo de estágio e seus respectivos status.
 
 - Atores:
 	- Aluno
@@ -372,6 +392,9 @@ UC5 ..> UC1 : <<extend>>
 
 ### Notificações
 
+- Descrição:
+  - Permite ao usuário acessar notificações relacionadas a eventos do sistema, como aprovações e pendências.
+
 - Atores:
 	- Aluno
 	- Coordenação
@@ -426,6 +449,9 @@ UC6 ..> UC1 : <<extend>>
 ```
 
 ### Encerrar Processo
+
+- Descrição: 
+  - Permite encerrar oficialmente um processo de estágio após a verificação de todos os requisitos.
 
 - Atores:
 	- Aluno
