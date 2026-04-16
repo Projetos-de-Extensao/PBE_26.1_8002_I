@@ -1,8 +1,8 @@
-# 🌸 Brainstorm para o Site de Gerenciamento de Estágios 🌸
+# 🌸 Brainstorming para o Site de Gerenciamento de Estágios 🌸
  
 ## 🎀 Introdução
 <p align = "justify">
-O brainstorm é uma técnica de elicitação de requisitos que consiste em reunir a equipe e discutir sobre diversos tópicos gerais do projeto apresentados no documento problema de negócio. No brainstorm o diálogo é incentivado e críticas são evitadas para permitir que todos colaborem com suas próprias ideias.
+O brainstorming é uma técnica de elicitação de requisitos que consiste em reunir a equipe e discutir sobre diversos tópicos gerais do projeto apresentados no documento problema de negócio. No brainstormimg o diálogo é incentivado e críticas são evitadas para permitir que todos colaborem com suas próprias ideias.
 </p>
  
 ## 🎀 Metodologia
@@ -181,4 +181,4 @@ A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, c
 
 
 ## 🎀 Dados do Documento
-> id: Brainstorm-Estagios <br/> title: Brainstorm do Site para Gerenciamento de Estágios para a IBMEC
+> id: Brainstorming-Estagios <br/> title: Brainstorming do Site para Gerenciamento de Estágios para a IBMEC
