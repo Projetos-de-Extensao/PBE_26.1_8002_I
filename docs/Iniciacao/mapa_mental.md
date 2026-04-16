@@ -18,11 +18,70 @@ Mapa mental consiste em criar resumos cheios de símbolos, cores, setas e frases
  
 ## 🎀 Mapa mental 1 - Ideias
  
-[![Mapa mental Entrevista](../assets/Mapas_Mentais/image.png)](../assets/Mapas_Mentais/MindMapIdeias.png)
+[![Mapa mental Entrevista](../assets/Mapas_Mentais/mindmap-ideias-pbe.png)]
  
 ## 🎀 Mapa mental 2 - Visão Técnica
- 
-[![Mapa mental Brainstorm](../assets/Mapas_Mentais/image.png)](../assets/Mapas_Mentais/MindMapTecnica.png)
+
+```plantuml
+@startmindmap
+<style>
+mindmapDiagram {
+    .projeto {
+        BackgroundColor #571a6f
+        FontColor white
+        Fontsize 22
+    }
+    .azul {
+        BackgroundColor #b2d4ef
+        Fontsize 18
+    }
+    .vermelho {
+        BackgroundColor #e79d9d
+        Fontsize 18
+    }
+    .amarelo {
+        BackgroundColor #ffef97
+        Fontsize 18
+    }
+    .verde {
+        BackgroundColor #93d08b
+        Fontsize 18
+    }
+    .rosa {
+        BackgroundColor #e0c0de
+    }
+}
+</style>
+
+* **Sistema de Validação de Estágios (Ibmec)** <<projeto>>
+
+** Sistema <<verde>>
+*** Controla acessos e restringe operações para cada perfil
+*** Valida reɔuisitos para cada curso
+*** Fornece templates de documentos 
+*** Contabiliza as horas
+*** Armazena e versiona os documentos
+*** Gera um score de conformidade de documentos
+
+** Empresa <<amarelo>>
+*** Visualiza os processos <<rosa>>
+**** Envia e edita documentos
+**** Assina documentos
+
+left side
+
+** Coordenador <<vermelho>>
+*** Visualiza os processos <<rosa>>
+**** Gerencia documentos 
+**** Acompanha processos
+**** Assina Documentos
+
+** Aluno <<azul>>
+*** Inicia Processo <<rosa>>
+**** Envia e edita documentos
+**** Visualiza status em tempo real
+**** Assina documentos
+@endmindmap
  
 ## 🎀 Conclusão
  
