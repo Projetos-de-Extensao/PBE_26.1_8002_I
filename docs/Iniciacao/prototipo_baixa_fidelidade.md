@@ -265,10 +265,10 @@ title Página de Documentos - Aluno
 @endsalt
 ```
 
-### 💕 Página de Processos - Aluno
+### 💕 Painel do Aluno
 ```plantuml
 @startsalt
-title Página de Processos - Aluno
+title Painel Aluno
 {
     {+
   **Nome do Aluno**:Julho Souza
