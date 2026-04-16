@@ -1,12 +1,12 @@
-# 🌸 Mapa Mental do site de Gerenciamento de Estágios para o IBMEC 🌸
+# Mapa Mental do site de Gerenciamento de Estágios para o IBMEC 
 
-## 🎀 Introdução
+## Introdução
  
 <p align = "justify">
 Mapa mental consiste em criar resumos cheios de símbolos, cores, setas e frases de efeito com o objetivo de organizar o conteúdo e facilitar associações entre as informações destacadas. Esse material é muito indicado para pessoas que têm facilidade de aprender de forma visual.
 </p>
  
-## 🎀 Metodologia
+## Metodologia
  
 <p align="justify"> A construção do mapa mental foi fundamentada na técnica de <b>Visual Thinking</b>, priorizando a síntese de ideias complexas em pilares fundamentais. O processo metodológico consistiu em: </p>
 
@@ -16,11 +16,11 @@ Mapa mental consiste em criar resumos cheios de símbolos, cores, setas e frases
   -   **Design Centrado no Usuário:**  Utilização de uma estética visual organizada e minimalista para garantir que a proposta de valor do projeto seja compreendida de forma imediata e intuitiva.
 ---
  
-## 🎀 Mapa mental 1 - Ideias
+## Mapa mental 1 - Ideias
  
 ![Mapa mental Entrevista](../assets/Mapas_Mentais/mindmap-ideias-pbe.png)
  
-## 🎀 Mapa mental 2 - Visão Técnica
+## Mapa mental 2 - Visão Técnica
 
 ```puml
 @startmindmap
@@ -84,13 +84,13 @@ left side
 @endmindmap
 ```
  
-## 🎀 Conclusão
+## Conclusão
  
 <p align = "justify">
 O mapa mental é uma ficha de estudos que ajuda a dar uma visão geral do tema, e ajuda a fixar os pontos mais importantes sobre o app.
 </p>
 
-## 🎀 Autor(es)
+## Autor(es)
 | Data | Versão | Descrição | Autor(es) |
 | -- | -- | -- | -- |
 | 11/04/2026 | 1.0 | Criação do documento | Letícia Valladão |
