@@ -66,7 +66,7 @@ UC4 ..> UC1 : <<extend>>
 
 ```
 
-### Entrada do usuário no sistema
+### Login
 
 - Atores:
 	- Aluno
@@ -85,6 +85,8 @@ UC4 ..> UC1 : <<extend>>
 	- Erro de login → exibe mensagem
 	- Primeiro acesso → redefinição de senha
 
+- Pós-Condições:
+ Sessão autenticada iniciada e usuário direcionado ao sistema.
  
 # 2. Novo Processo
 
@@ -119,7 +121,7 @@ UC6 ..> UC1 : <<extend>>
 @enduml
 
 ```
-### Entrada do usuário no sistema
+### Novo Processo
 
 - Atores:
 	- Aluno
@@ -138,59 +140,8 @@ UC6 ..> UC1 : <<extend>>
 	- Erro de login → exibe mensagem
 	- Primeiro acesso → redefinição de senha
 
-
-# 3. Novo Processo
-
-```puml
-@startuml
-left to right direction
-
-actor Aluno
-actor Secretaria
-
-rectangle "Sistema de Gestão de Estágios IBMEC RJ" {
-
-  usecase "Iniciar Processo de Estágio" as UC1
-  usecase "Preencher Dados do Estágio" as UC2
-  usecase "Anexar Documento (TCE)" as UC3
-  usecase "Validar Informações" as UC4
-  usecase "Exibir Erro de Arquivo" as UC5
-  usecase "Exibir Erro de Campos Obrigatórios" as UC6
-
-}
-
-Aluno -- UC1
-Secretaria -- UC1
-
-UC1 ..> UC2 : <<include>>
-UC1 ..> UC3 : <<include>>
-UC1 ..> UC4 : <<include>>
-
-UC5 ..> UC1 : <<extend>>
-UC6 ..> UC1 : <<extend>>
-
-@enduml
-
-```
-### Entrada do usuário no sistema
-
-- Atores:
-	- Aluno
-	- Coordenação
-
-- Pré-Condições:
-	Usuário logado e sem processo ativo
-
-- Fluxo Básico:
-    - 1. Usuário inicia processo.
-	- 2. Preenche dados.
-	- 3. Anexa documento.
-  - 4. Sistema valida e salva.
-
-- Fluxos Alternativos:
-	- Erro de arquivo
-	- Campos obrigatórios não preenchidos
-
+- Pós-Condições:
+ Processo criado e armazenado com status "Pendente de Análise".
 
 # 3. Add Documentos 
 
@@ -234,7 +185,9 @@ UC4 ..> UC1 : <<extend>>
 
 - Fluxos Alternativos:
 	- Arquivo inválido
-	
+
+- Pós-Condições:
+	Documento anexado corretamente ao processo.
   
 # 4. Validar Contrato 
 
@@ -277,6 +230,9 @@ UC4 ..> UC1 : <<extend>>
 
 - Fluxos Alternativos:
 	- Reprovação com justificativa
+
+- Pós-Condições:
+	Contrato atualizado com status "Aprovado" ou "Reprovado" e aluno notificado.
 
 
 # 5. Enviar Relatório
@@ -323,6 +279,10 @@ UC5 ..> UC1 : <<extend>>
 - Fluxos Alternativos:
 	- Envio fora do prazo
 	- Campos obrigatórios não preenchidos
+
+  - Pós-Condições:
+	Relatório salvo e status atualizado para "Aguardando Validação".
+
 
 # 6. Acompanhar status
 
@@ -374,6 +334,10 @@ UC5 ..> UC1 : <<extend>>
 	- Sem processos
 	- Download de documento
 
+- Pós-Condições:
+	Nenhuma alteração nos dados; apenas consulta realizada
+
+
 # 7. Notificações
 
 ```puml
@@ -423,6 +387,8 @@ UC5 ..> UC1 : <<extend>>
 	- Sem notificações
 	- Acesso ao processo
 
+- Pós-Condições:
+	Notificações visualizadas pelo usuário
 
 # 8. Encerrar Processo
 
@@ -459,7 +425,7 @@ UC6 ..> UC1 : <<extend>>
 
 ```
 
-### Notificações
+### Encerrar Processo
 
 - Atores:
 	- Aluno
@@ -477,3 +443,6 @@ UC6 ..> UC1 : <<extend>>
 - Fluxos Alternativos:
 	- Ainda há Pendências
 	- Geração de termo de conclusão
+
+- Pós-Condições:
+	Processo encerrado e registrado no histórico
