@@ -1,18 +1,18 @@
-# 🌸 Brainstorming para o Site de Gerenciamento de Estágios 🌸
+# Brainstorming para o Site de Gerenciamento de Estágios 
  
-## 🎀 Introdução
+## Introdução
 <p align = "justify">
 O brainstorming é uma técnica de elicitação de requisitos que consiste em reunir a equipe e discutir sobre diversos tópicos gerais do projeto apresentados no documento problema de negócio. No brainstormimg o diálogo é incentivado e críticas são evitadas para permitir que todos colaborem com suas próprias ideias.
 </p>
  
-## 🎀 Metodologia
+## Metodologia
 <p align = "justify">
 A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, começou 07/04/2026 e terminou [preencher],onde a equipe decidiu em conjunto as perguntas e as respostas foram transcritas para o documento.
 </p>
  
-## 🎀 Perguntas
+## Perguntas
  
-### 💕 1. Qual o objetivo principal da aplicação?
+### 1. Qual o objetivo principal da aplicação?
  
 <p align = "justify">
 <b>Letícia</b> - Deve ser uma plataforma onde os coordenadores tenham mais facilidade para gerenciar estágio.
@@ -29,7 +29,7 @@ A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, c
  
 ---
  
-### 💕 2. Como será o processo para cadastrar uma nova empresa?
+### 2. Como será o processo para cadastrar uma nova empresa?
  
 <p align = "justify">
 <b>Letícia</b> - Deve ser um processo prático e intuitivo onde a  empresa deve estar de acordo com a legislação e as normas requeridas pela IBMEC.
@@ -46,7 +46,7 @@ A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, c
 
 --- 
 
-### 💕 3. Como será a forma de adicionar vagas de estágios?(Desconsiderada)
+### 3. Como será a forma de adicionar vagas de estágios?(Desconsiderada)
  
 <p align = "justify">
 <b>Letícia</b> - A empresa deve fornecer todas as informações requeridas pelo sistema com base nas necessidades de cada curso.
@@ -65,7 +65,7 @@ A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, c
 
 ---
  
-### 💕 4. Como será o processo de aprovação do estágio?
+### 4. Como será o processo de aprovação do estágio?
 
 <p align = "justify">
 <b>Letícia</b> - O sistema deve validar os documentos requeridos, seguido da aprovação do coordenador e do professor responsável.
@@ -78,7 +78,7 @@ A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, c
  
 ---
   
-## 🎀 1. Objetivo e Escopo
+## 1. Objetivo e Escopo
 * Qual é o principal problema que a IBMEC quer resolver com esse site? <br/> **Gerenciamento de Requisitos, foco em automatização dos processos burocráticos da aprovação e acompanhamento do estágio.**
 * O foco do projeto é somente estágio obrigatório ou incluir estágio não obrigatório no futuro? <br/> **Focar apenas no que foi pedido.**
 * O sistema será usado apenas pela IBMEC RJ ou deve nascer preparado para expansão? <br/> **O melhor é focarmos apenas na IBMEC RJ.**
@@ -94,7 +94,7 @@ A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, c
 * Se só 3 funcionalidades pudessem existir no MVP, quais seriam? <br/> **Análise de documentos, acompanhamento em tempo real dos processos e logins.**
 * Qual tipo de erro o cliente mais quer evitar? <br/> **Recusa ou aceitação do estágio errada pelo sistema.**
 
-## 🎀 2. Perfis de Usuário e Acessos
+## 2. Perfis de Usuário e Acessos
 * Quais perfis de usuário existirão exatamente? <br/> **Empresa, Aluno e Coordenadores.**
 * “Professor” e “Coordenador” terão permissões iguais? <br/> **Acredito que tenham as mesmas permissões.**
 * A empresa terá vários usuários para atuar pela mesma empresa? <br/> **Não tem necessidade de ter vários logins para uma mesma empresa.**
@@ -107,7 +107,7 @@ A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, c
 * O sistema terá autenticação institucional para alunos e professores? <br/> **Sim.**
 * A empresa fará cadastro manual com validação por e-mail? <br/> **Sim.**
 
-## 🎀 3. Regras de Negócio e Validações
+## 3. Regras de Negócio e Validações
 * Em que momento o aluno pode iniciar um pedido de estágio? <br/> **Quando estiver devidamente matriculado na disciplina Estágio Supervisionado.**
 * O aluno precisa comprovar matrícula ativa e vínculo com a disciplina? <br/> **Sim. A ideia é o login dele só ser liberado enquanto ele estiver devidamente matriculado na disciplina.**
 * O sistema deve validar automaticamente se o aluno está apto a estagiar? <br/> **Sim.**
@@ -132,7 +132,7 @@ A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, c
 * O sistema precisa exigir apólice/seguro antes da aprovação? <br/> **Sim.**
 * Calcular automaticamente se a carga horária obrigatória foi integralizada? <br/> **Sim, inclusive o sistema deve analisar antes da aprovação do estágio se a quantidade de horas que a empresa oferece é compatível com a quantidade mínima que o aluno precisa.**
 
-## 🎀 4. Documentos e Formalizações
+## 4. Documentos e Formalizações
 * O sistema trabalhará com modelos prontos de documentos? <br/> **Sim.**
 * O Termo de Compromisso (TCE) será gerado automaticamente? <br/> **Sim.**
 * O Plano de Atividades será documento separado ou parte do TCE? <br/> **Estará dentro do TCE.**
@@ -155,7 +155,7 @@ A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, c
 * Quem poderá excluir documentos ou processos? <br/> **Coordenador.**
 * O sistema deve manter o processo arquivado após encerramento para auditoria futura? <br/> **Sim.**
 
-## 🎀 5. Notificações e Acompanhamento
+## 5. Notificações e Acompanhamento
 * O aluno precisará lançar frequência, horas ou atividades periodicamente? <br/> **Sim.**
 * O sistema deve registrar data e hora de cada aprovação? <br/> **Sim.**
 * Há prazos máximos para cada ator responder? <br/> **Sim.**
@@ -172,7 +172,7 @@ A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, c
 * Quais indicadores importam mais no Dashboard? <br/> **Número de processos e pendências principalmente.**
 
  
-## 🎀 Autor(es)
+## Autor(es)
 | Data | Versão | Descrição | Autor(es) |
 | -- | -- | -- | -- |
 | 07/04/2026 | 1.0 | Criação do documento | Letícia Valladão, Roger Pires, Lucas Alcântara, João Gabriel de Oliveira |
@@ -180,5 +180,5 @@ A equipe se reuniu para debater ideias gerais sobre o projeto presencialmente, c
 | 16/04/2026 | 3.0 | Migrei os requisitos para um documento só para requisitos e adicionei as perguntas que respondi para elicitar os requisitos | Letícia Valladão |
 
 
-## 🎀 Dados do Documento
+## Dados do Documento
 > id: Brainstorming-Estagios <br/> title: Brainstorming do Site para Gerenciamento de Estágios para a IBMEC
