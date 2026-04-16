@@ -22,7 +22,7 @@ nav:
   - Elaboração:
       - Index: Elaboracao/index.md
       - Requisitos: Elaboracao/Requisitos/Requisitos-Gerais.md
-      - Requsiitos de Arquitetura: Elaboracao/Requisitos/Requisitos-ArqteUrb.md
+      - Requisitos de Arquitetura: Elaboracao/Requisitos/Requisitos-ArqteUrb.md
       - Casos de Uso: Elaboracao/casos_de_uso.md
       - Diagrama de Classes: Elaboracao/diagrma_de_classes.md
       - Protótipo de Alta Fidelidade: Elaboracao/prototipo_alta_fidelidade.md

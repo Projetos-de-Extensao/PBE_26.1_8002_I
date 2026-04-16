@@ -22,7 +22,7 @@ Mapa mental consiste em criar resumos cheios de símbolos, cores, setas e frases
  
 ## 🎀 Mapa mental 2 - Visão Técnica
 
-```plantuml
+```puml
 @startmindmap
 <style>
 mindmapDiagram {
