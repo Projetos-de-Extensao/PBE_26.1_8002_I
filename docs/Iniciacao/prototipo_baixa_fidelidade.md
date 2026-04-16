@@ -14,7 +14,7 @@ Iniciamos o projeto através dos levantamentos iniciais da equipe, após discuss
 
 ### 💕 Tela Login - Geral
 
-```plantuml
+```puml
 @startsalt
 title Página de login - Geral
 {
@@ -38,7 +38,7 @@ title Página de login - Geral
 
 ### 💕 Página de Cadastro - Empresa
 
-```plantuml
+```puml
 @startsalt
 title Página de Cadastro - Empresa
 {
@@ -73,7 +73,7 @@ title Página de Cadastro - Empresa
 
 ### 💕 Página de cadastro de vaga de estágio - Empresa
 
-```plantuml
+```puml
 @startsalt
 title Página de cadastro de vaga de estágio - Empresa
 {
@@ -115,7 +115,7 @@ title Página de cadastro de vaga de estágio - Empresa
 ```
 
 ### 💕 Painel Empresa
-```plantuml
+```puml
 @startsalt
 title Painel Empresa
 {
@@ -139,7 +139,7 @@ title Painel Empresa
 @endsalt
 ```
 ### 💕 Página de Detalhes do Processo - Empresa
-```plantuml
+```puml
 @startsalt
 title Página de Detalhes do Processo - Empresa
 {
@@ -175,7 +175,7 @@ title Página de Detalhes do Processo - Empresa
 ```
 
 ### 💕 Painel do Coordenador
-```plantuml
+```puml
 @startsalt
 title Painel do Coordenador
 {
@@ -201,7 +201,7 @@ title Painel do Coordenador
 ```
 
 ### 💕 Página de detalhes do Processo - Coordenador
-```plantuml
+```puml
 @startsalt
 title Página de detalhes do Processo - Coordenador
 {
@@ -241,7 +241,7 @@ title Página de detalhes do Processo - Coordenador
 
 ### 💕 Página de detalhes do Processo - Aluno
 
-```plantuml
+```puml
 @startsalt
 title Página de Documentos - Aluno
 {
@@ -266,7 +266,7 @@ title Página de Documentos - Aluno
 ```
 
 ### 💕 Painel do Aluno
-```plantuml
+```puml
 @startsalt
 title Painel Aluno
 {
