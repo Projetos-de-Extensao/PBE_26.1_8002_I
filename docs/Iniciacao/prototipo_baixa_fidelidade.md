@@ -1,156 +1,313 @@
----
-id: prototipobaixa
-title: Protótipo Baixa Fidelidade
----
-## Introdução
+## 🌸 Introdução 🌸
 
 <p align = "justify">
-A construção do protótipo de alta fidelidade auxilia a equipe de desenvolvimento a encontrar um nível de detalhes abrangentes, extrair funcionalidades, testar usabilidade, e também fornece uma base para o gerenciamento do projeto pois com o protótipo é possível realizar estimativas de quanto tempo será necessário desempenhar em cada funcionalidade.
+A construção do protótipo de baixa fidelidade auxilia a equipe de desenvolvimento a alcançar uma visualização simples do software para que tenham um norte na hora de passar para código.
 </p>
 
-## Metodologia
+## 🎀 Metodologia
 
 <p align = "justify">
-Iniciamos o projeto através dos levantamentos iniciais da equipe, após discussões a ferramenta Figma foi selecionada para produzir o protótipo de alta fidelidade com auxílio do Material Design Color Tool.
+Iniciamos o projeto através dos levantamentos iniciais da equipe, após discussões a ferramenta PlantUML foi a selecionada para a confecção das diferentes páginas desse processo.
 </p>
 
-## Protótipo de alta fidelidade
+## 🎀 Protótipo de baixa fidelidade
 
-### Versão 1.0
+### 💕 Tela Login - Geral
 
-### Tela Login
+```plantuml
+@startsalt
+title Página de login - Geral
+{
+  {+
+    **Login com e-mail**
+    ==
+    E-mail:
+    "                     "
+    .
+    Senha:
+    "                     "
+    .
+    [] Manter Login
+    .
+    [       Continuar      ]
+  
+  }
+}
+@endsalt
+```
 
-[![Prototipo 1](../assets/Prototipo/image.png)](../assets/Prototipo/image.png)
+### 💕 Página de Cadastro - Empresa
 
-### Tela Cadastro 1
+```plantuml
+@startsalt
+title Página de Cadastro - Empresa
+{
+  {+
+    **Cadastrar empresa:**
+    ==
+    CNPJ:
+    "                         "
+    .
+    Razão social:
+    "                         "
+    .
+    Nome fantasia:
+    "                         "
+    .
+    Email:
+    "                         "
+    .
+    Senha:
+    "                         "
+    .
+    Possúi convênio com a faculdade?
+    [] Sim 
+    [] Não
+    .
+    [         Continuar      ]
+  
+  }
+}
+@endsalt
+```
 
-[![Prototipo 2](../assets/Prototipo/image.png)](../assets/Prototipo/image.png)
+### 💕 Página de cadastro de vaga de estágio - Empresa
 
-### Tela Cadastro 2
+```plantuml
+@startsalt
+title Página de cadastro de vaga de estágio - Empresa
+{
+  {+
+    **Cadastrar vaga de estágio:**
+    ==
+    Nome da vaga:
+    "                                       "
+    .
+    Áreas academicas:
+    "                                       "
+    .
+    Periodo:
+    {Min | ^0^^ | Max. | ^0^}
+    .
+    Ano de formação:
+    {| ^2026^}
+    .
+    Faixa salarial:
+    "                                       "
+    .
+    Local:
+    {| ^UF^ | ^Cidade^ }
+    {CEP: | "                "}
+    {Número: | "             "}
+    {| Complemento: | "         "}
+    .
+    Modalidade e Carga Horária:
+    { ^Presencial^ | ^6 horas/dia^ }
+    .
+    Anexar documento complementar (PDF):
+    [ Procurar arquivo...]
+    .
+    [         Enviar vaga para análise      ]
+  
+  }
+}
+@endsalt
+```
 
-[![Prototipo 3](../assets/Prototipo/image.png)](../assets/Prototipo/image.png)
+### 💕 Painel Empresa
+```plantuml
+@startsalt
+title Painel Empresa
+{
+  {+       
+    {# **Vagas disponibilizadas:** { "**4**" }}
+   --
+    {
+       "🔎Buscar por nome da vaga:                                     "|^Filtros^
+    }
+    --
+    
+    {# 
+      **Vaga**| **Curso** | **Status** | **Ações**
+      Estágio como analísta de processos juridicos | Direito, Adiministração | Aceito ✅ |{[Visualizar 👁️] | [Remover ❌] | [Editar vaga ✏]}
+      Estágio em análize de dados |  Ciência de Dados e IA, Analize de dados | Em análise ⏳ |{[Visualizar 👁️] | [Remover ❌] | [Editar vaga ✏]}
+      Estágio em manutenção de bancos de dados |Eng de Software, Eng. se Computação | Negado ❌ |{[Visualizar 👁️] | [Remover ❌] | [Editar vaga ✏]}
+      Estágio em controle de midea | Publicidade e Propaganda| Em análise ⏳ |{[Visualizar 👁️] | [Remover ❌] | [Editar vaga ✏]}
+    }
+}
+}
+@endsalt
+```
+### 💕 Página de Detalhes do Processo - Empresa
+```plantuml
+@startsalt
+title Página de Detalhes do Processo - Empresa
+{
+  {+       
+    **Documentos do Estagiário**               **<u>67%</u> de conformidade atual**
+  
+    --
+    {# 
+      **Nome** | **Status** | **Ações**
+      Documento #1 📄 | Validado ✅| {[Visualizar 👁️]}
+      Documento #2 📄| Em análise ⏳| {[Visualizar 👁️]}
+      Documento #3 📄 | Negado ❌| {[Visualizar 👁️]}
+    }
 
-### Tela Esqueceu Senha
+    --
+    **Documentos da Empresa**                 **<u>69%</u> de conformidade atual**
+  
+    --
+    {# 
+      **Nome** | **Status** | **Ações**
+      Documento #1 📄 | Validado ✅| {[Visualizar 👁️] | [Alterar ✏️]}
+      Documento #2 📄| Em análise ⏳| {[Visualizar 👁️] | [Alterar ✏️]}
+      Documento #3 📄 | Negado ❌| {[Visualizar 👁️] | [Alterar ✏️]}
+    }
 
-[![Prototipo 4](../assets/Prototipo/image.png)](../assets/Prototipo/image.png)
+    --
+    {
+                   {[ Anexar novo documento 📎] }
+    }
+  }
+}
+@endsalt
+```
 
-### Tela do Feed
+### 💕 Painel do Coordenador
+```plantuml
+@startsalt
+title Painel do Coordenador
+{
+  {+       
+    {# **Processos Abertos:** { "**15**" }}
+   --
+    {
+       "🔎Buscar por nome do Aluno:                                     "|[ Filtrar ▼]
+    }
+    --
+    
+    {# 
+      **Nome do Aluno**|**Matrícula**| **Curso** | **Conformidade** | **Ações**
+      Breno L. Jordan |202000000000 | Direito | 67% |{[Visualizar 👁️] | [Remover ❌]}
+      César Cohen |202000000000 | Engenharia de Software | 69% |{[Visualizar 👁️] | [Remover ❌]}
+      Elizabeth Webber |202000000000 | Ciência de Dados e IA | 24% |{[Visualizar 👁️] | [Remover ❌]}
+      Arthur Cervero |202000000000 | Publicidade e Propaganda| 22% |{[Visualizar 👁️] | [Remover ❌]}
+      Beatrice Portinari |202000000000 | Engenharia de Computação| 71% |{[Visualizar 👁️] | [Remover ❌]}
+    }
+}
+}
+@endsalt
+```
 
-[![Prototipo 5](../assets/Prototipo/image.png)](../assets/Prototipo/image.png)
+### 💕 Página de detalhes do Processo - Coordenador
+```plantuml
+@startsalt
+title Página de detalhes do Processo - Coordenador
+{
+    {+
+  **Nome do Aluno** | **Matrícula do Aluno**
+  **E-mail do Aluno**| [Mais informações]
+    
+    }
+  {+
+    **Detalhes do Processo**                                  **<u>67%</u> de conformidade atual**
+    --
+    {
+       "🔎Buscar:                                 "| [ Filtrar ⌄]
+    }
+    --
+    {#
+      **Nome** | **Status** | **Ações**
 
-### Tela Feed com configurações
+      Documento #1 📄 | Validado ✅| {[Visualizar 👁️] | [Alterar Status✏️]}
+      
+      Documento #2 📄 | Em análise ⏳| {[Visualizar 👁️] | [Alterar Status✏️]}
 
-[![Prototipo 6](../assets/Prototipo/image.png)](../assets/Prototipo/image.png)
+      Documento #3 📄 |  Negado ❌| {[Visualizar 👁️] | [Alterar Status✏️]}
+    }
+  }
+    -------
+    {
+    {#
+    **Documentos Aprovados:** 8
+    **Documentos em Análise:** 3
+    **Documentos Faltantes:** 5
+    }
+  }
+}
+@endsalt
+```
 
-### Tela Perfil
+### 💕 Página de detalhes do Processo - Aluno
 
-[![Prototipo 7](../assets/Prototipo/image.png)](../assets/Prototipo/image.png)
+```plantuml
+@startsalt
+title Página de Documentos - Aluno
+{
+  {+       
+    **Meus Documentos**                             **<u>67%</u> de conformidade atual**
+  
+    --
+    {# 
+      **Nome** | **Status** | **Ações**
+      Documento #1 📄 | Validado ✅| {[Visualizar 👁️] | [Alterar ✏️]}
+      Documento #2 📄| Em análise ⏳| {[Visualizar 👁️] | [Alterar ✏️]}
+      Documento #3 📄 | Negado ❌| {[Visualizar 👁️] | [Alterar ✏️]}
+    }
 
-### Tela Cadastrar torneio 1
+    --
+    {
+                   {[ Anexar novo documento 📎] }
+    }
+  }
+}
+@endsalt
+```
 
-[![Prototipo 8](../assets/Prototipo/image.png)](../assets/Prototipo/image.png)
+### 💕 Painel do Aluno
+```plantuml
+@startsalt
+title Painel Aluno
+{
+    {+
+  **Nome do Aluno**:Julho Souza
+  **Matrícula do Aluno**: 202569019487
+  **E-mail do Aluno**: JulhoS@gmail.com 
+    
+    }
+  {+
+    **Vagas do aluno**
+    --
+    
+    {#
+      **Nome da empresa** | **Área*** | **Status** | **Ações**
 
-### Tela Cadastrar torneio 2
+      Microsoft | Analise de dados |Aceito ✅ | {[Visualizar 👁️]}
+      
+      Assaí | Suporte técnico | Recusado ❌ | {[Visualizar 👁️]}
 
-[![Prototipo 9](../assets/Prototipo/image.png)](../assets/Prototipo/image.png)
+      TMG Racing | Sistemas embarcados|  Recusado ❌| {[Visualizar 👁️]}
+    }
+  }
+    -------
+    {
+  }
+}
+@endsalt
+```
 
-### Tela Cadastrar torneio 3
-
-[![Prototipo 10](../assets/Prototipo/image.png)](../assets/Prototipo/image.png)
-
-### Tela Cadastrar torneio 4
-
-[![Prototipo 11](../assets/Prototipo/image.png)](../assets/Prototipo/image.png)
-
-### Tela com meus torneios
-
-[![Prototipo 12](../assets/Prototipo/image.png)](../assets/Prototipo/image.png)
-
-### Tela de inscrição em torneio
-
-[![Prototipo 13](../assets/Prototipo/image.png)](../assets/Prototipo/image.png)
+## 🎀 Conclusão
 
 <p align = "justify">
-Na primeira versão do protótipo utilizamos a ferramenta <a href="https://material.io/resources/color/#!/?view.left=0&view.right=0">Material Design Color Tool</a>  para auxiliar na criação da paleta de cores do aplicativo, definimos as cores base do aplicativo mas as cores definidas para as telas 12 e 13 ainda não foram decididas.
+A partir da elaboração do protótipo foi possível ter uma noção inicial de como é a ideia do software e como deve ser traduzida para código.
 </p>
 
-### Versão 2.0
-
-### Versão 1.0
-
-### Tela Login
-
-[![Prototipo 1](../assets/Prototipo/image.png)](../assets/Prototipo/image.png)
-
-### Tela Cadastro 1
-
-[![Prototipo 2](../assets/Prototipo/image.png)](../assets/Prototipo/image.png)
-
-### Tela Cadastro 2
-
-[![Prototipo 3](../assets/Prototipo/image.png)](../assets/Prototipo/image.png)
-
-### Tela Esqueceu Senha
-
-[![Prototipo 4](../assets/Prototipo/image.png)](../assets/Prototipo/image.png)
-
-### Tela do Feed
-
-[![Prototipo 5](../assets/Prototipo/image.png)](../assets/Prototipo/image.png)
-
-### Tela Feed com configurações
-
-[![Prototipo 6](../assets/Prototipo/image.png)](../assets/Prototipo/image.png)
-
-### Tela Perfil
-
-[![Prototipo 7](../assets/Prototipo/image.png)](../assets/Prototipo/image.png)
-
-### Tela Cadastrar torneio 1
-
-[![Prototipo 8](../assets/Prototipo/image.png)](../assets/Prototipo/image.png)
-
-### Tela Cadastrar torneio 2
-
-[![Prototipo 9](../assets/Prototipo/image.png)](../assets/Prototipo/image.png)
-
-### Tela Cadastrar torneio 3
-
-[![Prototipo 10](../assets/Prototipo/image.png)](../assets/Prototipo/image.png)
-
-### Tela Cadastrar torneio 4
-
-[![Prototipo 11](../assets/Prototipo/image.png)](../assets/Prototipo/image.png)
-
-### Tela com meus torneios
-
-[![Prototipo 12](../assets/Prototipo/image.png)](../assets/Prototipo/image.png)
-
-### Tela de inscrição em torneio
-
-[![Prototipo 13](../assets/Prototipo/image.png)](../assets/Prototipo/image.png)
-
-link para o `<a href="https://www.figma.com/">`Protótipo`</a>`
-
-## Conclusão
-
-<p align = "justify">
-A partir da elaboração do protótipo foi possível ter uma noção inicial da interface do usuário, definindo fluxo, paleta de cores, botões, app bars e diversas outras funcionalidades
-</p>
-
-## Referências
-
-> Material Design Color Tool. Disponível em:  https://material.io/resources/color/#!/?view.left=0&view.right=0
-
-> PMI. Um guia do conhecimento em gerenciamento de projetos. Guia PMBOK® 5a. ed. EUA: Project Management Institute, 2013.
-
-> Ferramenta Figma. Disponível em https://www.figma.com
-
-## Autor(es)
+## 🎀 Autor(es)
 
 | Data     | Versão | Descrição                            | Autor(es)                                                                            |
 | -------- | ------- | -------------------------------------- | ------------------------------------------------------------------------------------ |
-| 07/09/20 | 1.0     | Criação do documento                 | Lucas Alexandre e Matheus Estanislau                                                 |
-| 07/09/20 | 1.1     | Adicionado as imagens do protótipo    | Lucas Alexandre e Matheus Estanislau                                                 |
-| 07/09/20 | 1.2     | Adicionado conclusão e referências   | Lucas Alexandre e Matheus Estanislau                                                 |
-| 26/10/20 | 2.0     | Adicionada a versão 2.0 do protótipo | João Pedro, Lucas Alexandre, Matheus Estanislau, Moacir Mascarenha e Renan Cristyan |
+| 15/04/2026 | 1.0 | Criação do Documento | Roger Pires e Vinicius Machado |
+
+## 🎀 Dados do Documento
+>id: prototipobaixafidelidade-Estágios <br/> title: Protótipo Baixa Fidelidade para Gerenciamento de Estágios para a IBMEC
