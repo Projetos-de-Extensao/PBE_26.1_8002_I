@@ -62,7 +62,61 @@ O modelo parte da solicitação aberta pelo `Aluno` e organiza o restante do flu
 
 Durante a análise, o `CoordenadorCurso` valida a compatibilidade do estágio com o curso, decide diretamente sobre o avanço do processo e produz pareceres acadêmicos quando necessário. O `SupervisorEmpresa` permanece responsável pelo acompanhamento do aluno dentro da concedente e pela avaliação de desempenho. Ao longo do ciclo, o sistema registra documentos, relatórios, carga horária, notificações e logs de auditoria.
 
-No fluxo documental, `Documento` funciona como raiz abstrata da hierarquia de anexos. `TCE`, `Convenio` e `TermoRealizacao` aparecem como especializações explícitas no diagrama, deixando o tipo do artefato declarado pela própria classe concreta. Relatórios, avaliações e pareceres continuam como registros do acompanhamento e, quando houver arquivo associado, podem apontar para uma especialização concreta de `Documento`.
+A visão geral abaixo apresenta esse núcleo em uma única leitura, com foco apenas nas relações essenciais do processo. Depois dela, o documento detalha os mesmos vínculos em recortes menores para preservar legibilidade. No fluxo documental, `Documento` funciona como raiz abstrata da hierarquia de peças documentais do processo. `TCE`, `Convenio` e `TermoRealizacao` aparecem como especializações explícitas no diagrama, deixando o tipo do artefato declarado pela própria classe concreta. Já `RelatorioPeriodico`, `RelatorioFinal`, `AvaliacaoDesempenho` e `ParecerAcademico` não são subclasses de `Documento`: eles representam entregas ou decisões do processo e apenas podem apontar para um anexo documental quando houver arquivo associado.
+
+## Visão Geral Integrada do Processo
+
+Esta visão reúne, em um único recorte, apenas as classes centrais do estágio obrigatório. Ela existe para dar contexto rápido ao leitor antes dos diagramas fragmentados e não substitui os detalhes apresentados nas visões seguintes.
+
+```puml
+@startuml
+left to right direction
+hide empty members
+skinparam classAttributeIconSize 0
+skinparam linetype polyline
+skinparam nodesep 70
+skinparam ranksep 70
+skinparam Padding 20
+skinparam ArrowFontSize 12
+
+class Aluno
+class ProcessoEstagio
+class RegraCurso
+class EmpresaConcedente
+class SupervisorEmpresa
+class CoordenadorCurso
+class PlanoAtividades
+abstract class Documento
+class TCE
+class Convenio
+class TermoRealizacao
+
+Aluno "1" --> "0..*" ProcessoEstagio : inicia
+ProcessoEstagio "0..*" --> "1" RegraCurso : aplica
+ProcessoEstagio "0..*" --> "1" EmpresaConcedente : empresa
+ProcessoEstagio "0..*" --> "1" SupervisorEmpresa : supervisor
+ProcessoEstagio "0..*" --> "1" CoordenadorCurso : responsavel academico
+ProcessoEstagio "1" *-- "1" PlanoAtividades : plano
+ProcessoEstagio "1" *-- "0..*" Documento : documentos
+Documento <|-- TCE
+Documento <|-- Convenio
+Documento <|-- TermoRealizacao
+
+RegraCurso -[hidden]- EmpresaConcedente
+EmpresaConcedente -[hidden]- CoordenadorCurso
+PlanoAtividades -[hidden]- Documento
+TCE -[hidden]- Convenio
+Convenio -[hidden]- TermoRealizacao
+@enduml
+```
+
+### Leitura da visão geral
+
+- `ProcessoEstagio` é o agregado central do domínio e organiza a abertura, a formalização e a validação do estágio obrigatório.
+- O `Aluno` abre o processo, enquanto `EmpresaConcedente`, `SupervisorEmpresa` e `CoordenadorCurso` representam os vínculos institucionais necessários para sua análise e acompanhamento.
+- `RegraCurso` contextualiza as exigências acadêmicas aplicadas ao processo.
+- `PlanoAtividades` e `Documento` aparecem dentro do processo porque são partes formais da solicitação e da validação.
+- A hierarquia documental foi mantida enxuta: `TCE`, `Convenio` e `TermoRealizacao` aparecem como especializações concretas apenas para os artefatos essenciais já consolidados no modelo.
 
 ## Visão 1. Identidade, atores e contexto acadêmico
 
@@ -189,7 +243,7 @@ SupervisorEmpresa -[hidden]down- CoordenadorCurso
 
 ### Visão 2C. Estrutura documental e decisão acadêmica do processo
 
-Este recorte reúne os elementos que formalizam a solicitação e a análise do coordenador. O `PlanoAtividades` representa o planejamento acadêmico do estágio: atividades previstas, relação com o curso e base para a validação acadêmica. Ele aparece como classe própria porque não é apenas um arquivo anexado; é uma parte estruturante do processo e pode ser analisado e corrigido ao longo do fluxo. Já `Documento` passa a ser abstrata, e os principais artefatos legais do processo aparecem como subclasses concretas no próprio diagrama. A decisão do coordenador incide diretamente sobre `ProcessoEstagio`, sem a necessidade de classes intermediárias de aprovação, pendência, aditivo, rescisão ou histórico de status.
+Este recorte reúne os elementos que formalizam a solicitação e a análise do coordenador. O `PlanoAtividades` representa o planejamento acadêmico do estágio: atividades previstas, relação com o curso e base para a validação acadêmica. Ele aparece como classe própria porque não é apenas um arquivo anexado; é uma parte estruturante do processo e pode ser analisado e corrigido ao longo do fluxo. Já `Documento` representa somente a peça documental vinculada ao processo, e por isso aparece como classe abstrata com subclasses concretas para os principais artefatos legais. A decisão do coordenador incide diretamente sobre `ProcessoEstagio`, sem a necessidade de classes intermediárias de aprovação, pendência, aditivo, rescisão ou histórico de status.
 
 ```puml
 @startuml
@@ -224,19 +278,18 @@ Convenio -[hidden]- TermoRealizacao
 @enduml
 ```
 
-### Leitura da visão
+### Leitura da visão 2
 
-- `ProcessoEstagio` continua como agregado principal, mas os relacionamentos foram separados por intenção: abertura, vínculos institucionais, documentação e decisão acadêmica.
-- `CoordenadorCurso` aparece como responsável acadêmico do processo e concentra a análise e a decisão sobre o avanço do estágio.
-- As multiplicidades indicam que cada processo possui uma empresa, um supervisor e um coordenador responsável, mas cada uma dessas classes pode estar vinculada a vários processos de estágio.
-- A mesma `RegraCurso` pode ser aplicada a vários processos, garantindo reutilização das regras acadêmicas de um curso sem criar uma regra nova para cada solicitação.
-- `PlanoAtividades`, a hierarquia de `Documento` e a decisão do `CoordenadorCurso` ficaram no mesmo recorte para mostrar, em uma única visão, a formalização do processo e a análise acadêmica.
+- A Visão 2 foi dividida em três recortes para preservar legibilidade, mas todos eles descrevem o mesmo agregado principal: `ProcessoEstagio`.
+- Na Visão 2A, o `Aluno` inicia o `ProcessoEstagio`, e o processo aplica uma `RegraCurso`.
+- Na Visão 2B, o `ProcessoEstagio` fica vinculado à `EmpresaConcedente`, ao `SupervisorEmpresa` e ao `CoordenadorCurso` responsável acadêmico.
+- Na Visão 2C, cada `ProcessoEstagio` compõe um `PlanoAtividades` e zero ou muitos `Documento`, enquanto o `CoordenadorCurso` analisa e decide sobre o avanço do processo.
+- A hierarquia de `Documento` foi mantida restrita aos artefatos documentais do processo. Por isso, `TCE`, `Convenio` e `TermoRealizacao` aparecem como subclasses concretas.
 - A etapa de análise foi simplificada: `CoordenadorCurso` decide diretamente sobre `ProcessoEstagio`, sem exigir classes separadas de aprovação, pendência, aditivo, rescisão ou histórico de status.
-- O layout foi padronizado com setas mais curtas, rótulos menores e caminhos menos tortuosos.
 
 ## Visão 3. Acompanhamento e rastreabilidade
 
-O acompanhamento posterior à análise inicial também foi padronizado para manter escala semelhante entre os blocos e evitar diferenças excessivas de tamanho visual. Nesta visão, relatórios, avaliações e pareceres não aparecem como subclasses de `Documento`; eles são registros do acompanhamento que podem apontar para um anexo documental representado por uma especialização concreta de `Documento`.
+O acompanhamento posterior à análise inicial também foi padronizado para manter escala semelhante entre os blocos e evitar diferenças excessivas de tamanho visual. Nesta visão, relatórios, avaliações e pareceres aparecem como classes próprias porque representam entregas e decisões do processo. O vínculo opcional com `Documento` indica apenas a existência de um arquivo anexado, e não uma relação de herança documental.
 
 ### Visão 3A. Registro de horas e entregas do aluno
 
@@ -332,12 +385,13 @@ Notificacao -[hidden]- LogAuditoria
 @enduml
 ```
 
-### Leitura da visão
+### Leitura da visão 3
 
-- `RegistroCargaHoraria`, `RelatorioPeriodico` e `RelatorioFinal` foram mantidos juntos porque representam o acompanhamento operacional do aluno.
+- `RegistroCargaHoraria`, `RelatorioPeriodico` e `RelatorioFinal` aparecem juntos porque representam o acompanhamento operacional do aluno dentro do `ProcessoEstagio`.
 - `AvaliacaoDesempenho` e `ParecerAcademico` ficaram em um recorte separado para destacar os emissores distintos: a avaliação operacional vem do `SupervisorEmpresa`, enquanto o parecer acadêmico vem do `CoordenadorCurso`.
-- `RelatorioPeriodico`, `RelatorioFinal`, `AvaliacaoDesempenho` e `ParecerAcademico` podem ter anexos, mas não herdam de `Documento`. Essa separação deixa claro que `Documento` representa a hierarquia documental abstrata, enquanto essas classes representam eventos ou entregas do acompanhamento.
-- A hierarquia documental substitui `TipoDocumento`: `Documento` virou classe abstrata, e os tipos de artefato passam a ser expressos por subclasses concretas como `TCE`, `Convenio` e `TermoRealizacao`.
+- `RelatorioPeriodico`, `RelatorioFinal`, `AvaliacaoDesempenho` e `ParecerAcademico` podem ter anexos, mas não herdam de `Documento`. Cada uma dessas classes continua existindo como registro do processo mesmo sem arquivo; `Documento` modela apenas o artefato documental eventualmente anexado.
+- Nos recortes 3A e 3B, a seta `--> Documento : anexo` indica associação opcional a um arquivo, e não especialização.
+- A hierarquia documental continua restrita às subclasses concretas mostradas na Visão 2C, como `TCE`, `Convenio` e `TermoRealizacao`.
 - `Notificacao` e `LogAuditoria` ganharam um recorte independente para representar a camada de rastreabilidade sem poluir as relações de acompanhamento.
 
 ## Decisões de modelagem que ainda dependem de validação
@@ -359,3 +413,4 @@ O modelo proposto posiciona `ProcessoEstagio` como centro do domínio e distribu
 | 15/04/2026 | 2.0 | Atualização do documento consertando as cardialidades das classes e removendo classes desnecessárias | João Gabriel |
 | 16/04/2026 | 2.1 | Documento abstrato com subclasses documentais e simplificação da visão 2D | João Gabriel |
 | 16/04/2026 | 2.2 | Mesclagem das visões 2C e 2D com remoção de classes de apoio ao fluxo | João Gabriel |
+| 16/04/2026 | 2.3 | Adição de visão geral integrada do processo com manutenção dos recortes detalhados | João Gabriel |
