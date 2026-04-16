@@ -18,7 +18,7 @@ Mapa mental consiste em criar resumos cheios de símbolos, cores, setas e frases
  
 ## 🎀 Mapa mental 1 - Ideias
  
-[![Mapa mental Entrevista](../assets/Mapas_Mentais/mindmap-ideias-pbe.png)]
+![Mapa mental Entrevista](../assets/Mapas_Mentais/mindmap-ideias-pbe.png)
  
 ## 🎀 Mapa mental 2 - Visão Técnica
 
@@ -82,6 +82,7 @@ left side
 **** Visualiza status em tempo real
 **** Assina documentos
 @endmindmap
+```
  
 ## 🎀 Conclusão
  
