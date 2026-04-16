@@ -10,7 +10,7 @@ hide:
 # Gestão e otimização de estágios obrigatórios
 
 <p class="home-lead">
-Este projeto propõe uma plataforma web para centralizar a formalização, validação e acompanhamento dos estágios obrigatórios do IBMEC. A solução conecta aluno, empresa concedente, coordenação e professor orientador em um fluxo único, com rastreabilidade documental, regras acadêmicas por curso e menos dependência de processos manuais.
+Este projeto propõe uma plataforma web para centralizar a formalização, validação e acompanhamento dos estágios obrigatórios do IBMEC. A solução conecta aluno, empresa concedente e coordenador do curso em um fluxo único, com rastreabilidade documental, regras acadêmicas por curso e menos dependência de processos manuais.
 </p>
 
 [Explorar documentação](Iniciacao/index.md){ .md-button .md-button--primary }
@@ -40,7 +40,7 @@ O sistema está sendo estruturado para resolver um problema recorrente na gestã
 
 -   ### :material-alert-circle-outline: O problema
 
-    A secretaria e a coordenação lidam com validações manuais, exigências que variam por curso, análise documental e controle de prazos institucionais.
+    A coordenação do curso lida com validações manuais, exigências que variam por curso, análise documental e controle de prazos institucionais.
 
 -   ### :material-cog-outline: A proposta
 
@@ -86,13 +86,10 @@ O sistema está sendo estruturado para resolver um problema recorrente na gestã
 
     Informa dados institucionais, jornada, condições do estágio, documentos obrigatórios e participa da formalização do vínculo.
 
--   ### :material-account-tie-outline: Coordenação e secretaria
+-   ### :material-account-tie-outline: Coordenador do curso
 
-    Validam regras institucionais, conferem documentos, acompanham pendências e supervisionam o andamento administrativo do estágio.
+    Valida regras institucionais e acadêmicas, confere documentos, acompanha pendências e assume a orientação acadêmica do estágio.
 
--   ### :material-teach: Professor orientador
-
-    Atua na validação e no acompanhamento acadêmico, garantindo aderência entre atividades desenvolvidas e objetivos formativos.
 
 </div>
 
@@ -133,7 +130,7 @@ O fluxo consolida documentos legais, acadêmicos e operacionais exigidos para in
 
 ### Validação e aprovação
 
-As regras de negócio apoiam a conferência da coordenação e da orientação acadêmica, destacando pendências e inconsistências.
+As regras de negócio apoiam a conferência do coordenador do curso, destacando pendências, inconsistências documentais e aderência acadêmica.
 </div>
 <div class="home-flow__item" markdown>
 <span class="home-flow__number">4</span>
