@@ -1,6 +1,6 @@
-# 🌸 Validação dos documentos exigidos 🌸
+# Validação dos documentos exigidos 
 
-## 🎀 Documentação legal obrigatória
+## Documentação legal obrigatória
 
 -   Identidade do aluno (Nome, CPF, RG)
 -  Comprovante de residência do aluno
@@ -9,7 +9,7 @@
 -  Carteira de Trabalho (CLT)
 -   Dispensa do serviço militar (para homens)
 
-## 🎀 Documentação acadêmica
+## Documentação acadêmica
 
 -   Endereço da instituição de ensino
 -   CNPJ da instituição de ensino
@@ -17,27 +17,27 @@
 -   Comprovante de matrícula e frequência do aluno
 -   Coeficiente de rendimento (CR) do aluno
 
-## 🎀 Documentação da empresa
+## Documentação da empresa
 
 -   Contrato de estágio
 -   Jornada de trabalho
 -   Endereço e CNPJ da empresa
 
-## 🎀 Critérios para a validação acadêmica
+## Critérios para a validação acadêmica
 
-### 💕  Horário
+### Horário
   
 A jornada de Trabalho não pode ultrapassar 6 horas diárias
 
 Horário não pode conflitar com as aulas escolhidas
 
-### 💕 Situação acadêmica
+### Situação acadêmica
 
 Validar o Coeficiente de Rendimento
 
 Comprovar matrícula e frequência
 
-#### 💕 <u>*Fontes:*</u>
+#### <u>*Fontes:*</u>
 
 Gupy (https://www.gupy.io/blog/contratacao-estagiario)
 Exame (https://exame.com/carreira/guia-de-carreira/quais-documentos-sao-necessarios-para-comecar-um-estagio)
