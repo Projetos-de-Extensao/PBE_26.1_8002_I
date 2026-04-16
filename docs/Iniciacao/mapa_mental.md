@@ -95,5 +95,5 @@ O mapa mental é uma ficha de estudos que ajuda a dar uma visão geral do tema, 
 | -- | -- | -- | -- |
 | 11/04/2026 | 1.0 | Criação do documento | Letícia Valladão |
 
-## 🎀 Dados do Documento
+## Dados do Documento
 > id: MapaMental-Estagios <br/> title: Mapa Mental do Site para Gerenciamento de Estágios para a IBMEC
