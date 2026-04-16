@@ -1,5 +1,5 @@
-# 🌸 Requisitos Levantados 🌸
-## 🎀 Introdução
+# Requisitos Levantados
+## Introdução
  Este documento apresenta os requisitos elicitados para a construção do sistema, definindo claramente as funcionalidades necessárias para atender aos três perfis principais de usuários: Aluno, Empresa e Coordenador. Os requisitos aqui descritos foram levantados para garantir que a plataforma ofereça:
 - Acompanhamento de status em tempo real e interfaces intuitivas.
 - Um motor de regras de negócio capaz de validar pré-requisitos acadêmicos específicos de cada curso e limites de carga horária.
@@ -8,7 +8,7 @@
 
 Através deste levantamento, a equipe de desenvolvimento possui as diretrizes exatas do que deve ser implementado para entregar um sistema que reduza erros e otimize o tempo de resposta da coordenação.
 
-## 🎀 Requisitos Funcionais 
+## Requisitos Funcionais 
 
 |ID|Descrição|
 |----|-------------|
@@ -33,7 +33,7 @@ Através deste levantamento, a equipe de desenvolvimento possui as diretrizes ex
 |RF19| **Filtros de Pesquisa** O sistema deve permitir filtros por curso, empresa, aluno, status, período e situação documental. |
 |RF20| **Armazenamento de documentos** O sistema deve armazenar e versionar os documentos vinculados a cada etapa do processo. |
 
-## 🎀 Requisitos Não-Funcionais 
+## Requisitos Não-Funcionais 
 
 |ID|Descrição|
 |----|-------------|
@@ -48,7 +48,7 @@ Através deste levantamento, a equipe de desenvolvimento possui as diretrizes ex
 |RNF09| **Controle de Acesso** O sistema deve permitir acesso à documentos e dados pessoais apenas a perfis autorizados. |
 |RNF10| **Controle de Fluxo** O fluxo deve ser guiado por etapas, reduzindo erros de preenchimento.|
 
-## 🎀 Regras de Negógio
+## Regras de Negógio
 
 |ID|Descrição|
 |----|-------------|
@@ -63,13 +63,13 @@ Através deste levantamento, a equipe de desenvolvimento possui as diretrizes ex
 |RN09| O aluno não pode prosseguir com a formalização do estágio em uma empresa que não tenha sido previamente aprovada/homologada pela faculdade no sistema |
 |RN10| Toda empresa cadastrada deve possuir, obrigatoriamente, os dados: CNPJ, Razão Social (Nome), Áreas com vagas disponíveis e Localização |
 
-## 🎀 Autor(es)
+## Autor(es)
 | Data | Versão | Descrição | Autor(es) |
 | -- | -- | -- | -- |
 | 15/04/2026 | 1.0 | Criação do documento | Letícia Valladão |
 
 
-## 🎀 Dados do Documento
+## Dados do Documento
 > id: Requisitos-Estagios <br/> title: Elicitação de Requisitos do Site para Gerenciamento de Estágios para a IBMEC
 
 
