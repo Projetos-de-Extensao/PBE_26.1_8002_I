@@ -41,7 +41,7 @@ Os diagramas foram modelados de forma simples e didática, representando o ciclo
 
 # 1. Login
 
-```plantuml
+```puml
 @startuml
 left to right direction
 
@@ -86,9 +86,9 @@ UC4 ..> UC1 : <<extend>>
 	- Primeiro acesso → redefinição de senha
 
  
- # 2. Novo Processo
+# 2. Novo Processo
 
-```plantuml
+```puml
   @startuml
 left to right direction
 
@@ -141,7 +141,7 @@ UC6 ..> UC1 : <<extend>>
 
 # 3. Novo Processo
 
-```plantuml
+```puml
 @startuml
 left to right direction
 
@@ -194,7 +194,7 @@ UC6 ..> UC1 : <<extend>>
 
 # 3. Add Documentos 
 
-```plantuml
+```puml
 @startuml
 left to right direction
 
@@ -235,9 +235,10 @@ UC4 ..> UC1 : <<extend>>
 - Fluxos Alternativos:
 	- Arquivo inválido
 	
+  
 # 4. Validar Contrato 
 
-```plantuml
+```puml
 @startuml
 left to right direction
 
@@ -277,9 +278,10 @@ UC4 ..> UC1 : <<extend>>
 - Fluxos Alternativos:
 	- Reprovação com justificativa
 
-  # 5. Enviar Relatório
 
-```plantuml
+# 5. Enviar Relatório
+
+```puml
 @startuml
 left to right direction
 
@@ -322,9 +324,9 @@ UC5 ..> UC1 : <<extend>>
 	- Envio fora do prazo
 	- Campos obrigatórios não preenchidos
 
-  # 6. Acompanhar status
+# 6. Acompanhar status
 
-```plantuml
+```puml
 @startuml
 left to right direction
 
@@ -372,9 +374,9 @@ UC5 ..> UC1 : <<extend>>
 	- Sem processos
 	- Download de documento
 
-  # 7. Notificações
+# 7. Notificações
 
-```plantuml
+```puml
 @startuml
 left to right direction
 
@@ -424,7 +426,7 @@ UC5 ..> UC1 : <<extend>>
 
 # 8. Encerrar Processo
 
-```plantuml
+```puml
 @startuml
 left to right direction
 
