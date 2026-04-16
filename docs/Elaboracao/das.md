@@ -75,19 +75,19 @@ O sistema utiliza o modelo Cliente-Servidor, onde o processamento é distribuíd
 
 - **Python:** Linguagem de programação robusta utilizada no desenvolvimento do Back-end.
 - **Django:** Framework web de alto nível para o desenvolvimento ágil da API e do motor de regras acadêmicas.
-- **PostgreSQL/MySQL:** Banco de dados relacional utilizado para persistência e integridade dos dados.
+- **MySQL:** Banco de dados relacional utilizado para persistência e integridade dos dados.
 - **Figma:** Ferramenta utilizada para o design de interface (UI) e prototipagem do fluxo do usuário.
 - **Git/GitHub:** Sistema de controle de versão para colaboração do time e versionamento do código-fonte.
 
 ## 🎀 Visão de Caso de Uso
 
-> A inserir.
+> https://projetos-de-extensao.github.io/PBE_26.1_8002_I/Elaboracao/casos_de_uso/
 
 ## 🎀 Visão de Implementação
 
 A implementação do sistema segue o paradigma de Orientação a Objetos, utilizando o ORM (Object-Relational Mapping) do Django para mapear as classes de domínio para o banco de dados relacional. Abaixo, o Diagrama de Classes detalha a estrutura das entidades, seus atributos e os métodos principais que regem o ciclo de vida do estágio.
 
-> Inserir diagrama de classes.
+> https://projetos-de-extensao.github.io/PBE_26.1_8002_I/Elaboracao/diagrma_de_classes/
 
 ## 🎀 Visão de Dados
 
