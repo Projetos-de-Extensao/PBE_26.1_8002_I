@@ -7,7 +7,7 @@ title: Diagrama de Casos de Uso
 
 ## Objetivo
 
-Este documento apresenta os Diagramas de Casos de Uso do Sistema de Gestão de Estágios do IBMEC RJ. O sistema tem como objetivo organizar, facilitar e automatizar o processo documental de estágio entre Aluno e Secretaria, considerando que o aluno já foi aprovado na vaga.
+Este documento apresenta os Diagramas de Casos de Uso do Sistema de Gestão de Estágios do IBMEC RJ. O sistema tem como objetivo organizar, facilitar e automatizar o processo documental de estágio entre Aluno e Coordenador, considerando que o aluno já foi aprovado na vaga.
 
 Os diagramas foram modelados de forma simples e didática, representando o ciclo básico do processo de estágio.
 
@@ -98,7 +98,7 @@ UC4 ..> UC1 : <<extend>>
 left to right direction
 
 actor Aluno
-actor Secretaria
+actor Coordenador
 
 rectangle "Sistema de Gestão de Estágios IBMEC RJ" {
 
@@ -112,7 +112,7 @@ rectangle "Sistema de Gestão de Estágios IBMEC RJ" {
 }
 
 Aluno -- UC1
-Secretaria -- UC1
+Coordenador -- UC1
 
 UC1 ..> UC2 : <<include>>
 UC1 ..> UC3 : <<include>>
@@ -205,7 +205,7 @@ UC4 ..> UC1 : <<extend>>
 @startuml
 left to right direction
 
-actor Secretaria
+actor Coordenador
 
 rectangle "Sistema de Gestão de Estágios IBMEC RJ" {
 
@@ -217,7 +217,7 @@ rectangle "Sistema de Gestão de Estágios IBMEC RJ" {
 
 }
 
-Secretaria -- UC1
+Coordenador -- UC1
 
 UC1 ..> UC2 : <<include>>
 UC1 ..> UC3 : <<include>>
@@ -231,7 +231,7 @@ UC4 ..> UC1 : <<extend>>
 ### Validar contrato
 
 - Descrição: 
-  - Permite à Secretaria analisar e decidir sobre a aprovação ou reprovação de contratos de estágio submetidos.
+  - Permite à Coordenador analisar e decidir sobre a aprovação ou reprovação de contratos de estágio submetidos.
 
 - Atores:
 	- Coordenação
@@ -308,7 +308,7 @@ UC5 ..> UC1 : <<extend>>
 left to right direction
 
 actor Aluno
-actor Secretaria
+actor Coordenador
 
 rectangle "Sistema de Gestão de Estágios IBMEC RJ" {
 
@@ -321,7 +321,7 @@ rectangle "Sistema de Gestão de Estágios IBMEC RJ" {
 }
 
 Aluno -- UC1
-Secretaria -- UC1
+Coordenador -- UC1
 
 UC1 ..> UC2 : <<include>>
 UC1 ..> UC3 : <<include>>
@@ -365,7 +365,7 @@ UC5 ..> UC1 : <<extend>>
 left to right direction
 
 actor Aluno
-actor Secretaria
+actor Coordenador
 
 rectangle "Sistema de Gestão de Estágios IBMEC RJ" {
 
@@ -378,7 +378,7 @@ rectangle "Sistema de Gestão de Estágios IBMEC RJ" {
 }
 
 Aluno -- UC1
-Secretaria -- UC1
+Coordenador -- UC1
 
 UC1 ..> UC2 : <<include>>
 UC1 ..> UC3 : <<include>>
@@ -420,7 +420,7 @@ UC5 ..> UC1 : <<extend>>
 left to right direction
 
 actor Aluno
-actor Secretaria
+actor Coordenador
 
 rectangle "Sistema de Gestão de Estágios IBMEC RJ" {
 
@@ -434,7 +434,7 @@ rectangle "Sistema de Gestão de Estágios IBMEC RJ" {
 }
 
 Aluno -- UC1
-Secretaria -- UC1
+Coordenador -- UC1
 
 UC1 ..> UC2 : <<include>>
 UC1 ..> UC3 : <<include>>
