@@ -7,612 +7,471 @@ title: Diagrama de Casos de Uso
 
 ## Objetivo
 
-Este documento apresenta os Diagramas de Casos de Uso do Sistema de Gestão e Mediação de Estágios Obrigatórios do IBMEC RJ. A modelagem foi derivada do arquivo `documento_elicitacao_requisitos_estagio_ibmec.md` e do documento de especificação de casos de uso. Os diagramas foram divididos por fase do ciclo de vida do processo para manter a legibilidade dos atores e dos casos de uso.
+Este documento apresenta os Diagramas de Casos de Uso do Sistema de Gestão de Estágios do IBMEC RJ. O sistema tem como objetivo organizar, facilitar e automatizar o processo documental de estágio entre Aluno e Secretaria, considerando que o aluno já foi aprovado na vaga.
+
+Os diagramas foram modelados de forma simples e didática, representando o ciclo básico do processo de estágio.
+
+---
 
 ## Premissas de modelagem
 
-- O escopo cobre exclusivamente o fluxo de estágio obrigatório.
-- Os diagramas foram separados em sete visões correspondentes ao ciclo de vida: Visão Geral, Cadastro e Regularização, Submissão Documental, Validação e Aprovação, Monitoramento, Encerramento e Relatórios e Auditoria.
-- Relacionamentos `<<include>>` representam dependências obrigatórias entre casos de uso.
-- Relacionamentos `<<extend>>` representam fluxos condicionais ou opcionais.
-- Atores que não participam de uma fase não aparecem naquele diagrama, mantendo o foco visual.
-- `Coordenacao/Secretaria` é tratada como um único ator até validação formal do papel junto ao cliente.
-
-## Visão geral dos diagramas propostos
-
-| Visão | Foco | Atores envolvidos |
-| --- | --- | --- |
-| Visão 0 — Geral | Mapa completo de atores e grupos de UC | Todos |
-| Visão 1 — Cadastro | Abertura do processo e regularização | Aluno, Empresa/Supervisor, Coord./Secretaria |
-| Visão 2 — Documentos | Submissão e controle documental | Aluno, Empresa/Supervisor |
-| Visão 3 — Validação | Análise, parecer e aprovação | Prof. Orientador, Coord./Secretaria |
-| Visão 4 — Monitoramento | Acompanhamento do estágio ativo | Aluno, Empresa/Supervisor, Prof. Orientador |
-| Visão 5 — Encerramento | Relatório final e conclusão | Aluno, Empresa/Supervisor, Prof. Orientador, Coord./Secretaria |
-| Visão 6 — Auditoria | Relatórios operacionais e trilha | Coord./Secretaria |
+- O sistema inicia após o aluno já ter sido aprovado em uma vaga de estágio.
+- O foco está na gestão documental e acompanhamento do processo.
+- Relacionamentos `<<include>>` representam ações obrigatórias.
+- Relacionamentos `<<extend>>` representam fluxos alternativos ou opcionais.
+- O sistema não é representado como ator.
+- Diagramas simples, voltados para fácil compreensão.
 
 ---
 
-## Visão 0. Mapa geral de casos de uso
+## Visão geral dos casos de uso
 
-Visão panorâmica que posiciona os quatro atores e os grupos funcionais do sistema, sem detalhar os relacionamentos internos de cada fase.
+| Fase | Casos de Uso |
+|------|-------------|
+| Acesso | Login |
+| Início | Abrir Novo Processo |
+| Documentação | Adicionar Documentos |
+| Validação | Validar Contrato |
+| Execução | Enviar Relatório |
+| Monitoramento | Acompanhar Status |
+| Comunicação | Notificações |
+| Encerramento | Encerrar Processo |
+
+---
+
+# 1. Login
 
 ```plantuml
-@startuml visao_0_mapa_geral
-
+@startuml
 left to right direction
 
-skinparam DefaultFontName Arial
-skinparam DefaultFontSize 12
-skinparam shadowing false
-skinparam backgroundColor white
+actor Aluno
+actor Coordenadores
 
-skinparam actor {
-  BackgroundColor white
-  BorderColor black
-  FontColor black
-}
-skinparam usecase {
-  BackgroundColor white
-  BorderColor black
-  FontColor black
-  FontSize 12
-}
-skinparam rectangle {
-  BackgroundColor white
-  BorderColor black
-  FontColor black
-  FontSize 14
-}
-skinparam ArrowColor black
-skinparam ArrowFontColor black
-skinparam ArrowFontSize 11
-
-actor "Aluno"                  as ALU
-actor "Empresa / Supervisor"   as EMP
-actor "Prof. Orientador"       as ORI
-actor "Coordenacao/Secretaria" as COO
-
-rectangle "Sistema de Gestao de Estagios IBMEC RJ" {
-  usecase "Cadastro e\nRegularizacao"  as G1
-  usecase "Submissao\nDocumental"      as G2
-  usecase "Validacao e\nAprovacao"     as G3
-  usecase "Monitoramento\ndo Estagio"  as G4
-  usecase "Encerramento\ndo Processo"  as G5
-  usecase "Relatorios\ne Auditoria"    as G6
+rectangle "Sistema de Gestão de Estágios IBMEC RJ" {
+  usecase "Fazer Login" as UC1
+  usecase "Autenticar Credenciais" as UC2
+  usecase "Exibir Erro de Login" as UC3
+  usecase "Redefinir Senha (1º Acesso)" as UC4
 }
 
-ALU -- G1
-ALU -- G2
-ALU -- G4
-ALU -- G5
+Aluno -- UC1
+Coordenadores -- UC1
 
-EMP -- G1
-EMP -- G2
-EMP -- G4
-EMP -- G5
-
-ORI -- G3
-ORI -- G4
-ORI -- G5
-
-COO -- G1
-COO -- G3
-COO -- G4
-COO -- G5
-COO -- G6
+UC1 ..> UC2 : <<include>>
+UC3 ..> UC1 : <<extend>>
+UC4 ..> UC1 : <<extend>>
 
 @enduml
+
 ```
 
-### Leitura da visão
+### Entrada do usuário no sistema
 
-- A visão geral serve como índice visual: cada elipse representa um grupo de casos de uso detalhado nas visões seguintes.
-- Todos os atores aparecem simultaneamente para evidenciar as fronteiras de responsabilidade de cada perfil.
-- Os relacionamentos `<<include>>` e `<<extend>>` são detalhados nas visões específicas de cada fase.
+- Atores:
+	- Aluno
+	- Coordenação
 
----
+- Pré-Condições:
+	Usuário deve ter cadastrado
 
-## Visão 1. Cadastro e regularização
+- Fluxo Básico:
+    - 1. Usuário acessa a página inicial.
+	- 2. Usuário informa credenciais.
+	- 3. Sistema valida login.
+  - 4. Sistema redireciona ao dashboard.
 
-Cobre a abertura do processo de estágio, a validação de pré-condições acadêmicas, o cadastro da empresa e a parametrização das regras por curso.
+- Fluxos Alternativos:
+	- Erro de login → exibe mensagem
+	- Primeiro acesso → redefinição de senha
+
+ 
+ # 2. Novo Processo
 
 ```plantuml
-@startuml visao_1_cadastro_regularizacao
-
+  @startuml
 left to right direction
 
-skinparam DefaultFontName Arial
-skinparam DefaultFontSize 12
-skinparam shadowing false
-skinparam backgroundColor white
+actor Aluno
+actor Secretaria
 
-skinparam actor {
-  BackgroundColor white
-  BorderColor black
-  FontColor black
-}
-skinparam usecase {
-  BackgroundColor white
-  BorderColor black
-  FontColor black
-  FontSize 12
-}
-skinparam rectangle {
-  BackgroundColor white
-  BorderColor black
-  FontColor black
-  FontSize 14
-}
-skinparam ArrowColor black
-skinparam ArrowFontColor black
-skinparam ArrowFontSize 11
+rectangle "Sistema de Gestão de Estágios IBMEC RJ" {
 
-actor "Aluno"                  as ALU
-actor "Empresa / Supervisor"   as EMP
-actor "Coordenacao/Secretaria" as COO
+  usecase "Iniciar Processo de Estágio" as UC1
+  usecase "Preencher Dados do Estágio" as UC2
+  usecase "Anexar Documento (TCE)" as UC3
+  usecase "Validar Informações" as UC4
+  usecase "Exibir Erro de Arquivo" as UC5
+  usecase "Exibir Erro de Campos Obrigatórios" as UC6
 
-rectangle "Cadastro e Regularizacao" {
-  usecase "Autenticar\nno Sistema"             as UC_AUTH
-  usecase "Abrir Solicitacao\nde Estagio"      as UC_ABRIR
-  usecase "Validar Pre-condicoes\nAcademicas"  as UC_PREC
-  usecase "Registrar Plano\nde Atividades"     as UC_PLANO
-  usecase "Cadastrar Empresa\nConcedente"      as UC_EMP
-  usecase "Validar Situacao\nda Empresa"       as UC_VEMP
-  usecase "Cadastrar Supervisor\nda Empresa"   as UC_SUP
-  usecase "Parametrizar Regras\npor Curso"     as UC_REGRAS
-  usecase "Visualizar Painel\nde Pendencias"   as UC_PAINEL
 }
 
-ALU -- UC_AUTH
-ALU -- UC_ABRIR
-ALU -- UC_EMP
-ALU -- UC_PLANO
-ALU -- UC_PAINEL
+Aluno -- UC1
+Secretaria -- UC1
 
-EMP -- UC_AUTH
-EMP -- UC_EMP
-EMP -- UC_SUP
-EMP -- UC_PAINEL
+UC1 ..> UC2 : <<include>>
+UC1 ..> UC3 : <<include>>
+UC1 ..> UC4 : <<include>>
 
-COO -- UC_AUTH
-COO -- UC_REGRAS
-COO -- UC_PAINEL
-
-UC_ABRIR .> UC_AUTH  : <<include>>
-UC_ABRIR .> UC_PREC  : <<include>>
-UC_ABRIR .> UC_PLANO : <<include>>
-UC_ABRIR .> UC_EMP   : <<include>>
-
-UC_EMP .> UC_VEMP : <<include>>
-UC_EMP .> UC_SUP  : <<include>>
+UC5 ..> UC1 : <<extend>>
+UC6 ..> UC1 : <<extend>>
 
 @enduml
+
 ```
+### Entrada do usuário no sistema
 
-### Leitura da visão
+- Atores:
+	- Aluno
+	- Coordenação
 
-- `Abrir Solicitacao de Estagio` agrega obrigatoriamente quatro dependências: autenticação, pré-condições, plano de atividades e cadastro de empresa.
-- `Validar Pre-condicoes Academicas` é executado pelo sistema automaticamente e verifica matrícula e frequência regulares (RN-02).
-- `Validar Situacao da Empresa` verifica se a concedente possui situação documental e institucional apta, conforme RN-11.
-- `Parametrizar Regras por Curso` é exclusivo da Coordenação/Secretaria, pois as regras variam por PPC e DCN (RN-04).
+- Pré-Condições:
+	Usuário deve ter cadastrado
 
----
+- Fluxo Básico:
+    - 1. Usuário acessa a página inicial.
+	- 2. Usuário informa credenciais.
+	- 3. Sistema valida login.
+  - 4. Sistema redireciona ao dashboard.
 
-## Visão 2. Submissão documental
+- Fluxos Alternativos:
+	- Erro de login → exibe mensagem
+	- Primeiro acesso → redefinição de senha
 
-Cobre o envio, versionamento e validação de documentos, incluindo a geração ou registro do TCE e a correção de documentos devolvidos.
+
+# 3. Novo Processo
 
 ```plantuml
-@startuml visao_2_submissao_documental
-
+@startuml
 left to right direction
 
-skinparam DefaultFontName Arial
-skinparam DefaultFontSize 12
-skinparam shadowing false
-skinparam backgroundColor white
+actor Aluno
+actor Secretaria
 
-skinparam actor {
-  BackgroundColor white
-  BorderColor black
-  FontColor black
-}
-skinparam usecase {
-  BackgroundColor white
-  BorderColor black
-  FontColor black
-  FontSize 12
-}
-skinparam rectangle {
-  BackgroundColor white
-  BorderColor black
-  FontColor black
-  FontSize 14
-}
-skinparam ArrowColor black
-skinparam ArrowFontColor black
-skinparam ArrowFontSize 11
+rectangle "Sistema de Gestão de Estágios IBMEC RJ" {
 
-actor "Aluno"                as ALU
-actor "Empresa / Supervisor" as EMP
+  usecase "Iniciar Processo de Estágio" as UC1
+  usecase "Preencher Dados do Estágio" as UC2
+  usecase "Anexar Documento (TCE)" as UC3
+  usecase "Validar Informações" as UC4
+  usecase "Exibir Erro de Arquivo" as UC5
+  usecase "Exibir Erro de Campos Obrigatórios" as UC6
 
-rectangle "Submissao Documental" {
-  usecase "Autenticar\nno Sistema"              as UC_AUTH
-  usecase "Enviar\nDocumentos"                  as UC_UPDOC
-  usecase "Validar Obrigatoriedade\nDocumental" as UC_VALDOC
-  usecase "Gerar e\nRegistrar TCE"              as UC_TCE
-  usecase "Consultar Status\ndos Documentos"    as UC_STSDOC
-  usecase "Corrigir e Reenviar\nDocumentos"     as UC_CORRDOC
 }
 
-ALU -- UC_AUTH
-ALU -- UC_UPDOC
-ALU -- UC_TCE
-ALU -- UC_CORRDOC
-ALU -- UC_STSDOC
+Aluno -- UC1
+Secretaria -- UC1
 
-EMP -- UC_AUTH
-EMP -- UC_TCE
-EMP -- UC_STSDOC
+UC1 ..> UC2 : <<include>>
+UC1 ..> UC3 : <<include>>
+UC1 ..> UC4 : <<include>>
 
-UC_UPDOC   .> UC_AUTH   : <<include>>
-UC_UPDOC   .> UC_VALDOC : <<include>>
-UC_TCE     .> UC_UPDOC  : <<include>>
-UC_CORRDOC .> UC_UPDOC  : <<extend>>
+UC5 ..> UC1 : <<extend>>
+UC6 ..> UC1 : <<extend>>
 
 @enduml
+
 ```
+### Entrada do usuário no sistema
 
-### Leitura da visão
+- Atores:
+	- Aluno
+	- Coordenação
 
-- `Enviar Documentos` sempre inclui `Validar Obrigatoriedade Documental`, garantindo que documentos obrigatórios por etapa não sejam ignorados (RF-16, RF-21).
-- `Gerar e Registrar TCE` inclui `Enviar Documentos` porque o TCE é tratado como um documento do processo com versionamento próprio (RF-19).
-- `Corrigir e Reenviar Documentos` estende `Enviar Documentos` — só ocorre quando um documento foi rejeitado ou marcado como pendente (RF-17, RF-18).
-- Tanto o Aluno quanto a Empresa participam do fluxo documental, pois o TCE exige participação de ambas as partes.
+- Pré-Condições:
+	Usuário logado e sem processo ativo
 
----
+- Fluxo Básico:
+    - 1. Usuário inicia processo.
+	- 2. Preenche dados.
+	- 3. Anexa documento.
+  - 4. Sistema valida e salva.
 
-## Visão 3. Validação e aprovação
+- Fluxos Alternativos:
+	- Erro de arquivo
+	- Campos obrigatórios não preenchidos
 
-Cobre a análise da documentação, a validação da aderência acadêmica pelo professor orientador, a emissão de pareceres e o fluxo de aprovação ou devolução pela coordenação.
+
+# 3. Add Documentos 
 
 ```plantuml
-@startuml visao_3_validacao_aprovacao
-
+@startuml
 left to right direction
 
-skinparam DefaultFontName Arial
-skinparam DefaultFontSize 12
-skinparam shadowing false
-skinparam backgroundColor white
+actor Usuario
 
-skinparam actor {
-  BackgroundColor white
-  BorderColor black
-  FontColor black
-}
-skinparam usecase {
-  BackgroundColor white
-  BorderColor black
-  FontColor black
-  FontSize 12
-}
-skinparam rectangle {
-  BackgroundColor white
-  BorderColor black
-  FontColor black
-  FontSize 14
-}
-skinparam ArrowColor black
-skinparam ArrowFontColor black
-skinparam ArrowFontSize 11
+rectangle "Sistema de Gestão de Estágios IBMEC RJ" {
 
-actor "Prof. Orientador"       as ORI
-actor "Coordenacao/Secretaria" as COO
+  usecase "Anexar Documentos (.pdf)" as UC1
+  usecase "Selecionar Arquivo" as UC2
+  usecase "Validar Arquivo (tipo e tamanho)" as UC3
+  usecase "Exibir Erro de Tamanho" as UC4
 
-rectangle "Validacao e Aprovacao" {
-  usecase "Autenticar\nno Sistema"             as UC_AUTH
-  usecase "Analisar Documentacao\ndo Processo" as UC_ANALDOC
-  usecase "Validar Aderencia\nAcademica"       as UC_ADER
-  usecase "Emitir Parecer\nou Pendencia"       as UC_PARECER
-  usecase "Devolver Processo\npara Correcao"   as UC_DEV
-  usecase "Aprovar\nEstagio"                   as UC_APROV
-  usecase "Rejeitar\nEstagio"                  as UC_REJ
 }
 
-ORI -- UC_AUTH
-ORI -- UC_ADER
-ORI -- UC_PARECER
+Usuario -- UC1
 
-COO -- UC_AUTH
-COO -- UC_ANALDOC
-COO -- UC_PARECER
-COO -- UC_DEV
-COO -- UC_APROV
-COO -- UC_REJ
+UC1 ..> UC2 : <<include>>
+UC1 ..> UC3 : <<include>>
 
-UC_ANALDOC .> UC_AUTH    : <<include>>
-UC_ADER    .> UC_AUTH    : <<include>>
-UC_APROV   .> UC_ANALDOC : <<include>>
-UC_APROV   .> UC_ADER    : <<include>>
-
-UC_DEV .> UC_PARECER : <<extend>>
-UC_REJ .> UC_PARECER : <<extend>>
+UC4 ..> UC1 : <<extend>>
 
 @enduml
+
 ```
+### Adicionar Documentos
+- Atores:
+	- Aluno
+	- Coordenação
 
-### Leitura da visão
+- Pré-Condições:
+	Processo existente.
 
-- `Aprovar Estagio` inclui obrigatoriamente `Analisar Documentacao do Processo` e `Validar Aderencia Academica` — a aprovação só é possível após ambas as validações (RF-27, RN-10).
-- `Devolver Processo para Correcao` e `Rejeitar Estagio` estendem `Emitir Parecer ou Pendencia`, pois ambos são desdobramentos condicionais do parecer negativo (RF-25, RF-26).
-- O Professor Orientador é responsável exclusivo pela validação acadêmica; a Coordenação/Secretaria é responsável pela análise institucional e pela decisão final de aprovação.
+- Fluxo Básico:
+    - 1. Seleciona arquivo
+	- 2. Valida arquivo
+	- 3. Salva arquivo
 
----
-
-## Visão 4. Monitoramento do estágio
-
-Cobre o acompanhamento do estágio ativo: controle de jornada e carga horária, envio de relatórios periódicos, avaliações de desempenho, pareceres periódicos e eventos de aditivo e rescisão.
+- Fluxos Alternativos:
+	- Arquivo inválido
+	
+# 4. Validar Contrato 
 
 ```plantuml
-@startuml visao_4_monitoramento
-
+@startuml
 left to right direction
 
-skinparam DefaultFontName Arial
-skinparam DefaultFontSize 12
-skinparam shadowing false
-skinparam backgroundColor white
+actor Secretaria
 
-skinparam actor {
-  BackgroundColor white
-  BorderColor black
-  FontColor black
-}
-skinparam usecase {
-  BackgroundColor white
-  BorderColor black
-  FontColor black
-  FontSize 12
-}
-skinparam rectangle {
-  BackgroundColor white
-  BorderColor black
-  FontColor black
-  FontSize 14
-}
-skinparam ArrowColor black
-skinparam ArrowFontColor black
-skinparam ArrowFontSize 11
+rectangle "Sistema de Gestão de Estágios IBMEC RJ" {
 
-actor "Aluno"                  as ALU
-actor "Empresa / Supervisor"   as EMP
-actor "Prof. Orientador"       as ORI
-actor "Coordenacao/Secretaria" as COO
+  usecase "Validar Contrato" as UC1
+  usecase "Visualizar Contrato" as UC2
+  usecase "Aprovar Contrato" as UC3
+  usecase "Reprovar com Justificativa" as UC4
+  usecase "Notificar Aluno" as UC5
 
-rectangle "Monitoramento do Estagio" {
-  usecase "Autenticar\nno Sistema"              as UC_AUTH
-  usecase "Acompanhar Status\ndo Processo"      as UC_STATUS
-  usecase "Controlar Jornada\ne Carga Horaria"  as UC_CH
-  usecase "Enviar Relatorios\nPeriodicos"       as UC_RELPER
-  usecase "Enviar Avaliacao\nde Desempenho"     as UC_AVAL
-  usecase "Emitir Parecer\nAcademico Periodico" as UC_PARPER
-  usecase "Receber\nNotificacoes"               as UC_NOTIF
-  usecase "Registrar Aditivo\nde Estagio"       as UC_ADIT
-  usecase "Registrar Rescisao\nAntecipada"      as UC_RESC
 }
 
-ALU -- UC_AUTH
-ALU -- UC_STATUS
-ALU -- UC_CH
-ALU -- UC_RELPER
-ALU -- UC_NOTIF
+Secretaria -- UC1
 
-EMP -- UC_AUTH
-EMP -- UC_AVAL
-EMP -- UC_NOTIF
+UC1 ..> UC2 : <<include>>
+UC1 ..> UC3 : <<include>>
+UC1 ..> UC5 : <<include>>
 
-ORI -- UC_AUTH
-ORI -- UC_STATUS
-ORI -- UC_PARPER
-ORI -- UC_RELPER
-ORI -- UC_NOTIF
-
-COO -- UC_AUTH
-COO -- UC_STATUS
-COO -- UC_ADIT
-COO -- UC_RESC
-COO -- UC_NOTIF
-
-UC_RELPER .> UC_AUTH   : <<include>>
-UC_RELPER .> UC_STATUS : <<include>>
-UC_CH     .> UC_STATUS : <<include>>
-
-UC_AVAL   .> UC_RELPER : <<extend>>
-UC_PARPER .> UC_RELPER : <<extend>>
-UC_ADIT   .> UC_STATUS : <<extend>>
-UC_RESC   .> UC_STATUS : <<extend>>
+UC4 ..> UC1 : <<extend>>
 
 @enduml
+
 ```
+### Validar contrato
+- Atores:
+	- Coordenação
 
-### Leitura da visão
 
-- `Enviar Relatorios Periodicos` inclui `Acompanhar Status do Processo` porque o envio só é válido com o estágio em status **Ativo** (RF-37).
-- `Enviar Avaliacao de Desempenho` e `Emitir Parecer Academico Periodico` estendem `Enviar Relatorios Periodicos` — são eventos complementares opcionais atrelados ao ciclo de relatórios (RF-38, RF-39).
-- `Registrar Aditivo de Estagio` e `Registrar Rescisao Antecipada` estendem `Acompanhar Status do Processo` — são eventos excepcionais que alteram o curso do processo ativo (RN-12).
-- `Receber Notificacoes` é compartilhado por todos os atores, pois o sistema dispara alertas de pendências, prazos e mudanças de status para todos os perfis envolvidos (RF-49).
+- Fluxo Básico:
+    - 1. Seleciona contrato
+	- 2. Analisa contrato
+	- 3. Aprova contrato
 
----
+- Fluxos Alternativos:
+	- Reprovação com justificativa
 
-## Visão 5. Encerramento do processo
-
-Cobre o envio do relatório final, a anexação do termo de realização, as avaliações finais, o parecer institucional e o registro do encerramento com cálculo de carga horária.
+  # 5. Enviar Relatório
 
 ```plantuml
-@startuml visao_5_encerramento
-
+@startuml
 left to right direction
 
-skinparam DefaultFontName Arial
-skinparam DefaultFontSize 12
-skinparam shadowing false
-skinparam backgroundColor white
+actor Aluno
 
-skinparam actor {
-  BackgroundColor white
-  BorderColor black
-  FontColor black
-}
-skinparam usecase {
-  BackgroundColor white
-  BorderColor black
-  FontColor black
-  FontSize 12
-}
-skinparam rectangle {
-  BackgroundColor white
-  BorderColor black
-  FontColor black
-  FontSize 14
-}
-skinparam ArrowColor black
-skinparam ArrowFontColor black
-skinparam ArrowFontSize 11
+rectangle "Sistema de Gestão de Estágios IBMEC RJ" {
 
-actor "Aluno"                  as ALU
-actor "Empresa / Supervisor"   as EMP
-actor "Prof. Orientador"       as ORI
-actor "Coordenacao/Secretaria" as COO
+  usecase "Enviar Relatório de Horas" as UC1
+  usecase "Preencher Dados do Relatório" as UC2
+  usecase "Anexar Documento" as UC3
+  usecase "Salvar Relatório" as UC4
+  usecase "Registrar Envio Fora do Prazo" as UC5
 
-rectangle "Encerramento do Processo" {
-  usecase "Autenticar\nno Sistema"                   as UC_AUTH
-  usecase "Enviar Relatorio\nFinal"                  as UC_RELFIN
-  usecase "Anexar Termo\nde Realizacao"              as UC_TERMO
-  usecase "Registrar Avaliacao\nFinal do Supervisor" as UC_AVALFIN
-  usecase "Emitir Parecer\nFinal Institucional"      as UC_PARFIN
-  usecase "Calcular Carga Horaria\np/ Integralizacao" as UC_CALCCH
-  usecase "Registrar\nEncerramento"                  as UC_ENCERRAR
-  usecase "Consultar Historico\ndo Processo"         as UC_HIST
 }
 
-ALU -- UC_AUTH
-ALU -- UC_RELFIN
-ALU -- UC_HIST
+Aluno -- UC1
 
-EMP -- UC_AUTH
-EMP -- UC_TERMO
-EMP -- UC_AVALFIN
+UC1 ..> UC2 : <<include>>
+UC1 ..> UC3 : <<include>>
+UC1 ..> UC4 : <<include>>
 
-ORI -- UC_AUTH
-ORI -- UC_PARFIN
-ORI -- UC_HIST
-
-COO -- UC_AUTH
-COO -- UC_ENCERRAR
-COO -- UC_HIST
-
-UC_ENCERRAR .> UC_AUTH   : <<include>>
-UC_ENCERRAR .> UC_CALCCH : <<include>>
-UC_ENCERRAR .> UC_RELFIN : <<include>>
-UC_ENCERRAR .> UC_PARFIN : <<include>>
-
-UC_TERMO   .> UC_ENCERRAR : <<extend>>
-UC_AVALFIN .> UC_ENCERRAR : <<extend>>
+UC5 ..> UC1 : <<extend>>
 
 @enduml
+
 ```
+### Enviar relatório
 
-### Leitura da visão
+- Atores:
+	- Aluno
 
-- `Registrar Encerramento` é o UC central desta fase e inclui obrigatoriamente: autenticação, cálculo de carga horária, relatório final e parecer final institucional (RF-47, RF-48).
-- `Anexar Termo de Realizacao` e `Registrar Avaliacao Final do Supervisor` estendem o encerramento — são documentos complementares exigidos conforme regras do curso (RF-45, RF-46).
-- `Calcular Carga Horaria p/ Integralizacao` é executado automaticamente pelo sistema para verificar se a carga mínima foi atingida antes de permitir a conclusão (RN-08).
-- `Consultar Historico do Processo` está disponível para todos os atores ao final, garantindo rastreabilidade e auditabilidade completa do ciclo (RF-58).
 
----
+- Fluxo Básico:
+    - 1. Preenche o relatório
+	- 2. Anexa arquivos
+	- 3. Envia relatório
+  - 4. Sistema valida e salva.
 
-## Visão 6. Relatórios e auditoria
+- Fluxos Alternativos:
+	- Envio fora do prazo
+	- Campos obrigatórios não preenchidos
 
-Cobre a geração de relatórios operacionais e gerenciais, a aplicação de filtros, a identificação de processos em atraso e a consulta à trilha de auditoria.
+  # 6. Acompanhar status
 
 ```plantuml
-@startuml visao_6_relatorios_auditoria
-
+@startuml
 left to right direction
 
-skinparam DefaultFontName Arial
-skinparam DefaultFontSize 12
-skinparam shadowing false
-skinparam backgroundColor white
+actor Aluno
+actor Secretaria
 
-skinparam actor {
-  BackgroundColor white
-  BorderColor black
-  FontColor black
-}
-skinparam usecase {
-  BackgroundColor white
-  BorderColor black
-  FontColor black
-  FontSize 12
-}
-skinparam rectangle {
-  BackgroundColor white
-  BorderColor black
-  FontColor black
-  FontSize 14
-}
-skinparam ArrowColor black
-skinparam ArrowFontColor black
-skinparam ArrowFontSize 11
+rectangle "Sistema de Gestão de Estágios IBMEC RJ" {
 
-actor "Coordenacao/Secretaria" as COO
+  usecase "Acompanhar Status do Processo" as UC1
+  usecase "Visualizar Lista de Processos" as UC2
+  usecase "Visualizar Detalhes do Processo" as UC3
+  usecase "Exibir Mensagem Sem Processos" as UC4
+  usecase "Fazer Download do Documento" as UC5
 
-rectangle "Relatorios e Auditoria" {
-  usecase "Autenticar\nno Sistema"                as UC_AUTH
-  usecase "Gerar Relatorios\nOperacionais"        as UC_RELOP
-  usecase "Filtrar Processos\npor Criterio"       as UC_FILT
-  usecase "Identificar Processos\nem Atraso"      as UC_ATRASO
-  usecase "Consultar Trilha\nde Auditoria"        as UC_AUDIT
-  usecase "Visualizar Carga Horaria\nConsolidada" as UC_CHCONS
 }
 
-COO -- UC_AUTH
-COO -- UC_RELOP
-COO -- UC_FILT
-COO -- UC_ATRASO
-COO -- UC_AUDIT
-COO -- UC_CHCONS
+Aluno -- UC1
+Secretaria -- UC1
 
-UC_RELOP .> UC_AUTH  : <<include>>
-UC_AUDIT .> UC_AUTH  : <<include>>
+UC1 ..> UC2 : <<include>>
+UC1 ..> UC3 : <<include>>
 
-UC_FILT   .> UC_RELOP : <<extend>>
-UC_ATRASO .> UC_RELOP : <<extend>>
-UC_CHCONS .> UC_RELOP : <<extend>>
+UC4 ..> UC1 : <<extend>>
+UC5 ..> UC1 : <<extend>>
 
 @enduml
+
 ```
 
-### Leitura da visão
+### Acompanhar status
 
-- `Gerar Relatorios Operacionais` é o UC base desta fase; `Filtrar Processos por Criterio`, `Identificar Processos em Atraso` e `Visualizar Carga Horaria Consolidada` são especializações condicionais que o estendem (RF-53, RF-54, RF-55).
-- `Consultar Trilha de Auditoria` é independente dos relatórios operacionais e serve para revisão de ações críticas com identificação de responsável, data e hora (RF-56, RF-57, RN-09).
-- Esta visão é exclusiva da Coordenação/Secretaria, pois envolve dados consolidados de múltiplos processos e alunos, acessíveis apenas pelo perfil gerencial (RF-52, RNF-02).
+- Atores:
+	- Aluno
+	- Coordenação
 
----
+- Pré-Condições:
+	Usuário deve estar logado
 
-## Decisões de modelagem que ainda dependem de validação
+- Fluxo Básico:
+    - 1. Usuário acessa a página visualizar status
+	- 2. Visualiza listas e ocorrencias pendentes
+	- 3. Acessa detalhes
 
-- Confirmar se `Coordenacao` e `Secretaria` devem ser atores separados, com responsabilidades distintas em etapas específicas do fluxo.
-- Validar se o `Supervisor da Empresa` terá acesso independente ao sistema ou sempre operará via perfil vinculado à `Empresa Concedente`.
-- Decidir se `Registrar Aditivo de Estagio` exige fluxo de aprovação próprio (com parecer da coordenação) ou apenas registro direto.
-- Verificar se haverá casos de uso específicos para integração futura com sistemas acadêmicos (consulta de matrícula, frequência e histórico).
-- Refinar se `Receber Notificacoes` deve ser desdobrado por tipo (e-mail, painel interno, push) em iterações futuras.
+- Fluxos Alternativos:
+	- Sem processos
+	- Download de documento
 
----
+  # 7. Notificações
 
-## Síntese
+```plantuml
+@startuml
+left to right direction
 
-Os sete diagramas acima cobrem o ciclo completo do estágio obrigatório do IBMEC RJ, da abertura do processo ao encerramento auditável. A divisão por fase de ciclo de vida mantém os atores, as elipses de casos de uso e os relacionamentos legíveis em cada contexto, sem sobrecarregar um único diagrama com todos os 37 UCs e 4 atores simultaneamente. Os relacionamentos `<<include>>` e `<<extend>>` foram aplicados de forma consistente com a especificação de casos de uso detalhada no documento complementar.
+actor Aluno
+actor Secretaria
+
+rectangle "Sistema de Gestão de Estágios IBMEC RJ" {
+
+  usecase "Receber Notificações" as UC1
+  usecase "Visualizar Notificações" as UC2
+  usecase "Exibir Detalhe da Notificação" as UC3
+  usecase "Exibir Sem Notificações" as UC4
+  usecase "Acessar Processo Relacionado" as UC5
+
+}
+
+Aluno -- UC1
+Secretaria -- UC1
+
+UC1 ..> UC2 : <<include>>
+UC1 ..> UC3 : <<include>>
+
+UC4 ..> UC1 : <<extend>>
+UC5 ..> UC1 : <<extend>>
+
+@enduml
+
+```
+
+### Notificações
+
+- Atores:
+	- Aluno
+	- Coordenação
+
+
+- Fluxo Básico:
+    - 1. Usuário acessa a página de notificações
+	- 2. Visualiza notificações
+	- 3. Abre a aba detalhes
+  - 4. Sistema redireciona ao dashboard.
+
+- Fluxos Alternativos:
+	- Sem notificações
+	- Acesso ao processo
+
+
+# 8. Encerrar Processo
+
+```plantuml
+@startuml
+left to right direction
+
+actor Aluno
+actor Secretaria
+
+rectangle "Sistema de Gestão de Estágios IBMEC RJ" {
+
+  usecase "Finalizar Processo de Estágio" as UC1
+  usecase "Verificar Requisitos para Encerramento" as UC2
+  usecase "Registrar Encerramento" as UC3
+  usecase "Notificar Usuário" as UC4
+  usecase "Encerramento com Pendências" as UC5
+  usecase "Gerar Termo de Encerramento" as UC6
+
+}
+
+Aluno -- UC1
+Secretaria -- UC1
+
+UC1 ..> UC2 : <<include>>
+UC1 ..> UC3 : <<include>>
+UC1 ..> UC4 : <<include>>
+
+UC5 ..> UC1 : <<extend>>
+UC6 ..> UC1 : <<extend>>
+
+@enduml
+
+
+```
+
+### Notificações
+
+- Atores:
+	- Aluno
+	- Coordenação
+
+- Pré-Condições:
+	Usuário deve ter concluído todas as etapas
+
+- Fluxo Básico:
+    - 1. Verifica requisitos
+	- 2. Informa a conclusão do processo
+	- 3. Encerra o processo
+  - 4. Notifica o encerramento do processo
+
+- Fluxos Alternativos:
+	- Ainda há Pendências
+	- Geração de termo de conclusão
