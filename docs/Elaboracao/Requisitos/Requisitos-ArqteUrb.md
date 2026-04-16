@@ -15,18 +15,18 @@ Este documento detalha as regras de negócio, restrições e requisitos acadêmi
 
 ## 🎀 3. Áreas de Atuação Aceitas (PPC)
 Para que o plano de atividades seja validado pelo sistema, a atuação da empresa e as atividades do aluno devem estar vinculadas a pelo menos uma das áreas de arquitetura:
- - Interiores residenciais e comerciais.
- - Edificações residenciais, comerciais, turismo/lazer, saúde ou industriais.
- - Restauração e estudos de patrimônio.
- - Projeto e planejamento urbano.
- - Paisagismo e Meio ambiente.
- - Projetos complementares (elétrica, hidrossanitária, gás, incêndio, estrutural).
+- Interiores residenciais e comerciais.
+- Edificações residenciais, comerciais, turismo/lazer, saúde ou industriais.
+- Restauração e estudos de patrimônio.
+- Projeto e planejamento urbano.
+- Paisagismo e Meio ambiente.
+- Projetos complementares (elétrica, hidrossanitária, gás, incêndio, estrutural).
 
 ## 🎀 4. Mapeamento de Softwares para Formulários
 O sistema deverá conter campos no relatório final para avaliar a utilização e o nível de proficiência das seguintes ferramentas:
- - AutoCAD, SketchUp, Vray e Revit.
- - Google Earth, QGIS, Promob e Archicad.
- - Word e Excel.
+- AutoCAD, SketchUp, Vray e Revit.
+- Google Earth, QGIS, Promob e Archicad.
+- Word e Excel.
  
 ## 🎀 5. Fluxo de Documentos e Avaliação
 -  **Formalização:** O sistema deve gerenciar as assinaturas do Termo de Compromisso de Estágio (entrada) e do Distrato (saída) pelas três partes: IBMEC, empresa e aluno.
