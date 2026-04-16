@@ -126,7 +126,7 @@ class ProcessoEstagio
 class RegraCurso
 
 Aluno "1" --> "0..*" ProcessoEstagio : inicia
-ProcessoEstagio "1" --> "1" RegraCurso : aplica
+ProcessoEstagio "0..*" --> "1" RegraCurso : aplica
 @enduml
 ```
 
@@ -148,9 +148,9 @@ class EmpresaConcedente
 class SupervisorEmpresa
 class CoordenadorCurso
 
-ProcessoEstagio "1" --> "1" EmpresaConcedente : empresa
-ProcessoEstagio "1" --> "1" SupervisorEmpresa : supervisor
-ProcessoEstagio "1" --> "1" CoordenadorCurso : responsavel academico
+ProcessoEstagio "0..*" --> "1" EmpresaConcedente : empresa
+ProcessoEstagio "0..*" --> "1" SupervisorEmpresa : supervisor
+ProcessoEstagio "0..*" --> "1" CoordenadorCurso : responsavel academico
 
 EmpresaConcedente -[hidden]down- SupervisorEmpresa
 SupervisorEmpresa -[hidden]down- CoordenadorCurso
@@ -242,6 +242,8 @@ Aditivo -[hidden]down- Rescisao
 
 - `ProcessoEstagio` continua como agregado principal, mas os relacionamentos foram separados por intenção: abertura, vínculos institucionais, documentação, aprovação e encerramento.
 - `CoordenadorCurso` aparece como responsável acadêmico do processo e concentra as ações de aprovação e registro de pendências.
+- As multiplicidades indicam que cada processo possui uma empresa, um supervisor e um coordenador responsável, mas cada uma dessas classes pode estar vinculada a vários processos de estágio.
+- A mesma `RegraCurso` pode ser aplicada a vários processos, garantindo reutilização das regras acadêmicas de um curso sem criar uma regra nova para cada solicitação.
 - `PlanoAtividades`, `Documento` e `TipoDocumento` ficaram em um recorte dedicado para destacar a estrutura documental sem misturar atores externos.
 - `Aprovacao`, `Pendencia`, `HistoricoStatus`, `Aditivo` e `Rescisao` foram repartidos em blocos menores para reduzir cruzamentos e sobreposição de rótulos.
 - O layout foi padronizado com setas mais curtas, rótulos menores e caminhos menos tortuosos.
