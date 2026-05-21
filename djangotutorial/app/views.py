@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -6,14 +6,30 @@ from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 
 from .models import (
-    Curso, Empresa, Aluno, Coordenador, SolicitacaoEstagio,
+    Usuario, Curso, Empresa, Aluno, Coordenador, SolicitacaoEstagio,
     TermoCompromisso, ApoliceSeguro, RelatorioEstagio, AssinaturaDigital,
 )
 from .serializers import (
-    CursoSerializer, EmpresaSerializer, AlunoSerializer, CoordenadorSerializer,
+    UsuarioSerializer, CursoSerializer, EmpresaSerializer,
+    AlunoSerializer, CoordenadorSerializer,
     SolicitacaoEstagioSerializer, TermoCompromissoSerializer,
     ApoliceSeguroSerializer, RelatorioEstagioSerializer, AssinaturaDigitalSerializer,
 )
+
+
+# ── Permissões customizadas ───────────────────────────────────────────────────
+
+class IsCoordenadorDoSeussCursos(permissions.BasePermission):
+    """Permite que coordenador edite só seus próprios cursos. Admin edita todos."""
+
+    def has_object_permission(self, request, view, obj):
+        if request.user.is_superuser or request.user.is_staff:
+            return True
+        try:
+            coordenador = request.user.coordenador
+            return obj.coordenador == coordenador
+        except Exception:
+            return False
 
 
 # ── ViewSets CRUD (protegidos por IsAuthenticated via settings.py) ──────────
@@ -21,6 +37,18 @@ from .serializers import (
 class CursoViewSet(viewsets.ModelViewSet):
     queryset = Curso.objects.all()
     serializer_class = CursoSerializer
+    permission_classes = [IsAuthenticated, IsCoordenadorDoSeussCursos]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_superuser or user.is_staff:
+            return Curso.objects.all()
+        try:
+            coordenador = user.coordenador
+            return Curso.objects.filter(coordenador=coordenador)
+        except Exception:
+            pass
+        return Curso.objects.all()
 
 
 class EmpresaViewSet(viewsets.ModelViewSet):
@@ -67,7 +95,7 @@ class AssinaturaDigitalViewSet(viewsets.ModelViewSet):
 
 class RegisterView(APIView):
     """
-    Cria um Aluno ou Coordenador.
+    Cria um Usuario e o perfil vinculado (Aluno ou Coordenador).
     Corpo: { "tipo": "aluno"|"coordenador", "username": ..., "password": ..., ...campos do perfil }
     """
     permission_classes = [AllowAny]
@@ -86,12 +114,15 @@ class RegisterView(APIView):
 
         if tipo == 'aluno':
             try:
-                user = Aluno.objects.create_user(
+                user = Usuario.objects.create_user(
                     username=username,
                     password=password,
+                    tipo='aluno',
                     nome=data.get('nome', ''),
                     email_institucional=data.get('email_institucional', ''),
-                    matricula=data.get('matricula', ''),
+                )
+                Aluno.objects.create(
+                    usuario=user,
                     cpf=data.get('cpf', ''),
                     rg=data.get('rg', ''),
                     coeficiente_rendimento=data.get('coeficiente_rendimento', 0),
@@ -102,11 +133,15 @@ class RegisterView(APIView):
 
         elif tipo == 'coordenador':
             try:
-                user = Coordenador.objects.create_user(
+                user = Usuario.objects.create_user(
                     username=username,
                     password=password,
+                    tipo='coordenador',
                     nome=data.get('nome', ''),
                     email_institucional=data.get('email_institucional', ''),
+                )
+                Coordenador.objects.create(
+                    usuario=user,
                     departamento=data.get('departamento', ''),
                 )
             except Exception as e:

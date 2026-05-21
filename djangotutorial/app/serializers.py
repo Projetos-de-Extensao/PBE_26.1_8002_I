@@ -1,8 +1,14 @@
 from rest_framework import serializers
 from .models import (
-    Curso, Empresa, Aluno, Coordenador, SolicitacaoEstagio,
+    Usuario, Curso, Empresa, Aluno, Coordenador, SolicitacaoEstagio,
     TermoCompromisso, ApoliceSeguro, RelatorioEstagio, AssinaturaDigital,
 )
+
+
+class UsuarioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Usuario
+        fields = '__all__'
 
 
 class CursoSerializer(serializers.ModelSerializer):

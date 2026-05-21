@@ -2,13 +2,56 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 
 
+class Usuario(AbstractUser):
+    tipo = models.CharField(
+        max_length=20,
+        choices=[('aluno', 'Aluno'), ('coordenador', 'Coordenador')],
+        default='aluno',
+    )
+    nome = models.CharField(max_length=100)
+    email_institucional = models.EmailField(blank=True, default='')
+
+    def __str__(self):
+        return self.nome
+
+    class Meta:
+        verbose_name = 'Usuário'
+        verbose_name_plural = 'Usuários'
+
+
+class Coordenador(models.Model):
+    usuario = models.OneToOneField(
+        Usuario, on_delete=models.CASCADE, related_name='coordenador'
+    )
+    #departamento = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.usuario.nome
+
+    class Meta:
+        verbose_name = 'Coordenador'
+        verbose_name_plural = 'Coordenadores'
+
+
 class Curso(models.Model):
     nome = models.CharField(max_length=200)
+    '''
     carga_horaria_minima_total = models.PositiveIntegerField(
-        help_text='Carga horária mínima total exigida para integralização (horas)'
+        null=True, blank=True,
+        help_text='Carga horária mínima total exigida para integralização (horas)',
     )
     carga_horaria_maxima_diaria = models.PositiveIntegerField(
-        help_text='Limite diário de horas permitido pela legislação/PPC'
+        null=True, blank=True,
+        help_text='Limite diário de horas permitido pela legislação/PPC',
+    )
+    '''
+    coordenador = models.ForeignKey(
+        Coordenador,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='cursos_coordenados',
+        verbose_name='Coordenador responsável',
     )
 
     def __str__(self):
@@ -19,17 +62,33 @@ class Curso(models.Model):
         verbose_name_plural = 'Cursos'
 
 
+class Aluno(models.Model):
+    usuario = models.OneToOneField(
+        Usuario, on_delete=models.CASCADE, related_name='aluno'
+    )
+    cpf = models.CharField(max_length=14, unique=True)
+    rg = models.CharField(max_length=20, blank=True, default='')
+    coeficiente_rendimento = models.DecimalField(max_digits=2, decimal_places=2, default=0)
+    curso = models.ForeignKey(
+        Curso, on_delete=models.PROTECT, related_name='alunos', null=True, blank=True
+    )
+
+    def __str__(self):
+        return self.usuario.nome
+
+    class Meta:
+        verbose_name = 'Aluno'
+        verbose_name_plural = 'Alunos'
+
+
 class Empresa(models.Model):
     cnpj = models.CharField(max_length=18, unique=True)
     razao_social = models.CharField(max_length=200)
-    areas_atuacao = models.TextField(
-        help_text='Áreas de atuação da empresa (texto livre)'
-    )
+    areas_atuacao = models.TextField()
     localizacao = models.CharField(max_length=300)
     email_contato = models.EmailField()
     aprovada_ibmec = models.BooleanField(
         default=False,
-        help_text='Empresa verificada e aprovada pela coordenação do IBMEC'
     )
 
     def __str__(self):
@@ -38,51 +97,6 @@ class Empresa(models.Model):
     class Meta:
         verbose_name = 'Empresa'
         verbose_name_plural = 'Empresas'
-
-
-class Usuario(AbstractUser):
-    """
-    Usuário base do sistema. AbstractUser já fornece username, password (com hash),
-    is_active, is_staff, date_joined, etc. Não adicione campo 'senha' manualmente.
-    Aluno e Coordenador herdam deste model via multi-table inheritance.
-    """
-    nome = models.CharField(max_length=200)
-    email_institucional = models.EmailField(unique=True, blank=True, default='')
-
-    def __str__(self):
-        return self.nome or self.username
-
-    class Meta:
-        verbose_name = 'Usuário'
-        verbose_name_plural = 'Usuários'
-
-
-class Aluno(Usuario):
-    matricula = models.CharField(max_length=20, unique=True)
-    cpf = models.CharField(max_length=14, unique=True)
-    rg = models.CharField(max_length=20)
-    coeficiente_rendimento = models.DecimalField(max_digits=4, decimal_places=2, default=0)
-    curso = models.ForeignKey(
-        Curso, on_delete=models.PROTECT, related_name='alunos', null=True, blank=True
-    )
-
-    def __str__(self):
-        return f'{self.nome} ({self.matricula})'
-
-    class Meta:
-        verbose_name = 'Aluno'
-        verbose_name_plural = 'Alunos'
-
-
-class Coordenador(Usuario):
-    departamento = models.CharField(max_length=200)
-
-    def __str__(self):
-        return f'{self.nome} — {self.departamento}'
-
-    class Meta:
-        verbose_name = 'Coordenador'
-        verbose_name_plural = 'Coordenadores'
 
 
 class SolicitacaoEstagio(models.Model):
@@ -100,7 +114,6 @@ class SolicitacaoEstagio(models.Model):
     empresa = models.ForeignKey(
         Empresa, on_delete=models.PROTECT, related_name='solicitacoes'
     )
-    # nullable: coordenador é atribuído quando avalia a solicitação
     coordenador = models.ForeignKey(
         Coordenador, on_delete=models.SET_NULL,
         null=True, blank=True, related_name='solicitacoes'
@@ -122,10 +135,6 @@ class SolicitacaoEstagio(models.Model):
 
 
 class Documento(models.Model):
-    """
-    Base abstrata para todos os documentos do processo de estágio.
-    Não gera tabela própria no banco — cada subclasse tem a sua.
-    """
     class StatusDocumento(models.TextChoices):
         PENDENTE = 'PENDENTE', 'Pendente'
         APROVADO = 'APROVADO', 'Aprovado'
@@ -148,7 +157,6 @@ class Documento(models.Model):
 
 
 class TermoCompromisso(Documento):
-    # O plano de atividades fica dentro do TCE, conforme Brainstorming
     plano_atividades = models.TextField()
 
     def __str__(self):
@@ -160,7 +168,6 @@ class TermoCompromisso(Documento):
 
 
 class ApoliceSeguro(Documento):
-    # Obrigatória antes da aprovação final do estágio
     data_vencimento = models.DateField()
 
     def __str__(self):
@@ -172,7 +179,6 @@ class ApoliceSeguro(Documento):
 
 
 class RelatorioEstagio(Documento):
-    # Ex.: "Fevereiro/2026" ou "2026-02"
     periodo_referencia = models.CharField(max_length=50)
 
     def __str__(self):
@@ -181,6 +187,7 @@ class RelatorioEstagio(Documento):
     class Meta:
         verbose_name = 'Relatório de Estágio'
         verbose_name_plural = 'Relatórios de Estágio'
+
 
 
 class AssinaturaDigital(models.Model):
@@ -194,7 +201,6 @@ class AssinaturaDigital(models.Model):
     ip_address = models.GenericIPAddressField()
     data_assinatura = models.DateTimeField(auto_now_add=True)
 
-    # Apenas uma das três FKs abaixo é preenchida por registro
     termo_compromisso = models.ForeignKey(
         TermoCompromisso, on_delete=models.CASCADE,
         null=True, blank=True, related_name='assinaturas'

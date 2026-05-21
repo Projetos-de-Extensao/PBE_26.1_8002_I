@@ -1,15 +1,15 @@
 from django.contrib import admin
 from .models import (
-    Curso, Empresa,
-    Usuario, Aluno, Coordenador,
+    Usuario, Curso, Empresa,
+    Aluno, Coordenador,
     SolicitacaoEstagio,
     TermoCompromisso, ApoliceSeguro, RelatorioEstagio,
     AssinaturaDigital,
 )
 
+admin.site.register(Usuario)
 admin.site.register(Curso)
 admin.site.register(Empresa)
-admin.site.register(Usuario)   # entrada separada para o usuário base
 admin.site.register(Aluno)
 admin.site.register(Coordenador)
 admin.site.register(SolicitacaoEstagio)
