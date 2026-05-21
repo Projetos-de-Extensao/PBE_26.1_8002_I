@@ -23,7 +23,7 @@ class Coordenador(models.Model):
     usuario = models.OneToOneField(
         Usuario, on_delete=models.CASCADE, related_name='coordenador'
     )
-    #departamento = models.CharField(max_length=100)
+    departamento = models.CharField(max_length=100, blank=True, default='')
 
     def __str__(self):
         return self.usuario.nome
