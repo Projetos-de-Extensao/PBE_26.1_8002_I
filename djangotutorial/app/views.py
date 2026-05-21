@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status, permissions
+from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -17,27 +17,11 @@ from .serializers import (
 )
 
 
-# ── Permissões customizadas ───────────────────────────────────────────────────
-
-class IsCoordenadorDoSeussCursos(permissions.BasePermission):
-    """Permite que coordenador edite só seus próprios cursos. Admin edita todos."""
-
-    def has_object_permission(self, request, view, obj):
-        if request.user.is_superuser or request.user.is_staff:
-            return True
-        try:
-            coordenador = request.user.coordenador
-            return obj.coordenador == coordenador
-        except Exception:
-            return False
-
-
-# ── ViewSets CRUD (protegidos por IsAuthenticated via settings.py) ──────────
+# ── ViewSets CRUD ────────────────────────────────────────────────────────────
 
 class CursoViewSet(viewsets.ModelViewSet):
     queryset = Curso.objects.all()
     serializer_class = CursoSerializer
-    permission_classes = [IsAuthenticated, IsCoordenadorDoSeussCursos]
 
     def get_queryset(self):
         user = self.request.user
