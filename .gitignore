@@ -2,6 +2,10 @@
 site/
 .mkdocs.yml.bak
 
+# Django
+djangotutorial/db.sqlite3
+djangotutorial/media/
+
 # Python
 __pycache__/
 *.py[cod]
@@ -29,6 +33,9 @@ venv/
 ENV/
 env/
 .venv/
+
+# Claude Code
+.claude/
 
 # IDE
 .vscode/
