@@ -9,14 +9,12 @@ from django.contrib.auth import authenticate
 
 from .models import (
     Usuario, Curso, Empresa, Aluno, Coordenador, SolicitacaoEstagio,
-    TermoCompromisso, ApoliceSeguro, RelatorioEstagio, AssinaturaDigital,
 )
 from .serializers import (
     UsuarioSerializer, CursoSerializer, EmpresaSerializer,
     AlunoSerializer, CoordenadorSerializer,
     SolicitacaoEstagioSerializer, CriarSolicitacaoSerializer,
-    AlterarStatusSerializer, TermoCompromissoSerializer,
-    ApoliceSeguroSerializer, RelatorioEstagioSerializer, AssinaturaDigitalSerializer,
+    AlterarStatusSerializer,
 )
 from .permissions import (
     SolicitacaoEstagioPermission, get_aluno, get_coordenador, is_admin,
@@ -139,26 +137,6 @@ class SolicitacaoEstagioViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-# ── ViewSets de documentos ────────────────────────────────────────────────────
-
-class TermoCompromissoViewSet(viewsets.ModelViewSet):
-    queryset = TermoCompromisso.objects.all()
-    serializer_class = TermoCompromissoSerializer
-
-
-class ApoliceSeguroViewSet(viewsets.ModelViewSet):
-    queryset = ApoliceSeguro.objects.all()
-    serializer_class = ApoliceSeguroSerializer
-
-
-class RelatorioEstagioViewSet(viewsets.ModelViewSet):
-    queryset = RelatorioEstagio.objects.all()
-    serializer_class = RelatorioEstagioSerializer
-
-
-class AssinaturaDigitalViewSet(viewsets.ModelViewSet):
-    queryset = AssinaturaDigital.objects.all()
-    serializer_class = AssinaturaDigitalSerializer
 
 
 # ── Auth manual ───────────────────────────────────────────────────────────────
