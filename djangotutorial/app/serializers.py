@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from .models import (
     Usuario, Curso, Empresa, Aluno, Coordenador, SolicitacaoEstagio,
-    TermoCompromisso, ApoliceSeguro, RelatorioEstagio, AssinaturaDigital,
 )
 
 
@@ -103,25 +102,6 @@ class AlterarStatusSerializer(serializers.ModelSerializer):
         return data
 
 
-class TermoCompromissoSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TermoCompromisso
-        fields = '__all__'
 
 
-class ApoliceSeguroSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ApoliceSeguro
-        fields = '__all__'
 
-
-class RelatorioEstagioSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = RelatorioEstagio
-        fields = '__all__'
-
-
-class AssinaturaDigitalSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = AssinaturaDigital
-        fields = '__all__'

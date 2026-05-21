@@ -23,7 +23,6 @@ class Coordenador(models.Model):
     usuario = models.OneToOneField(
         Usuario, on_delete=models.CASCADE, related_name='coordenador'
     )
-    departamento = models.CharField(max_length=100, blank=True, default='')
 
     def __str__(self):
         return self.usuario.nome
@@ -155,68 +154,3 @@ class Documento(models.Model):
     class Meta:
         abstract = True
 
-
-class TermoCompromisso(Documento):
-    plano_atividades = models.TextField()
-
-    def __str__(self):
-        return f'TCE — Solicitação #{self.solicitacao_id} (v{self.versao})'
-
-    class Meta:
-        verbose_name = 'Termo de Compromisso'
-        verbose_name_plural = 'Termos de Compromisso'
-
-
-class ApoliceSeguro(Documento):
-    data_vencimento = models.DateField()
-
-    def __str__(self):
-        return f'Apólice — Solicitação #{self.solicitacao_id} (v{self.versao})'
-
-    class Meta:
-        verbose_name = 'Apólice de Seguro'
-        verbose_name_plural = 'Apólices de Seguro'
-
-
-class RelatorioEstagio(Documento):
-    periodo_referencia = models.CharField(max_length=50)
-
-    def __str__(self):
-        return f'Relatório {self.periodo_referencia} — Solicitação #{self.solicitacao_id}'
-
-    class Meta:
-        verbose_name = 'Relatório de Estágio'
-        verbose_name_plural = 'Relatórios de Estágio'
-
-
-
-class AssinaturaDigital(models.Model):
-    class Perfil(models.TextChoices):
-        ALUNO = 'ALUNO', 'Aluno'
-        COORDENADOR = 'COORDENADOR', 'Coordenador'
-        EMPRESA = 'EMPRESA', 'Empresa'
-
-    signatario_nome = models.CharField(max_length=200)
-    signatario_perfil = models.CharField(max_length=20, choices=Perfil.choices)
-    ip_address = models.GenericIPAddressField()
-    data_assinatura = models.DateTimeField(auto_now_add=True)
-
-    termo_compromisso = models.ForeignKey(
-        TermoCompromisso, on_delete=models.CASCADE,
-        null=True, blank=True, related_name='assinaturas'
-    )
-    apolice_seguro = models.ForeignKey(
-        ApoliceSeguro, on_delete=models.CASCADE,
-        null=True, blank=True, related_name='assinaturas'
-    )
-    relatorio_estagio = models.ForeignKey(
-        RelatorioEstagio, on_delete=models.CASCADE,
-        null=True, blank=True, related_name='assinaturas'
-    )
-
-    def __str__(self):
-        return f'{self.signatario_nome} ({self.signatario_perfil}) — {self.data_assinatura}'
-
-    class Meta:
-        verbose_name = 'Assinatura Digital'
-        verbose_name_plural = 'Assinaturas Digitais'

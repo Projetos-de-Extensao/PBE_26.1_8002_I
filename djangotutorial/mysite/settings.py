@@ -25,6 +25,8 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.microsoft',
+    # Swagger / OpenAPI
+    'drf_spectacular',
     # app do projeto
     'app',
 ]
@@ -109,6 +111,13 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'API de Gestão de Estágios IBMEC',
+    'DESCRIPTION': 'API para gerenciamento de estágios do IBMEC',
+    'VERSION': '1.0.0',
 }
 
 LANGUAGE_CODE = 'pt-br'

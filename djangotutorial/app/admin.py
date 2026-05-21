@@ -3,9 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 from .models import (
     Usuario, Curso, Empresa,
     Aluno, Coordenador,
-    SolicitacaoEstagio,
-    TermoCompromisso, ApoliceSeguro, RelatorioEstagio,
-    AssinaturaDigital,
+    SolicitacaoEstagio
 )
 
 
@@ -49,7 +47,7 @@ class UsuarioAdmin(UserAdmin):
 
 @admin.register(Coordenador)
 class CoordenadorAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'departamento')
+    list_display = ('__str__',)
     search_fields = ('usuario__nome', 'usuario__username')
 
 
@@ -79,26 +77,3 @@ class SolicitacaoEstagioAdmin(admin.ModelAdmin):
     list_filter = ('status',)
     search_fields = ('aluno__usuario__nome', 'empresa__razao_social')
 
-
-@admin.register(TermoCompromisso)
-class TermoCompromissoAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'status', 'versao', 'data_upload')
-    list_filter = ('status',)
-
-
-@admin.register(ApoliceSeguro)
-class ApoliceSeguroAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'status', 'data_vencimento', 'versao')
-    list_filter = ('status',)
-
-
-@admin.register(RelatorioEstagio)
-class RelatorioEstagioAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'status', 'periodo_referencia', 'versao')
-    list_filter = ('status',)
-
-
-@admin.register(AssinaturaDigital)
-class AssinaturaDigitalAdmin(admin.ModelAdmin):
-    list_display = ('signatario_nome', 'signatario_perfil', 'data_assinatura', 'ip_address')
-    list_filter = ('signatario_perfil',)
