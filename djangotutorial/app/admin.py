@@ -1,9 +1,9 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import (
-    Usuario, Curso, Empresa,
-    Aluno, Coordenador,
-    SolicitacaoEstagio
+    Usuario, Curso, EmpresaConcedente,
+    Aluno, Coordenador, SupervisorEmpresa,
+    ProcessoEstagio, DocumentoProcesso,
 )
 
 
@@ -47,33 +47,52 @@ class UsuarioAdmin(UserAdmin):
 
 @admin.register(Coordenador)
 class CoordenadorAdmin(admin.ModelAdmin):
-    list_display = ('__str__',)
-    search_fields = ('usuario__nome', 'usuario__username')
+    list_display = ('__str__', 'departamento')
+    search_fields = ('usuario__nome', 'usuario__username', 'departamento')
 
 
 @admin.register(Aluno)
 class AlunoAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'cpf', 'curso', 'coeficiente_rendimento')
+    list_display = (
+        '__str__', 'cpf', 'curso', 'coeficiente_rendimento', 'matriculado_estagio'
+    )
     search_fields = ('usuario__nome', 'cpf')
-    list_filter = ('curso',)
+    list_filter = ('curso', 'matriculado_estagio')
 
 
 @admin.register(Curso)
 class CursoAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'coordenador')
+    list_display = (
+        'nome', 'coordenador',
+        'carga_horaria_minima_total', 'carga_horaria_maxima_diaria',
+    )
     search_fields = ('nome',)
 
 
-@admin.register(Empresa)
-class EmpresaAdmin(admin.ModelAdmin):
+@admin.register(EmpresaConcedente)
+class EmpresaConcedenteAdmin(admin.ModelAdmin):
     list_display = ('razao_social', 'cnpj', 'aprovada_ibmec', 'email_contato')
     list_filter = ('aprovada_ibmec',)
     search_fields = ('razao_social', 'cnpj')
 
 
-@admin.register(SolicitacaoEstagio)
-class SolicitacaoEstagioAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'status', 'horas_semanais', 'data_inicio_prevista', 'data_fim_prevista')
-    list_filter = ('status',)
+@admin.register(SupervisorEmpresa)
+class SupervisorEmpresaAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'empresa', 'cargo')
+    search_fields = ('usuario__nome',)
+
+
+@admin.register(ProcessoEstagio)
+class ProcessoEstagioAdmin(admin.ModelAdmin):
+    list_display = (
+        '__str__', 'status', 'horas_semanais',
+        'data_inicio_prevista', 'data_fim_prevista',
+    )
+    list_filter = ('status', 'empresa__aprovada_ibmec')
     search_fields = ('aluno__usuario__nome', 'empresa__razao_social')
 
+
+@admin.register(DocumentoProcesso)
+class DocumentoProcessoAdmin(admin.ModelAdmin):
+    list_display = ('processo', 'tipo', 'status', 'data_upload')
+    list_filter = ('tipo', 'status')
