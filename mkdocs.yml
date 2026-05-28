@@ -32,6 +32,14 @@ nav:
       - Git Issues: Construcao/git_issues.md
       - GitHub Projects: Construcao/github_projects.md
       - CodeSpace: Construcao/codespace.md
+      - API:
+          - Visão Geral: Construcao/api/index.md
+          - Autenticação: Construcao/api/autenticacao.md
+          - Endpoints: Construcao/api/endpoints.md
+          - Regras de Negócio: Construcao/api/regras-negocio.md
+          - Máquina de Estados: Construcao/api/state-machine.md
+          - Exemplos de Uso: Construcao/api/exemplos.md
+          - Códigos de Erro: Construcao/api/erros.md
   - Transição:
       - Index: Transicao/index.md
 
