@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal de Estágios — IBMEC</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1117; --surface: #1a1d27; --surface2: #222637; --border: #2e3347;
+    --accent: #6c63ff; --accent2: #00d4aa; --accent3: #ff6b6b; --accent4: #ffd166;
+    --text: #e8eaf0; --muted: #7b82a0; --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* SIDEBAR */
+  .sidebar {
+    position: fixed; top: 0; left: 0; width: 240px; height: 100vh;
+    background: var(--surface); border-right: 1px solid var(--border);
+    padding: 20px 14px; display: flex; flex-direction: column; gap: 6px; z-index: 100; overflow-y: auto;
+  }
+  .logo { font-size: 17px; font-weight: 700; color: var(--accent); margin-bottom: 20px; display: flex; align-items: center; gap: 9px; }
+  .logo svg { width: 26px; height: 26px; flex-shrink: 0; }
+  .nav-section { font-size: 10px; font-weight: 600; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; padding: 8px 12px 4px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px;
+    font-size: 14px; cursor: pointer; color: var(--muted); transition: all .15s;
+    border: none; background: none; width: 100%; text-align: left;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: rgba(108,99,255,.15); color: var(--accent); }
+  .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .student-card {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px;
+    cursor: pointer; transition: all .15s; border: 1px solid transparent;
+  }
+  .student-card:hover { background: var(--surface2); }
+  .student-card.active { border-color: var(--accent); background: rgba(108,99,255,.1); }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+  .student-info { font-size: 13px; line-height: 1.3; }
+  .student-info small { color: var(--muted); font-size: 11px; }
+  .add-btn {
+    margin-top: auto; display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 10px; border-radius: 8px; background: var(--accent); color: white;
+    border: none; cursor: pointer; font-size: 14px; font-weight: 600; transition: opacity .15s;
+  }
+  .add-btn:hover { opacity: .85; }
+
+  /* MAIN */
+  .main { margin-left: 240px; padding: 32px; min-height: 100vh; }
+
+  /* PAGES */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* PAGE HEADER */
+  .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
+  .page-title { font-size: 22px; font-weight: 700; }
+  .page-subtitle { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .badge-green { background: rgba(0,212,170,.15); color: var(--accent2); }
+  .badge-purple { background: rgba(108,99,255,.15); color: var(--accent); }
+  .badge-yellow { background: rgba(255,209,102,.15); color: var(--accent4); }
+
+  /* KPIs */
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); gap: 14px; margin-bottom: 24px; }
+  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; }
+  .kpi-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .kpi-value { font-size: 26px; font-weight: 700; }
+  .kpi-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .kpi-icon { font-size: 20px; margin-bottom: 8px; }
+
+  /* GRIDS */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; margin-bottom: 18px; }
+
+  /* CARDS */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; }
+  .card-title { font-size: 14px; font-weight: 600; margin-bottom: 18px; color: var(--text); display: flex; align-items: center; justify-content: space-between; }
+  .card-title span { color: var(--muted); font-size: 11px; font-weight: 400; }
+  .chart-wrap { position: relative; }
+
+  /* AREA ROWS */
+  .area-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .area-row:last-child { border-bottom: none; }
+  .area-name { flex: 1; }
+  .area-tags { display: flex; gap: 5px; flex-shrink: 0; }
+  .tag { padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+  .tag-yes { background: rgba(0,212,170,.15); color: var(--accent2); }
+  .tag-no { background: rgba(123,130,160,.1); color: var(--muted); }
+
+  /* SCORE PILLS */
+  .score-row { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .score-row:last-child { border-bottom: none; }
+  .score-label { flex: 1; }
+  .score-pill { padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+  .pill-1 { background: rgba(0,212,170,.15); color: var(--accent2); }
+  .pill-2 { background: rgba(108,99,255,.15); color: var(--accent); }
+  .pill-3 { background: rgba(255,209,102,.15); color: var(--accent4); }
+  .pill-4 { background: rgba(255,107,107,.15); color: var(--accent3); }
+
+  /* ── EMPRESAS PAGE ── */
+  .empresa-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-bottom: 24px; }
+  .empresa-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    overflow: hidden; cursor: pointer; transition: border-color .2s, transform .15s;
+  }
+  .empresa-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .empresa-card.selected { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(108,99,255,.25); }
+  .empresa-card-header {
+    padding: 20px 22px 16px; display: flex; align-items: flex-start; gap: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .empresa-logo {
+    width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center;
+    justify-content: center; font-size: 16px; font-weight: 800; flex-shrink: 0;
+  }
+  .empresa-header-info h3 { font-size: 15px; font-weight: 700; line-height: 1.3; }
+  .empresa-header-info p { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .empresa-card-body { padding: 16px 22px; }
+  .empresa-info-row { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 5px 0; color: var(--muted); }
+  .empresa-info-row strong { color: var(--text); }
+  .empresa-info-row svg { width: 14px; height: 14px; flex-shrink: 0; }
+  .empresa-card-footer { padding: 12px 22px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .star-rating { display: flex; gap: 3px; }
+  .star { font-size: 14px; }
+
+  /* DETAIL PANEL */
+  .empresa-detail { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 24px; }
+  .empresa-detail-header {
+    padding: 24px 28px; background: var(--surface2);
+    display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+  }
+  .empresa-detail-logo { width: 60px; height: 60px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; }
+  .empresa-detail-title h2 { font-size: 20px; font-weight: 700; }
+  .empresa-detail-title p { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .empresa-detail-badges { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+  .empresa-detail-body { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; }
+  .empresa-detail-section { padding: 22px 26px; border-right: 1px solid var(--border); }
+  .empresa-detail-section:last-child { border-right: none; }
+  .empresa-detail-section h4 { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 14px; }
+  .info-item { margin-bottom: 12px; }
+  .info-item .info-label { font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+  .info-item .info-value { font-size: 14px; font-weight: 600; }
+  .rating-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .rating-row:last-child { border-bottom: none; }
+  .rating-bar-wrap { width: 80px; height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .rating-bar-fill { height: 100%; border-radius: 3px; }
+  .area-tag-cloud { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  .area-tag { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; background: rgba(108,99,255,.12); color: var(--accent); }
+  .estagiario-chip { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--surface2); border-radius: 8px; margin-bottom: 6px; cursor: pointer; }
+  .estagiario-chip:hover { background: rgba(108,99,255,.1); }
+  .estagiario-chip .chip-avatar { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; flex-shrink: 0; }
+  .estagiario-chip .chip-info { font-size: 12px; line-height: 1.3; }
+  .estagiario-chip .chip-info small { color: var(--muted); font-size: 11px; }
+
+  /* ── REPORTS PAGE ── */
+  .filter-bar {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 18px 20px; margin-bottom: 20px;
+    display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;
+  }
+  .filter-group { display: flex; flex-direction: column; gap: 5px; min-width: 140px; }
+  .filter-group label { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+  .filter-group select, .filter-group input {
+    padding: 8px 10px; border-radius: 8px; background: var(--surface2);
+    border: 1px solid var(--border); color: var(--text); font-size: 13px; cursor: pointer;
+  }
+  .filter-group select:focus, .filter-group input:focus { outline: none; border-color: var(--accent); }
+  .btn-clear { padding: 8px 16px; border-radius: 8px; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); font-size: 13px; cursor: pointer; margin-top: auto; }
+  .btn-clear:hover { color: var(--text); }
+
+  /* STATS ROW */
+  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .stat-mini { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .stat-mini-label { font-size: 11px; color: var(--muted); }
+  .stat-mini-value { font-size: 22px; font-weight: 700; margin-top: 4px; }
+
+  /* TABLE */
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th { padding: 12px 16px; text-align: left; background: var(--surface2); color: var(--muted); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; cursor: pointer; user-select: none; white-space: nowrap; }
+  thead th:hover { color: var(--text); }
+  thead th .sort-icon { margin-left: 4px; opacity: .4; }
+  thead th.sorted .sort-icon { opacity: 1; color: var(--accent); }
+  tbody tr { border-top: 1px solid var(--border); transition: background .1s; }
+  tbody tr:hover { background: var(--surface2); }
+  td { padding: 12px 16px; vertical-align: middle; }
+  td .name-cell { font-weight: 600; }
+  td .name-cell small { display: block; color: var(--muted); font-size: 11px; font-weight: 400; }
+  .score-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+  .no-results { text-align: center; padding: 48px; color: var(--muted); font-size: 14px; }
+
+  /* COMPARE */
+  .compare-section { margin-top: 24px; }
+  .compare-section .card-title { margin-bottom: 12px; }
+
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 200; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 30px; width: 480px; max-width: 95vw; max-height: 90vh; overflow-y: auto; }
+  .modal h2 { font-size: 18px; margin-bottom: 18px; }
+  .modal label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; margin-top: 12px; }
+  .modal input, .modal select { width: 100%; padding: 9px 11px; border-radius: 8px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); font-size: 14px; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 22px; }
+  .btn-primary { flex: 1; padding: 10px; border-radius: 8px; background: var(--accent); color: white; border: none; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .btn-secondary { flex: 1; padding: 10px; border-radius: 8px; background: var(--surface2); color: var(--text); border: 1px solid var(--border); font-size: 14px; cursor: pointer; }
+
+  @media (max-width: 900px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .main { margin-left: 0; padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>
+    </svg>
+    EstágioIBMEC
+  </div>
+
+  <div class="nav-section">Menu</div>
+  <button class="nav-item active" onclick="setPage('dashboard')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    Dashboard
+  </button>
+  <button class="nav-item" onclick="setPage('relatorios')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    Relatórios
+  </button>
+  <button class="nav-item" onclick="setPage('empresas')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="12"/></svg>
+    Empresas
+  </button>
+
+  <div class="nav-section" style="margin-top:12px">Alunos</div>
+
+  <div class="student-card active" id="card-fernanda" onclick="selectStudent('fernanda')">
+    <div class="avatar" style="background:rgba(108,99,255,.2);color:#6c63ff">FO</div>
+    <div class="student-info">Aluno A<br><small>Arq. · 20º · 2025.1</small></div>
+  </div>
+  <div class="student-card" id="card-abraao" onclick="selectStudent('abraao')">
+    <div class="avatar" style="background:rgba(0,212,170,.2);color:#00d4aa">AA</div>
+    <div class="student-info">Aluno B<br><small>Arq. · 20º · 2023.2</small></div>
+  </div>
+  <div class="student-card" id="card-isadora" onclick="selectStudent('isadora')">
+    <div class="avatar" style="background:rgba(255,209,102,.2);color:#ffd166">IS</div>
+    <div class="student-info">Aluno C<br><small>Arq. · 2024.1</small></div>
+  </div>
+
+  <button class="add-btn" style="margin-top:16px" onclick="showModal()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Novo Relatório
+  </button>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- ══════════ PAGE: DASHBOARD ══════════ -->
+  <div class="page active" id="page-dashboard">
+
+    <!-- FERNANDA -->
+    <div id="dash-fernanda">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Aluno A</div>
+          <div class="page-subtitle">Matrícula 202300114872 · Arq. e Urb. · 20º período · Forma Studio Arquitetura · 2025.1</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span class="badge badge-green">✓ Efetivação aceita</span>
+          <span class="badge badge-purple">350h concluídas</span>
+        </div>
+      </div>
+      <div class="kpi-row">
+        <div class="kpi"><div class="kpi-icon">⏱️</div><div class="kpi-label">Horas Totais</div><div class="kpi-value">350h</div><div class="kpi-sub">14 sem · 21–25h/sem</div></div>
+        <div class="kpi"><div class="kpi-icon">💰</div><div class="kpi-label">Remuneração</div><div class="kpi-value" style="font-size:22px">R$1.518</div><div class="kpi-sub">Média mensal</div></div>
+        <div class="kpi"><div class="kpi-icon">📅</div><div class="kpi-label">Início</div><div class="kpi-value" style="font-size:20px">03/03/25</div><div class="kpi-sub">2025.1</div></div>
+        <div class="kpi"><div class="kpi-icon">🏢</div><div class="kpi-label">Empresa</div><div class="kpi-value" style="font-size:14px;line-height:1.4">Forma Studio<br>Arquitetura</div><div class="kpi-sub">Gestor: ██████</div></div>
+        <div class="kpi"><div class="kpi-icon">⭐</div><div class="kpi-label">Score Geral</div><div class="kpi-value" style="color:var(--accent2)">4.0</div><div class="kpi-sub">Avaliação da exp.</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Aplicação do Conhecimento <span>1=Muito · 3=Pouco</span></div>
+          <div class="chart-wrap" style="height:210px"><canvas id="c-fernanda-conhecimento"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Inteligência Comportamental <span>1–4</span></div>
+          <div class="chart-wrap" style="height:210px"><canvas id="c-fernanda-comp"></canvas></div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Softwares: Empresa vs Você <span>1=Muito / 4=Nada</span></div>
+          <div class="chart-wrap" style="height:240px"><canvas id="c-fernanda-soft"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Avaliação da Experiência</div>
+          <div class="score-row"><span class="score-label">Atividades x Formação</span><span class="score-pill pill-1">4 – Ótimo</span></div>
+          <div class="score-row"><span class="score-label">Orientação supervisor</span><span class="score-pill pill-1">4 – Ótimo</span></div>
+          <div class="score-row"><span class="score-label">Feedback supervisor</span><span class="score-pill pill-1">4 – Ótimo</span></div>
+          <div class="score-row"><span class="score-label">Condições de trabalho</span><span class="score-pill pill-1">4 – Ótimo</span></div>
+          <div class="score-row"><span class="score-label">Remuneração x mercado</span><span class="score-pill pill-2">3 – Bom</span></div>
+          <div class="score-row"><span class="score-label">Relacionamento</span><span class="score-pill pill-1">4 – Ótimo</span></div>
+          <div class="score-row"><span class="score-label">Produtividade</span><span class="score-pill pill-1">4 – Ótimo</span></div>
+          <div class="score-row"><span class="score-label">Indicaria a empresa?</span><span class="score-pill pill-1">4 – Ótimo</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABRAÃO -->
+    <div id="dash-abraao" style="display:none">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Aluno B</div>
+          <div class="page-subtitle">Matrícula 201800229631 · Arq. e Urb. · 20º período · Atlas Projetos e Segurança · 2023.2</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span class="badge badge-green">✓ Efetivado no 1º dia</span>
+          <span class="badge badge-purple">2.332h concluídas</span>
+        </div>
+      </div>
+      <div class="kpi-row">
+        <div class="kpi"><div class="kpi-icon">⏱️</div><div class="kpi-label">Horas Totais</div><div class="kpi-value">2.332h</div><div class="kpi-sub">53 sem · 44h/sem</div></div>
+        <div class="kpi"><div class="kpi-icon">💰</div><div class="kpi-label">Remuneração</div><div class="kpi-value" style="font-size:22px">R$2.500</div><div class="kpi-sub">Média mensal</div></div>
+        <div class="kpi"><div class="kpi-icon">📅</div><div class="kpi-label">Início</div><div class="kpi-value" style="font-size:20px">09/08/23</div><div class="kpi-sub">2023.2</div></div>
+        <div class="kpi"><div class="kpi-icon">🏢</div><div class="kpi-label">Empresa</div><div class="kpi-value" style="font-size:13px;line-height:1.4">Atlas Projetos<br>e Segurança</div><div class="kpi-sub">Gestor: ██████</div></div>
+        <div class="kpi"><div class="kpi-icon">⭐</div><div class="kpi-label">Score Geral</div><div class="kpi-value" style="color:var(--accent2)">4.0</div><div class="kpi-sub">Avaliação da exp.</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Aplicação do Conhecimento <span>Suficiente / Insuficiente</span></div>
+          <div class="chart-wrap" style="height:210px"><canvas id="c-abraao-conhecimento"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Inteligência Comportamental <span>1–4</span></div>
+          <div class="chart-wrap" style="height:210px"><canvas id="c-abraao-comp"></canvas></div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Softwares: Empresa vs Você <span>1=Muito / 4=Nada</span></div>
+          <div class="chart-wrap" style="height:240px"><canvas id="c-abraao-soft"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Avaliação da Experiência</div>
+          <div class="score-row"><span class="score-label">Atividades x Formação</span><span class="score-pill pill-1">4 – Ótimo</span></div>
+          <div class="score-row"><span class="score-label">Orientação supervisor</span><span class="score-pill pill-1">4 – Ótimo</span></div>
+          <div class="score-row"><span class="score-label">Feedback supervisor</span><span class="score-pill pill-1">4 – Ótimo</span></div>
+          <div class="score-row"><span class="score-label">Condições de trabalho</span><span class="score-pill pill-1">4 – Ótimo</span></div>
+          <div class="score-row"><span class="score-label">Remuneração x mercado</span><span class="score-pill pill-1">4 – Ótimo</span></div>
+          <div class="score-row"><span class="score-label">Relacionamento</span><span class="score-pill pill-1">4 – Ótimo</span></div>
+          <div class="score-row"><span class="score-label">Produtividade</span><span class="score-pill pill-1">4 – Ótimo</span></div>
+          <div class="score-row"><span class="score-label">Indicaria a empresa?</span><span class="score-pill pill-1">4 – Ótimo</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ISADORA -->
+    <div id="dash-isadora" style="display:none">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Aluno C</div>
+          <div class="page-subtitle">Matrícula 202200347518 · Arq. e Urb. · 20º período · Vértice Arquitetura · 2024.1</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span class="badge badge-yellow">⏳ Ainda trabalhando</span>
+          <span class="badge badge-purple">1.470h realizadas</span>
+        </div>
+      </div>
+      <div class="kpi-row">
+        <div class="kpi"><div class="kpi-icon">⏱️</div><div class="kpi-label">Horas Totais</div><div class="kpi-value">1.470h</div><div class="kpi-sub">29 sem · 30h/sem</div></div>
+        <div class="kpi"><div class="kpi-icon">💰</div><div class="kpi-label">Remuneração</div><div class="kpi-value" style="font-size:22px">R$900</div><div class="kpi-sub">Média mensal</div></div>
+        <div class="kpi"><div class="kpi-icon">📅</div><div class="kpi-label">Início</div><div class="kpi-value" style="font-size:20px">25/10/23</div><div class="kpi-sub">2024.1</div></div>
+        <div class="kpi"><div class="kpi-icon">🏢</div><div class="kpi-label">Empresa</div><div class="kpi-value" style="font-size:16px;line-height:1.4">Vértice<br>Arquitetura</div><div class="kpi-sub">Gestor: ██████</div></div>
+        <div class="kpi"><div class="kpi-icon">⭐</div><div class="kpi-label">Score Geral</div><div class="kpi-value" style="color:var(--accent4)">3.9</div><div class="kpi-sub">Avaliação da exp.</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Aplicação do Conhecimento <span>Suficiente / Insuficiente</span></div>
+          <div class="chart-wrap" style="height:210px"><canvas id="c-isadora-conhecimento"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Inteligência Comportamental <span>1–4</span></div>
+          <div class="chart-wrap" style="height:210px"><canvas id="c-isadora-comp"></canvas></div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Softwares: Empresa vs Você <span>1=Muito / 4=Nada</span></div>
+          <div class="chart-wrap" style="height:240px"><canvas id="c-isadora-soft"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Avaliação da Experiência</div>
+          <div class="score-row"><span class="score-label">Atividades x Formação</span><span class="score-pill pill-2">3 – Bom</span></div>
+          <div class="score-row"><span class="score-label">Orientação supervisor</span><span class="score-pill pill-1">4 – Ótimo</span></div>
+          <div class="score-row"><span class="score-label">Feedback supervisor</span><span class="score-pill pill-1">4 – Ótimo</span></div>
+          <div class="score-row"><span class="score-label">Condições de trabalho</span><span class="score-pill pill-1">4 – Ótimo</span></div>
+          <div class="score-row"><span class="score-label">Remuneração x mercado</span><span class="score-pill pill-2">3 – Bom</span></div>
+          <div class="score-row"><span class="score-label">Relacionamento</span><span class="score-pill pill-1">4 – Ótimo</span></div>
+          <div class="score-row"><span class="score-label">Produtividade</span><span class="score-pill pill-1">4 – Ótimo</span></div>
+          <div class="score-row"><span class="score-label">Indicaria a empresa?</span><span class="score-pill pill-1">4 – Ótimo</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /page-dashboard -->
+
+
+  <!-- ══════════ PAGE: RELATÓRIOS ══════════ -->
+  <div class="page" id="page-relatorios">
+
+    <div class="page-header">
+      <div>
+        <div class="page-title">Relatórios</div>
+        <div class="page-subtitle">Visualize, filtre e compare todos os relatórios de estágio</div>
+      </div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+      <div class="filter-group">
+        <label>Semestre</label>
+        <select id="f-semestre" onchange="applyFilters()">
+          <option value="">Todos</option>
+          <option value="2023.2">2023.2</option>
+          <option value="2024.1">2024.1</option>
+          <option value="2025.1">2025.1</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Status</label>
+        <select id="f-status" onchange="applyFilters()">
+          <option value="">Todos</option>
+          <option value="efetivado">Efetivado</option>
+          <option value="ativo">Ainda ativo</option>
+          <option value="concluido">Concluído</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Score mínimo</label>
+        <select id="f-score" onchange="applyFilters()">
+          <option value="0">Qualquer</option>
+          <option value="3">≥ 3.0</option>
+          <option value="3.5">≥ 3.5</option>
+          <option value="4">= 4.0</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Horas mínimas</label>
+        <select id="f-horas" onchange="applyFilters()">
+          <option value="0">Qualquer</option>
+          <option value="300">≥ 300h</option>
+          <option value="500">≥ 500h</option>
+          <option value="1000">≥ 1.000h</option>
+          <option value="2000">≥ 2.000h</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Buscar nome</label>
+        <input type="text" id="f-busca" placeholder="Ex: Aluno A..." oninput="applyFilters()">
+      </div>
+      <button class="btn-clear" onclick="clearFilters()">Limpar filtros</button>
+    </div>
+
+    <!-- MINI STATS -->
+    <div class="stats-row" id="stats-row">
+      <div class="stat-mini"><div class="stat-mini-label">Alunos exibidos</div><div class="stat-mini-value" id="stat-count">3</div></div>
+      <div class="stat-mini"><div class="stat-mini-label">Média de horas</div><div class="stat-mini-value" id="stat-horas">1.384h</div></div>
+      <div class="stat-mini"><div class="stat-mini-label">Score médio</div><div class="stat-mini-value" id="stat-score" style="color:var(--accent2)">3.97</div></div>
+      <div class="stat-mini"><div class="stat-mini-label">Média remuneração</div><div class="stat-mini-value" id="stat-rem">R$1.639</div></div>
+      <div class="stat-mini"><div class="stat-mini-label">Taxa de efetivação</div><div class="stat-mini-value" id="stat-efet" style="color:var(--accent2)">100%</div></div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+      <table id="report-table">
+        <thead>
+          <tr>
+            <th onclick="sortTable('nome')">Aluno <span class="sort-icon">↕</span></th>
+            <th onclick="sortTable('semestre')">Semestre <span class="sort-icon">↕</span></th>
+            <th onclick="sortTable('empresa')">Empresa <span class="sort-icon">↕</span></th>
+            <th onclick="sortTable('horas')">Horas <span class="sort-icon">↕</span></th>
+            <th onclick="sortTable('remuneracao')">Remuneração <span class="sort-icon">↕</span></th>
+            <th onclick="sortTable('score')">Score <span class="sort-icon">↕</span></th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+
+    <!-- COMPARE CHARTS -->
+    <div class="compare-section">
+      <div class="grid-2" style="margin-top:24px">
+        <div class="card">
+          <div class="card-title">Comparativo: Horas por Aluno</div>
+          <div class="chart-wrap" style="height:200px"><canvas id="c-compare-horas"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Comparativo: Score Geral</div>
+          <div class="chart-wrap" style="height:200px"><canvas id="c-compare-score"></canvas></div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Comparativo: Remuneração Mensal</div>
+          <div class="chart-wrap" style="height:200px"><canvas id="c-compare-rem"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Semestres representados</div>
+          <div class="chart-wrap" style="height:200px"><canvas id="c-compare-sem"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /page-relatorios -->
+
+
+  <!-- ══════════ PAGE: EMPRESAS ══════════ -->
+  <div class="page" id="page-empresas">
+
+    <div class="page-header">
+      <div>
+        <div class="page-title">Empresas Parceiras</div>
+        <div class="page-subtitle">Dados cadastrais, avaliações dos estagiários e histórico de estágios</div>
+      </div>
+    </div>
+
+    <!-- CARDS GRID -->
+    <div class="empresa-grid">
+
+      <!-- MTEKTON -->
+      <div class="empresa-card" id="ecard-mtekton" onclick="selectEmpresa('mtekton')">
+        <div class="empresa-card-header">
+          <div class="empresa-logo" style="background:rgba(108,99,255,.15);color:#6c63ff">MT</div>
+          <div class="empresa-header-info">
+            <h3>Forma Studio Arquitetura</h3>
+            <p>Interiores · Reformas · Obras</p>
+          </div>
+        </div>
+        <div class="empresa-card-body">
+          <div class="empresa-info-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            Gestor: <strong>██████</strong>
+          </div>
+          <div class="empresa-info-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.18 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.72 16z"/></svg>
+            <strong>(21) █████-████</strong>
+          </div>
+          <div class="empresa-info-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <strong>contato@formastudio.com.br</strong>
+          </div>
+          <div class="empresa-info-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <strong>@formastudioarq</strong>
+          </div>
+        </div>
+        <div class="empresa-card-footer">
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Avaliação média</div>
+            <div class="star-rating">
+              <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star" style="opacity:.3">★</span>
+              <span style="font-size:12px;margin-left:5px;color:var(--text);font-weight:600">3.9</span>
+            </div>
+          </div>
+          <span class="badge badge-purple">1 estagiário</span>
+        </div>
+      </div>
+
+      <!-- MAR & FIRE -->
+      <div class="empresa-card" id="ecard-marfire" onclick="selectEmpresa('marfire')">
+        <div class="empresa-card-header">
+          <div class="empresa-logo" style="background:rgba(0,212,170,.15);color:#00d4aa">MF</div>
+          <div class="empresa-header-info">
+            <h3>Atlas Projetos e Segurança</h3>
+            <p>Proteção Contra Incêndio</p>
+          </div>
+        </div>
+        <div class="empresa-card-body">
+          <div class="empresa-info-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            Gestor: <strong>██████</strong>
+          </div>
+          <div class="empresa-info-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.18 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.72 16z"/></svg>
+            <strong>(21) █████-████</strong>
+          </div>
+          <div class="empresa-info-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <strong>contato@atlasprojetos.com.br</strong>
+          </div>
+          <div class="empresa-info-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <strong>www.atlasprojetos.com.br</strong>
+          </div>
+        </div>
+        <div class="empresa-card-footer">
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Avaliação média</div>
+            <div class="star-rating">
+              <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
+              <span style="font-size:12px;margin-left:5px;color:var(--text);font-weight:600">4.0</span>
+            </div>
+          </div>
+          <span class="badge badge-green">1 efetivado</span>
+        </div>
+      </div>
+
+      <!-- Vértice Arquitetura -->
+      <div class="empresa-card" id="ecard-arqnisk" onclick="selectEmpresa('arqnisk')">
+        <div class="empresa-card-header">
+          <div class="empresa-logo" style="background:rgba(255,209,102,.15);color:#ffd166">AQ</div>
+          <div class="empresa-header-info">
+            <h3>Vértice Arquitetura</h3>
+            <p>Arquitetura · Interiores · Projetos</p>
+          </div>
+        </div>
+        <div class="empresa-card-body">
+          <div class="empresa-info-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            Gestor: <strong>██████</strong>
+          </div>
+          <div class="empresa-info-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.18 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.72 16z"/></svg>
+            <strong>(21) █████-████</strong>
+          </div>
+          <div class="empresa-info-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <strong>contato@verticearq.com.br</strong>
+          </div>
+          <div class="empresa-info-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <strong>www.verticearq.com.br</strong>
+          </div>
+        </div>
+        <div class="empresa-card-footer">
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Avaliação média</div>
+            <div class="star-rating">
+              <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star" style="opacity:.3">★</span>
+              <span style="font-size:12px;margin-left:5px;color:var(--text);font-weight:600">3.9</span>
+            </div>
+          </div>
+          <span class="badge badge-yellow">1 ativo</span>
+        </div>
+      </div>
+
+    </div><!-- /empresa-grid -->
+
+    <!-- DETAIL PANEL (shown on selection) -->
+    <div id="empresa-detail-panel" style="display:none">
+
+      <!-- MTEKTON DETAIL -->
+      <div id="edetail-mtekton" style="display:none">
+        <div class="empresa-detail">
+          <div class="empresa-detail-header">
+            <div class="empresa-detail-logo" style="background:rgba(108,99,255,.15);color:#6c63ff">MT</div>
+            <div class="empresa-detail-title">
+              <h2>Forma Studio Arquitetura</h2>
+              <p>Reforma e acompanhamento de obras residenciais e comerciais · Rio de Janeiro, RJ</p>
+            </div>
+            <div class="empresa-detail-badges">
+              <span class="badge badge-purple">Parceira ativa</span>
+              <span class="badge badge-green">Aceita efetivação</span>
+            </div>
+          </div>
+          <div class="empresa-detail-body">
+            <div class="empresa-detail-section">
+              <h4>Dados da Empresa</h4>
+              <div class="info-item"><div class="info-label">Razão Social</div><div class="info-value">Forma Studio Arquitetura</div></div>
+              <div class="info-item"><div class="info-label">Contato principal</div><div class="info-value">██████</div></div>
+              <div class="info-item"><div class="info-label">E-mail</div><div class="info-value" style="font-size:12px">contato@formastudio.com.br</div></div>
+              <div class="info-item"><div class="info-label">Telefone</div><div class="info-value">(21) █████-████</div></div>
+              <div class="info-item"><div class="info-label">Redes / Web</div><div class="info-value">@formastudioarq</div></div>
+              <div class="info-item"><div class="info-label">Estagiários registrados</div><div class="info-value">1</div></div>
+              <div class="info-item"><div class="info-label">Total de horas (todos)</div><div class="info-value">350h</div></div>
+              <div class="info-item"><div class="info-label">Remuneração praticada</div><div class="info-value">R$ 1.518/mês</div></div>
+            </div>
+            <div class="empresa-detail-section">
+              <h4>Avaliação dos Estagiários</h4>
+              <div class="rating-row"><span>Orientação do supervisor</span><div class="rating-bar-wrap"><div class="rating-bar-fill" style="width:100%;background:#6c63ff"></div></div><strong style="font-size:12px">4.0</strong></div>
+              <div class="rating-row"><span>Feedback ao estagiário</span><div class="rating-bar-wrap"><div class="rating-bar-fill" style="width:100%;background:#6c63ff"></div></div><strong style="font-size:12px">4.0</strong></div>
+              <div class="rating-row"><span>Condições de trabalho</span><div class="rating-bar-wrap"><div class="rating-bar-fill" style="width:100%;background:#6c63ff"></div></div><strong style="font-size:12px">4.0</strong></div>
+              <div class="rating-row"><span>Remuneração x mercado</span><div class="rating-bar-wrap"><div class="rating-bar-fill" style="width:75%;background:#ffd166"></div></div><strong style="font-size:12px">3.0</strong></div>
+              <div class="rating-row"><span>Relacionamento equipe</span><div class="rating-bar-wrap"><div class="rating-bar-fill" style="width:100%;background:#6c63ff"></div></div><strong style="font-size:12px">4.0</strong></div>
+              <div class="rating-row"><span>Atividades x formação</span><div class="rating-bar-wrap"><div class="rating-bar-fill" style="width:100%;background:#6c63ff"></div></div><strong style="font-size:12px">4.0</strong></div>
+              <div style="margin-top:14px;padding:10px 12px;background:var(--surface2);border-radius:8px;font-size:12px;color:var(--muted)">
+                <strong style="color:var(--accent4)">Ponto de atenção:</strong> Instruções repassadas pela manhã nas obras — dificuldade de horário relatada.
+              </div>
+            </div>
+            <div class="empresa-detail-section">
+              <h4>Áreas de Atuação</h4>
+              <div class="area-tag-cloud">
+                <span class="area-tag">Interiores Res.</span>
+                <span class="area-tag">Interiores Com.</span>
+                <span class="area-tag">Edif. Residencial</span>
+                <span class="area-tag">Edif. de Saúde</span>
+                <span class="area-tag">Proj. Elétrica/Hidro</span>
+                <span class="area-tag">Proj. Gás/Incêndio</span>
+                <span class="area-tag">Proj. Estrutural</span>
+              </div>
+              <h4 style="margin-top:20px">Estagiários</h4>
+              <div class="estagiario-chip" onclick="selectStudent('fernanda');setPageDirect('dashboard')">
+                <div class="chip-avatar" style="background:rgba(108,99,255,.2);color:#6c63ff">FO</div>
+                <div class="chip-info">Aluno A<small><br>2025.1 · 350h · Score 4.0</small></div>
+                <svg style="margin-left:auto;width:14px;height:14px;color:var(--muted)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+              <div style="margin-top:12px">
+                <div class="chart-wrap" style="height:160px"><canvas id="c-mtekton-radar"></canvas></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MAR & FIRE DETAIL -->
+      <div id="edetail-marfire" style="display:none">
+        <div class="empresa-detail">
+          <div class="empresa-detail-header">
+            <div class="empresa-detail-logo" style="background:rgba(0,212,170,.15);color:#00d4aa">MF</div>
+            <div class="empresa-detail-title">
+              <h2>Atlas Projetos e Segurança LTDA</h2>
+              <p>Projetos e laudos de combate a incêndio · Rio de Janeiro, RJ</p>
+            </div>
+            <div class="empresa-detail-badges">
+              <span class="badge badge-green">Parceira ativa</span>
+              <span class="badge badge-green">Efetivou estagiário</span>
+            </div>
+          </div>
+          <div class="empresa-detail-body">
+            <div class="empresa-detail-section">
+              <h4>Dados da Empresa</h4>
+              <div class="info-item"><div class="info-label">Razão Social</div><div class="info-value" style="font-size:12px">Atlas Projetos e Segurança LTDA</div></div>
+              <div class="info-item"><div class="info-label">Contato principal</div><div class="info-value">██████</div></div>
+              <div class="info-item"><div class="info-label">E-mail</div><div class="info-value" style="font-size:12px">contato@atlasprojetos.com.br</div></div>
+              <div class="info-item"><div class="info-label">Telefone</div><div class="info-value">(21) █████-████</div></div>
+              <div class="info-item"><div class="info-label">Website</div><div class="info-value">www.atlasprojetos.com.br</div></div>
+              <div class="info-item"><div class="info-label">Estagiários registrados</div><div class="info-value">1</div></div>
+              <div class="info-item"><div class="info-label">Total de horas (todos)</div><div class="info-value">2.332h</div></div>
+              <div class="info-item"><div class="info-label">Remuneração praticada</div><div class="info-value">R$ 2.500/mês</div></div>
+            </div>
+            <div class="empresa-detail-section">
+              <h4>Avaliação dos Estagiários</h4>
+              <div class="rating-row"><span>Orientação do supervisor</span><div class="rating-bar-wrap"><div class="rating-bar-fill" style="width:100%;background:#00d4aa"></div></div><strong style="font-size:12px">4.0</strong></div>
+              <div class="rating-row"><span>Feedback ao estagiário</span><div class="rating-bar-wrap"><div class="rating-bar-fill" style="width:100%;background:#00d4aa"></div></div><strong style="font-size:12px">4.0</strong></div>
+              <div class="rating-row"><span>Condições de trabalho</span><div class="rating-bar-wrap"><div class="rating-bar-fill" style="width:100%;background:#00d4aa"></div></div><strong style="font-size:12px">4.0</strong></div>
+              <div class="rating-row"><span>Remuneração x mercado</span><div class="rating-bar-wrap"><div class="rating-bar-fill" style="width:100%;background:#00d4aa"></div></div><strong style="font-size:12px">4.0</strong></div>
+              <div class="rating-row"><span>Relacionamento equipe</span><div class="rating-bar-wrap"><div class="rating-bar-fill" style="width:100%;background:#00d4aa"></div></div><strong style="font-size:12px">4.0</strong></div>
+              <div class="rating-row"><span>Atividades x formação</span><div class="rating-bar-wrap"><div class="rating-bar-fill" style="width:100%;background:#00d4aa"></div></div><strong style="font-size:12px">4.0</strong></div>
+              <div style="margin-top:14px;padding:10px 12px;background:var(--surface2);border-radius:8px;font-size:12px;color:var(--muted)">
+                <strong style="color:var(--accent3)">Ponto de atenção:</strong> Infraestrutura física precária (sem espaço de descanso, mobiliário inadequado).
+              </div>
+            </div>
+            <div class="empresa-detail-section">
+              <h4>Áreas de Atuação</h4>
+              <div class="area-tag-cloud">
+                <span class="area-tag">Proj. Gás/Incêndio</span>
+                <span class="area-tag">Laudos Técnicos</span>
+                <span class="area-tag">Levantamento Arq.</span>
+                <span class="area-tag">Legalização CBMERJ</span>
+              </div>
+              <h4 style="margin-top:20px">Estagiários</h4>
+              <div class="estagiario-chip" onclick="selectStudent('abraao');setPageDirect('dashboard')">
+                <div class="chip-avatar" style="background:rgba(0,212,170,.2);color:#00d4aa">AA</div>
+                <div class="chip-info">Aluno B<small><br>2023.2 · 2.332h · Score 4.0</small></div>
+                <svg style="margin-left:auto;width:14px;height:14px;color:var(--muted)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+              <div style="margin-top:12px">
+                <div class="chart-wrap" style="height:160px"><canvas id="c-marfire-radar"></canvas></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vértice Arquitetura DETAIL -->
+      <div id="edetail-arqnisk" style="display:none">
+        <div class="empresa-detail">
+          <div class="empresa-detail-header">
+            <div class="empresa-detail-logo" style="background:rgba(255,209,102,.15);color:#ffd166">AQ</div>
+            <div class="empresa-detail-title">
+              <h2>Vértice Arquitetura</h2>
+              <p>Arquitetura de interiores, projetos residenciais e comerciais · Rio de Janeiro, RJ</p>
+            </div>
+            <div class="empresa-detail-badges">
+              <span class="badge badge-green">Parceira ativa</span>
+              <span class="badge badge-yellow">Estagiário ativo</span>
+            </div>
+          </div>
+          <div class="empresa-detail-body">
+            <div class="empresa-detail-section">
+              <h4>Dados da Empresa</h4>
+              <div class="info-item"><div class="info-label">Nome Fantasia</div><div class="info-value">Vértice Arquitetura</div></div>
+              <div class="info-item"><div class="info-label">Contato principal</div><div class="info-value">██████</div></div>
+              <div class="info-item"><div class="info-label">E-mail</div><div class="info-value" style="font-size:12px">contato@verticearq.com.br</div></div>
+              <div class="info-item"><div class="info-label">Telefone</div><div class="info-value">(21) █████-████</div></div>
+              <div class="info-item"><div class="info-label">Website</div><div class="info-value">www.verticearq.com.br</div></div>
+              <div class="info-item"><div class="info-label">Estagiários registrados</div><div class="info-value">1</div></div>
+              <div class="info-item"><div class="info-label">Total de horas (todos)</div><div class="info-value">1.470h</div></div>
+              <div class="info-item"><div class="info-label">Remuneração praticada</div><div class="info-value">R$ 900/mês</div></div>
+            </div>
+            <div class="empresa-detail-section">
+              <h4>Avaliação dos Estagiários</h4>
+              <div class="rating-row"><span>Orientação do supervisor</span><div class="rating-bar-wrap"><div class="rating-bar-fill" style="width:100%;background:#ffd166"></div></div><strong style="font-size:12px">4.0</strong></div>
+              <div class="rating-row"><span>Feedback ao estagiário</span><div class="rating-bar-wrap"><div class="rating-bar-fill" style="width:100%;background:#ffd166"></div></div><strong style="font-size:12px">4.0</strong></div>
+              <div class="rating-row"><span>Condições de trabalho</span><div class="rating-bar-wrap"><div class="rating-bar-fill" style="width:100%;background:#ffd166"></div></div><strong style="font-size:12px">4.0</strong></div>
+              <div class="rating-row"><span>Remuneração x mercado</span><div class="rating-bar-wrap"><div class="rating-bar-fill" style="width:75%;background:#ffd166"></div></div><strong style="font-size:12px">3.0</strong></div>
+              <div class="rating-row"><span>Relacionamento equipe</span><div class="rating-bar-wrap"><div class="rating-bar-fill" style="width:100%;background:#ffd166"></div></div><strong style="font-size:12px">4.0</strong></div>
+              <div class="rating-row"><span>Atividades x formação</span><div class="rating-bar-wrap"><div class="rating-bar-fill" style="width:75%;background:#ffd166"></div></div><strong style="font-size:12px">3.0</strong></div>
+              <div style="margin-top:14px;padding:10px 12px;background:var(--surface2);border-radius:8px;font-size:12px;color:var(--muted)">
+                <strong style="color:var(--accent4)">Ponto de atenção:</strong> Muita demanda para poucos funcionários — carga de trabalho elevada.
+              </div>
+            </div>
+            <div class="empresa-detail-section">
+              <h4>Áreas de Atuação</h4>
+              <div class="area-tag-cloud">
+                <span class="area-tag">Interiores Res.</span>
+                <span class="area-tag">Interiores Com.</span>
+                <span class="area-tag">Edif. Residencial</span>
+                <span class="area-tag">Edif. Comercial</span>
+                <span class="area-tag">Restauração</span>
+                <span class="area-tag">Proj. Elétrica/Hidro</span>
+                <span class="area-tag">Proj. Gás/Incêndio</span>
+                <span class="area-tag">Proj. Estrutural</span>
+                <span class="area-tag">Fachadas</span>
+              </div>
+              <h4 style="margin-top:20px">Estagiários</h4>
+              <div class="estagiario-chip" onclick="selectStudent('isadora');setPageDirect('dashboard')">
+                <div class="chip-avatar" style="background:rgba(255,209,102,.2);color:#ffd166">IS</div>
+                <div class="chip-info">Aluno C<small><br>2024.1 · 1.470h · Score 3.9</small></div>
+                <svg style="margin-left:auto;width:14px;height:14px;color:var(--muted)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+              <div style="margin-top:12px">
+                <div class="chart-wrap" style="height:160px"><canvas id="c-arqnisk-radar"></canvas></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /empresa-detail-panel -->
+
+    <!-- RANKING BOTTOM -->
+    <div class="grid-2" style="margin-top:8px">
+      <div class="card">
+        <div class="card-title">Ranking de Empresas por Score Médio</div>
+        <div class="chart-wrap" style="height:200px"><canvas id="c-emp-ranking"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Remuneração Mensal por Empresa</div>
+        <div class="chart-wrap" style="height:200px"><canvas id="c-emp-rem"></canvas></div>
+      </div>
+    </div>
+
+  </div><!-- /page-empresas -->
+
+</main>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h2>Adicionar Novo Relatório</h2>
+    <label>Nome do Aluno</label><input type="text" placeholder="Ex: João Silva">
+    <label>Matrícula</label><input type="text" placeholder="2023XXXXXXXX">
+    <label>Semestre</label>
+    <select><option>2025.1</option><option>2024.2</option><option>2024.1</option><option>2023.2</option></select>
+    <label>Curso</label><input type="text" placeholder="Ex: Arquitetura e Urbanismo">
+    <label>Empresa</label><input type="text" placeholder="Nome da empresa">
+    <label>Horas Totais</label><input type="number" placeholder="Ex: 350">
+    <label>Remuneração Mensal (R$)</label><input type="number" placeholder="Ex: 1500">
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="hideModal()">Cancelar</button>
+      <button class="btn-primary" onclick="hideModal()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════════════
+const STUDENTS = [
+  {
+    id: 'fernanda', nome: 'Aluno A', matricula: '202300114872',
+    semestre: '2025.1', periodo: '20º', empresa: 'Forma Studio Arquitetura', gestor: '██████',
+    horas: 350, remuneracao: 1518, score: 4.0, status: 'concluido', efetivado: true,
+    color: '#6c63ff', initials: 'FO',
+  },
+  {
+    id: 'abraao', nome: 'Aluno B', matricula: '201800229631',
+    semestre: '2023.2', periodo: '20º', empresa: 'Atlas Projetos e Segurança', gestor: '██████',
+    horas: 2332, remuneracao: 2500, score: 4.0, status: 'efetivado', efetivado: true,
+    color: '#00d4aa', initials: 'AA',
+  },
+  {
+    id: 'isadora', nome: 'Aluno C', matricula: '202200347518',
+    semestre: '2024.1', periodo: '20º', empresa: 'Vértice Arquitetura', gestor: '██████',
+    horas: 1470, remuneracao: 900, score: 3.9, status: 'ativo', efetivado: true,
+    color: '#ffd166', initials: 'IS',
+  },
+];
+
+let currentStudent = 'fernanda';
+let sortKey = null;
+let sortDir = 1;
+let charts = {};
+
+// ══════════════════════════════════════════════════════
+// NAV
+// ══════════════════════════════════════════════════════
+function setPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  if (name === 'relatorios') { applyFilters(); buildCompareCharts(); }
+}
+
+function selectStudent(id) {
+  currentStudent = id;
+  document.querySelectorAll('[id^="card-"]').forEach(c => c.classList.remove('active'));
+  document.getElementById('card-' + id).classList.add('active');
+  ['fernanda','abraao','isadora'].forEach(s => {
+    document.getElementById('dash-' + s).style.display = s === id ? '' : 'none';
+  });
+  setPage('dashboard');
+  document.querySelectorAll('.nav-item')[0].classList.add('active');
+  document.querySelectorAll('.nav-item')[1].classList.remove('active');
+}
+
+// ══════════════════════════════════════════════════════
+// CHART HELPERS
+// ══════════════════════════════════════════════════════
+const DARK = { grid: '#2e3347', text: '#7b82a0', label: '#e8eaf0' };
+
+function makeRadar(id, labels, data, color) {
+  const ctx = document.getElementById(id).getContext('2d');
+  if (charts[id]) charts[id].destroy();
+  charts[id] = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels,
+      datasets: [{ data, backgroundColor: color + '33', borderColor: color, borderWidth: 2, pointBackgroundColor: color, pointRadius: 4 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: { r: { min: 0, max: 4, reverse: true, ticks: { stepSize: 1, color: DARK.text, font:{size:10}, backdropColor:'transparent' }, grid: { color: DARK.grid }, pointLabels: { color: DARK.label, font:{size:10} }, angleLines: { color: DARK.grid } } },
+      plugins: { legend: { display: false } }
+    }
+  });
+}
+
+function makeBar(id, labels, data, colors) {
+  const ctx = document.getElementById(id).getContext('2d');
+  if (charts[id]) charts[id].destroy();
+  charts[id] = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 8, borderSkipped: false }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: { y: { min:0, max:4, grid:{color:DARK.grid}, ticks:{color:DARK.text, stepSize:1} }, x: { grid:{display:false}, ticks:{color:DARK.label} } },
+      plugins: { legend: { display: false } }
+    }
+  });
+}
+
+function makeGroupedBar(id, labels, ds1, ds2, label1, label2) {
+  const ctx = document.getElementById(id).getContext('2d');
+  if (charts[id]) charts[id].destroy();
+  charts[id] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: label1, data: ds1, backgroundColor: 'rgba(108,99,255,.7)', borderRadius: 5 },
+        { label: label2, data: ds2, backgroundColor: 'rgba(0,212,170,.6)', borderRadius: 5 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        y: { min:0, max:4, reverse:true, grid:{color:DARK.grid}, ticks:{ color:DARK.text, stepSize:1, callback: v => ['','Muito','Médio','Pouco','Nada'][v]||v } },
+        x: { grid:{display:false}, ticks:{color:DARK.label, font:{size:10}} }
+      },
+      plugins: { legend: { labels: { color: DARK.label, font:{size:11} } } }
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// BUILD STUDENT CHARTS
+// ══════════════════════════════════════════════════════
+function buildCharts() {
+  const labels6 = ['Projeto','Teoria','Estruturas','Técnicas','Instalações','Desenho'];
+
+  // FERNANDA (1=Muito scale)
+  makeRadar('c-fernanda-conhecimento', labels6, [1,3,1,2,1,1], '#6c63ff');
+  makeBar('c-fernanda-comp', ['Visão','Adaptab.','Centralid.','Empatia'], [4,4,4,4],
+    ['rgba(108,99,255,.7)','rgba(0,212,170,.7)','rgba(255,209,102,.7)','rgba(255,107,107,.7)']);
+  makeGroupedBar('c-fernanda-soft', ['Word b.','Word av.','Excel b.','Excel av.','AutoCAD b.','AutoCAD av.','SketchUp b.'],
+    [1,2,1,1,1,3,2], [1,3,1,1,1,3,3], 'Empresa', 'Você');
+
+  // ABRAÃO (suficiente=2, insuficiente=3 mapped)
+  makeRadar('c-abraao-conhecimento', labels6, [2,2,2,2,2,2], '#00d4aa');
+  makeBar('c-abraao-comp', ['Visão','Adaptab.','Centralid.','Empatia'], [4,4,4,4],
+    ['rgba(0,212,170,.7)','rgba(108,99,255,.7)','rgba(255,209,102,.7)','rgba(255,107,107,.7)']);
+  makeGroupedBar('c-abraao-soft', ['Word b.','Word av.','Excel b.','Excel av.','AutoCAD b.','AutoCAD av.'],
+    [1,3,1,2,1,1], [2,4,1,3,1,1], 'Empresa', 'Você');
+
+  // ISADORA (suficiente=2, insuficiente=3, desenho=1-muito mapped to 1)
+  makeRadar('c-isadora-conhecimento', labels6, [2,2,3,3,3,1], '#ffd166');
+  makeBar('c-isadora-comp', ['Visão','Adaptab.','Centralid.','Empatia'], [3,4,4,4],
+    ['rgba(255,209,102,.7)','rgba(0,212,170,.7)','rgba(108,99,255,.7)','rgba(255,107,107,.7)']);
+  makeGroupedBar('c-isadora-soft', ['Word b.','Word av.','Excel b.','AutoCAD b.','AutoCAD av.','SketchUp b.','VRay b.'],
+    [1,2,1,1,1,1,1], [1,2,3,1,1,1,1], 'Empresa', 'Você');
+}
+
+// ══════════════════════════════════════════════════════
+// COMPARE CHARTS (Reports tab)
+// ══════════════════════════════════════════════════════
+function buildCompareCharts() {
+  const visible = getFiltered();
+  const names = visible.map(s => s.nome.split(' ')[0]);
+  const colors = visible.map(s => s.color + 'bb');
+
+  // Horas
+  const cH = document.getElementById('c-compare-horas').getContext('2d');
+  if (charts['c-compare-horas']) charts['c-compare-horas'].destroy();
+  charts['c-compare-horas'] = new Chart(cH, {
+    type: 'bar',
+    data: { labels: names, datasets: [{ data: visible.map(s=>s.horas), backgroundColor: colors, borderRadius: 8, borderSkipped: false }] },
+    options: { responsive:true, maintainAspectRatio:false, scales:{ y:{grid:{color:DARK.grid},ticks:{color:DARK.text}}, x:{grid:{display:false},ticks:{color:DARK.label}} }, plugins:{legend:{display:false}} }
+  });
+
+  // Score
+  const cS = document.getElementById('c-compare-score').getContext('2d');
+  if (charts['c-compare-score']) charts['c-compare-score'].destroy();
+  charts['c-compare-score'] = new Chart(cS, {
+    type: 'bar',
+    data: { labels: names, datasets: [{ data: visible.map(s=>s.score), backgroundColor: colors, borderRadius: 8, borderSkipped: false }] },
+    options: { responsive:true, maintainAspectRatio:false, scales:{ y:{min:0,max:4,grid:{color:DARK.grid},ticks:{color:DARK.text}}, x:{grid:{display:false},ticks:{color:DARK.label}} }, plugins:{legend:{display:false}} }
+  });
+
+  // Remuneração
+  const cR = document.getElementById('c-compare-rem').getContext('2d');
+  if (charts['c-compare-rem']) charts['c-compare-rem'].destroy();
+  charts['c-compare-rem'] = new Chart(cR, {
+    type: 'bar',
+    data: { labels: names, datasets: [{ data: visible.map(s=>s.remuneracao), backgroundColor: colors, borderRadius: 8, borderSkipped: false }] },
+    options: { responsive:true, maintainAspectRatio:false, scales:{ y:{grid:{color:DARK.grid},ticks:{color:DARK.text, callback:v=>'R$'+v.toLocaleString('pt-BR')}}, x:{grid:{display:false},ticks:{color:DARK.label}} }, plugins:{legend:{display:false}} }
+  });
+
+  // Semestres pie
+  const semCount = {};
+  visible.forEach(s => { semCount[s.semestre] = (semCount[s.semestre]||0)+1; });
+  const cSem = document.getElementById('c-compare-sem').getContext('2d');
+  if (charts['c-compare-sem']) charts['c-compare-sem'].destroy();
+  charts['c-compare-sem'] = new Chart(cSem, {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(semCount),
+      datasets: [{ data: Object.values(semCount), backgroundColor: ['rgba(108,99,255,.8)','rgba(0,212,170,.8)','rgba(255,209,102,.8)'], borderWidth: 0 }]
+    },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ labels:{ color:DARK.label } } } }
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// TABLE + FILTERS
+// ══════════════════════════════════════════════════════
+function getFiltered() {
+  const sem   = document.getElementById('f-semestre').value;
+  const status= document.getElementById('f-status').value;
+  const score = parseFloat(document.getElementById('f-score').value) || 0;
+  const horas = parseFloat(document.getElementById('f-horas').value) || 0;
+  const busca = document.getElementById('f-busca').value.toLowerCase();
+
+  return STUDENTS.filter(s => {
+    if (sem    && s.semestre !== sem) return false;
+    if (status && s.status   !== status) return false;
+    if (s.score < score) return false;
+    if (s.horas < horas) return false;
+    if (busca && !s.nome.toLowerCase().includes(busca) && !s.empresa.toLowerCase().includes(busca)) return false;
+    return true;
+  });
+}
+
+const STATUS_LABELS = { efetivado: '✓ Efetivado', ativo: '⏳ Ativo', concluido: '✔ Concluído' };
+const STATUS_COLORS = { efetivado: 'var(--accent2)', ativo: 'var(--accent4)', concluido: 'var(--accent)' };
+
+function applyFilters() {
+  let data = getFiltered();
+  if (sortKey) {
+    data = [...data].sort((a,b) => {
+      const av = a[sortKey], bv = b[sortKey];
+      return typeof av === 'string' ? av.localeCompare(bv)*sortDir : (av-bv)*sortDir;
+    });
+  }
+
+  const tbody = document.getElementById('table-body');
+  if (data.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" class="no-results">Nenhum aluno encontrado com esses filtros.</td></tr>`;
+  } else {
+    tbody.innerHTML = data.map(s => `
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="avatar" style="background:${s.color}22;color:${s.color};width:28px;height:28px;font-size:10px">${s.initials}</div>
+            <div class="name-cell">${s.nome}<small>${s.matricula} · ${s.periodo} período</small></div>
+          </div>
+        </td>
+        <td>${s.semestre}</td>
+        <td>${s.empresa}</td>
+        <td>${s.horas.toLocaleString('pt-BR')}h</td>
+        <td>R$ ${s.remuneracao.toLocaleString('pt-BR')}</td>
+        <td>
+          <span class="score-dot" style="background:${s.score>=4?'var(--accent2)':s.score>=3?'var(--accent4)':'var(--accent3)'}"></span>
+          ${s.score.toFixed(1)}
+        </td>
+        <td><span style="color:${STATUS_COLORS[s.status]};font-size:12px;font-weight:600">${STATUS_LABELS[s.status]}</span></td>
+        <td>
+          <button onclick="selectStudent('${s.id}');setPageDirect('dashboard')"
+            style="padding:5px 12px;border-radius:6px;background:rgba(108,99,255,.15);color:var(--accent);border:none;cursor:pointer;font-size:12px;font-weight:600">
+            Ver dashboard →
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // Update mini stats
+  const avg = v => data.reduce((a,s) => a+s[v], 0) / (data.length||1);
+  document.getElementById('stat-count').textContent = data.length;
+  document.getElementById('stat-horas').textContent = data.length ? Math.round(avg('horas')).toLocaleString('pt-BR')+'h' : '—';
+  document.getElementById('stat-score').textContent = data.length ? avg('score').toFixed(2) : '—';
+  document.getElementById('stat-rem').textContent = data.length ? 'R$'+Math.round(avg('remuneracao')).toLocaleString('pt-BR') : '—';
+  const efet = data.filter(s=>s.efetivado).length;
+  document.getElementById('stat-efet').textContent = data.length ? Math.round(efet/data.length*100)+'%' : '—';
+
+  buildCompareCharts();
+}
+
+function sortTable(key) {
+  if (sortKey === key) sortDir *= -1; else { sortKey = key; sortDir = 1; }
+  document.querySelectorAll('thead th').forEach(th => th.classList.remove('sorted'));
+  event.currentTarget.classList.add('sorted');
+  applyFilters();
+}
+
+function clearFilters() {
+  document.getElementById('f-semestre').value = '';
+  document.getElementById('f-status').value = '';
+  document.getElementById('f-score').value = '0';
+  document.getElementById('f-horas').value = '0';
+  document.getElementById('f-busca').value = '';
+  sortKey = null; sortDir = 1;
+  document.querySelectorAll('thead th').forEach(th => th.classList.remove('sorted'));
+  applyFilters();
+}
+
+function setPageDirect(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.nav-item')[0].classList.add('active');
+}
+
+// ══════════════════════════════════════════════════════
+// EMPRESAS
+// ══════════════════════════════════════════════════════
+let currentEmpresa = null;
+
+function selectEmpresa(id) {
+  // Toggle: click same card again → close detail
+  if (currentEmpresa === id) {
+    currentEmpresa = null;
+    document.getElementById('empresa-detail-panel').style.display = 'none';
+    document.querySelectorAll('.empresa-card').forEach(c => c.classList.remove('selected'));
+    return;
+  }
+  currentEmpresa = id;
+  // highlight card
+  document.querySelectorAll('.empresa-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('ecard-' + id).classList.add('selected');
+  // show panel
+  document.getElementById('empresa-detail-panel').style.display = 'block';
+  ['mtekton','marfire','arqnisk'].forEach(e => {
+    document.getElementById('edetail-' + e).style.display = e === id ? '' : 'none';
+  });
+  // scroll to detail
+  setTimeout(() => document.getElementById('empresa-detail-panel').scrollIntoView({behavior:'smooth', block:'start'}), 80);
+  // build radar for this company
+  buildEmpresaRadar(id);
+}
+
+function buildEmpresaRadar(id) {
+  const cfg = {
+    mtekton:  { canvasId:'c-mtekton-radar',  color:'#6c63ff', data:[4,4,4,3,4,4] },
+    marfire:  { canvasId:'c-marfire-radar',  color:'#00d4aa', data:[4,4,4,4,4,4] },
+    arqnisk:  { canvasId:'c-arqnisk-radar',  color:'#ffd166', data:[4,4,4,3,4,3] },
+  }[id];
+  const labels = ['Orientação','Feedback','Condições','Remuneração','Relacionamento','Atividades'];
+  const ctx = document.getElementById(cfg.canvasId).getContext('2d');
+  if (charts[cfg.canvasId]) charts[cfg.canvasId].destroy();
+  charts[cfg.canvasId] = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels,
+      datasets: [{ data: cfg.data, backgroundColor: cfg.color+'33', borderColor: cfg.color, borderWidth: 2, pointBackgroundColor: cfg.color, pointRadius: 3 }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      scales: { r: { min:0, max:4, ticks:{stepSize:1, color:DARK.text, font:{size:9}, backdropColor:'transparent'}, grid:{color:DARK.grid}, pointLabels:{color:DARK.label, font:{size:9}}, angleLines:{color:DARK.grid} } },
+      plugins: { legend:{display:false} }
+    }
+  });
+}
+
+function buildEmpresasCharts() {
+  // Ranking score
+  const cR = document.getElementById('c-emp-ranking').getContext('2d');
+  if (charts['c-emp-ranking']) charts['c-emp-ranking'].destroy();
+  charts['c-emp-ranking'] = new Chart(cR, {
+    type: 'bar',
+    data: {
+      labels: ['Atlas Projetos','Mtekton','Vértice Arquitetura'],
+      datasets: [{ data:[4.0,3.9,3.9], backgroundColor:['rgba(0,212,170,.7)','rgba(108,99,255,.7)','rgba(255,209,102,.7)'], borderRadius:8, borderSkipped:false }]
+    },
+    options: {
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      scales:{ x:{min:0,max:4,grid:{color:DARK.grid},ticks:{color:DARK.text}}, y:{grid:{display:false},ticks:{color:DARK.label}} },
+      plugins:{ legend:{display:false} }
+    }
+  });
+  // Remuneração
+  const cRem = document.getElementById('c-emp-rem').getContext('2d');
+  if (charts['c-emp-rem']) charts['c-emp-rem'].destroy();
+  charts['c-emp-rem'] = new Chart(cRem, {
+    type: 'bar',
+    data: {
+      labels: ['Atlas Projetos','Mtekton','Vértice Arquitetura'],
+      datasets: [{ data:[2500,1518,900], backgroundColor:['rgba(0,212,170,.7)','rgba(108,99,255,.7)','rgba(255,209,102,.7)'], borderRadius:8, borderSkipped:false }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      scales:{ y:{grid:{color:DARK.grid},ticks:{color:DARK.text,callback:v=>'R$'+v.toLocaleString('pt-BR')}}, x:{grid:{display:false},ticks:{color:DARK.label}} },
+      plugins:{ legend:{display:false} }
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// UPDATED setPage — trigger empresa charts
+// ══════════════════════════════════════════════════════
+const _origSetPage = setPage;
+
+// Override setPage to also handle empresas
+function setPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  if (name === 'relatorios') { applyFilters(); buildCompareCharts(); }
+  if (name === 'empresas') { buildEmpresasCharts(); }
+}
+
+// MODAL
+function showModal() { document.getElementById('modalOverlay').classList.add('open'); }
+function hideModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target===e.currentTarget) hideModal(); });
+
+// ══════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════
+buildCharts();
+applyFilters();
+</script>
+</body>
+</html>
