@@ -15,7 +15,8 @@ from .serializers import (
     UsuarioSerializer, CursoSerializer, EmpresaSerializer,
     AlunoSerializer, AlunoResumoSerializer, CoordenadorSerializer,
     SolicitacaoEstagioSerializer, CriarSolicitacaoSerializer,
-    AlterarStatusSerializer, TermoCompromissoSerializer,
+    AlterarStatusSerializer, ProcessoResumoSerializer,
+    TermoCompromissoSerializer,
     ApoliceSeguroSerializer, RelatorioEstagioSerializer, AssinaturaDigitalSerializer,
 )
 from .permissions import (
@@ -91,6 +92,54 @@ class CursoViewSet(viewsets.ModelViewSet):
             qs = qs.filter(usuario__nome__icontains=nome)
 
         serializer = AlunoResumoSerializer(qs, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='processos_pendentes')
+    def processos_pendentes(self, request):
+        """
+        GET /api/cursos/processos_pendentes/
+        Retorna processos de estágio vinculados aos cursos do coordenador logado.
+        Por padrão retorna apenas status PENDENTE.
+
+        Filtros via query params:
+          ?status=<STATUS>  — qualquer status válido (default: PENDENTE)
+          ?aluno=<id>       — filtra por aluno
+          ?empresa=<id>     — filtra por empresa
+          ?curso=<id>       — filtra por curso
+        """
+        coordenador = get_coordenador(request.user)
+        if coordenador is None and not is_admin(request.user):
+            raise PermissionDenied('Apenas coordenadores podem acessar este endpoint.')
+
+        # Filtro de segurança SEMPRE presente: processos de alunos dos cursos do coordenador.
+        # Nunca pode faltar — garante que o coordenador não veja processos de outros cursos.
+        qs = SolicitacaoEstagio.objects.filter(
+            aluno__curso__coordenador=coordenador,
+        ).select_related('aluno__usuario', 'aluno__curso', 'empresa')
+
+        # Filtro por status (default PENDENTE)
+        status_param = request.query_params.get('status', SolicitacaoEstagio.Status.PENDENTE)
+        if status_param not in SolicitacaoEstagio.Status.values:
+            return Response(
+                {'erro': f'Status inválido. Opções: {", ".join(SolicitacaoEstagio.Status.values)}'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        qs = qs.filter(status=status_param)
+
+        # Filtros adicionais
+        aluno_id = request.query_params.get('aluno')
+        if aluno_id:
+            qs = qs.filter(aluno_id=aluno_id)
+
+        empresa_id = request.query_params.get('empresa')
+        if empresa_id:
+            qs = qs.filter(empresa_id=empresa_id)
+
+        curso_id = request.query_params.get('curso')
+        if curso_id:
+            qs = qs.filter(aluno__curso_id=curso_id)
+
+        serializer = ProcessoResumoSerializer(qs, many=True)
         return Response(serializer.data)
 
 
