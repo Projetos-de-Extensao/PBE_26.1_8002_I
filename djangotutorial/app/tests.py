@@ -236,3 +236,147 @@ class SolicitacaoRBACTest(APITestCase):
             'data_fim_prevista': '2026-12-01',
         })
         self.assertEqual(r.status_code, status.HTTP_403_FORBIDDEN)
+
+
+# ── Testes do Coordenador: cursos, meus_alunos e processos_pendentes ───────────
+
+class CoordenadorCursosTest(APITestCase):
+    """
+    Testa o isolamento por coordenador nos endpoints:
+      GET /api/cursos/
+      GET /api/cursos/meus_alunos/
+      GET /api/cursos/processos_pendentes/
+
+    Cenários cobertos:
+      1. Coordenador A não vê cursos do Coordenador B
+      2. meus_alunos retorna só alunos dos cursos do coordenador logado
+      3. Filtro ?nome= funciona
+      4. Filtro ?matriculado=true funciona
+      5. processos_pendentes retorna só PENDENTE por padrão
+      6. ?status=APROVADO retorna só os aprovados
+      7. Coordenador não vê processos de outro coordenador
+    """
+
+    CURSOS_URL = '/api/cursos/'
+    MEUS_ALUNOS_URL = '/api/cursos/meus_alunos/'
+    PROCESSOS_URL = '/api/cursos/processos_pendentes/'
+
+    def setUp(self):
+        self.empresa = _empresa()
+
+        # Coordenador A — Curso de Engenharia
+        self.user_coord_a = _make_usuario('coord_a', 'coordenador', 'Coord A')
+        self.coord_a = Coordenador.objects.create(usuario=self.user_coord_a)
+        self.token_coord_a = _token(self.user_coord_a)
+        self.curso_a = Curso.objects.create(nome='Engenharia', coordenador=self.coord_a)
+
+        # Coordenador B — Curso de Direito
+        self.user_coord_b = _make_usuario('coord_b', 'coordenador', 'Coord B')
+        self.coord_b = Coordenador.objects.create(usuario=self.user_coord_b)
+        self.token_coord_b = _token(self.user_coord_b)
+        self.curso_b = Curso.objects.create(nome='Direito', coordenador=self.coord_b)
+
+        # Alunos do Curso A
+        self.user_joao = _make_usuario('joao', 'aluno', 'João Silva')
+        self.aluno_joao = Aluno.objects.create(
+            usuario=self.user_joao, cpf='111.111.111-11',
+            curso=self.curso_a, matriculado_estagio=True,
+        )
+        self.user_maria = _make_usuario('maria', 'aluno', 'Maria Souza')
+        self.aluno_maria = Aluno.objects.create(
+            usuario=self.user_maria, cpf='222.222.222-22',
+            curso=self.curso_a, matriculado_estagio=False,
+        )
+
+        # Aluno do Curso B
+        self.user_pedro = _make_usuario('pedro', 'aluno', 'Pedro Costa')
+        self.aluno_pedro = Aluno.objects.create(
+            usuario=self.user_pedro, cpf='333.333.333-33',
+            curso=self.curso_b, matriculado_estagio=True,
+        )
+
+        # Processos: João (PENDENTE) e Maria (APROVADO) no Curso A; Pedro (PENDENTE) no Curso B
+        self.proc_joao = _solicitacao(self.aluno_joao, self.empresa)  # PENDENTE (default)
+        self.proc_maria = SolicitacaoEstagio.objects.create(
+            aluno=self.aluno_maria, empresa=self.empresa,
+            status=SolicitacaoEstagio.Status.APROVADO,
+            horas_semanais=20,
+            data_inicio_prevista=datetime.date(2026, 6, 1),
+            data_fim_prevista=datetime.date(2026, 12, 1),
+        )
+        self.proc_pedro = _solicitacao(self.aluno_pedro, self.empresa)  # PENDENTE, Curso B
+
+    def _auth(self, token):
+        self.client.credentials(HTTP_AUTHORIZATION=f'Token {token.key}')
+
+    # ── cursos ──────────────────────────────────────────────────────────────────
+
+    def test_01_coordenador_nao_ve_cursos_de_outro(self):
+        """Coordenador A vê só o curso dele, não o do Coordenador B."""
+        self._auth(self.token_coord_a)
+        r = self.client.get(self.CURSOS_URL)
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        ids = [c['id'] for c in r.data]
+        self.assertIn(self.curso_a.pk, ids)
+        self.assertNotIn(self.curso_b.pk, ids)
+
+    # ── meus_alunos ───────────────────────────────────────────────────────────
+
+    def test_02_meus_alunos_retorna_so_alunos_do_coordenador(self):
+        """meus_alunos do Coord A traz João e Maria, nunca Pedro (Curso B)."""
+        self._auth(self.token_coord_a)
+        r = self.client.get(self.MEUS_ALUNOS_URL)
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        ids = [a['id'] for a in r.data]
+        self.assertIn(self.aluno_joao.pk, ids)
+        self.assertIn(self.aluno_maria.pk, ids)
+        self.assertNotIn(self.aluno_pedro.pk, ids)
+
+    def test_03_meus_alunos_filtro_nome(self):
+        """Filtro ?nome=joão retorna só o João (busca parcial, case-insensitive)."""
+        self._auth(self.token_coord_a)
+        r = self.client.get(self.MEUS_ALUNOS_URL, {'nome': 'joão'})
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        ids = [a['id'] for a in r.data]
+        self.assertEqual(ids, [self.aluno_joao.pk])
+
+    def test_04_meus_alunos_filtro_matriculado(self):
+        """Filtro ?matriculado=true retorna só João (Maria não está matriculada)."""
+        self._auth(self.token_coord_a)
+        r = self.client.get(self.MEUS_ALUNOS_URL, {'matriculado': 'true'})
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        ids = [a['id'] for a in r.data]
+        self.assertIn(self.aluno_joao.pk, ids)
+        self.assertNotIn(self.aluno_maria.pk, ids)
+
+    # ── processos_pendentes ─────────────────────────────────────────────────────
+
+    def test_05_processos_pendentes_default_so_pendente(self):
+        """Sem ?status, retorna só processos PENDENTE do curso do coordenador."""
+        self._auth(self.token_coord_a)
+        r = self.client.get(self.PROCESSOS_URL)
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        ids = [p['id'] for p in r.data]
+        self.assertIn(self.proc_joao.pk, ids)       # PENDENTE
+        self.assertNotIn(self.proc_maria.pk, ids)   # APROVADO
+        self.assertNotIn(self.proc_pedro.pk, ids)   # Curso B
+
+    def test_06_processos_pendentes_filtro_status_aprovado(self):
+        """?status=APROVADO retorna só os aprovados do curso do coordenador."""
+        self._auth(self.token_coord_a)
+        r = self.client.get(self.PROCESSOS_URL, {'status': 'APROVADO'})
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        ids = [p['id'] for p in r.data]
+        self.assertIn(self.proc_maria.pk, ids)      # APROVADO, Curso A
+        self.assertNotIn(self.proc_joao.pk, ids)    # PENDENTE
+        self.assertNotIn(self.proc_pedro.pk, ids)   # Curso B
+
+    def test_07_coordenador_nao_ve_processos_de_outro(self):
+        """Coord A nunca vê o processo de Pedro (Curso B), nem filtrando por curso B."""
+        self._auth(self.token_coord_a)
+        # Tenta forçar o curso do Coordenador B via query param
+        r = self.client.get(self.PROCESSOS_URL, {'curso': self.curso_b.pk})
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        ids = [p['id'] for p in r.data]
+        self.assertNotIn(self.proc_pedro.pk, ids)
+        self.assertEqual(r.data, [])  # filtro de segurança elimina tudo
