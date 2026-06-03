@@ -9,14 +9,15 @@ from django.contrib.auth import authenticate
 
 from .models import (
     Usuario, Curso, EmpresaConcedente, Aluno, Coordenador,
-    SupervisorEmpresa, ProcessoEstagio, DocumentoProcesso,
+    SupervisorEmpresa, ProcessoEstagio, DocumentoProcesso, LogDocumento,
 )
 from .serializers import (
     UsuarioSerializer, CursoSerializer, EmpresaConcedenteSerializer,
     AlunoSerializer, CoordenadorSerializer, SupervisorEmpresaSerializer,
-    DocumentoProcessoSerializer,
+    DocumentoProcessoSerializer, LogDocumentoSerializer,
     ProcessoEstagioSerializer, CriarProcessoSerializer, AlterarStatusSerializer,
 )
+from .score_utils import calcular_score_conformidade
 from .permissions import (
     get_aluno, get_coordenador, get_supervisor, is_admin,
     IsAluno, IsCoordenador, IsSupervisorEmpresa, IsAdminOrReadOnly, IsDonoDoProcesso,
@@ -119,10 +120,23 @@ class DocumentoProcessoViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         base = DocumentoProcesso.objects.select_related(
-            'processo__aluno', 'processo__empresa',
+            'processo__aluno', 'processo__empresa', 'enviado_por',
         )
+
+        # ── filtros opcionais ──────────────────────────────────────────────
+        processo_id = self.request.query_params.get('processo')
+        tipo = self.request.query_params.get('tipo')
+        doc_status = self.request.query_params.get('status')
+        if processo_id:
+            base = base.filter(processo_id=processo_id)
+        if tipo:
+            base = base.filter(tipo=tipo)
+        if doc_status:
+            base = base.filter(status=doc_status)
+
+        # ── isolamento por papel ──────────────────────────────────────────
         if is_admin(user):
-            return base.all()
+            return base
         aluno = get_aluno(user)
         if aluno is not None:
             return base.filter(processo__aluno=aluno)
@@ -135,7 +149,70 @@ class DocumentoProcessoViewSet(viewsets.ModelViewSet):
         return base.none()
 
     def perform_create(self, serializer):
-        serializer.save(enviado_por=self.request.user)
+        doc = serializer.save(enviado_por=self.request.user)
+        score = calcular_score_conformidade(doc.arquivo, doc.tipo)
+        doc.score_conformidade = score
+        auto_aprovado = score >= 0.8
+        if auto_aprovado:
+            doc.status = DocumentoProcesso.StatusDoc.APROVADO
+        doc.save(update_fields=['score_conformidade', 'status'])
+        LogDocumento.objects.create(
+            documento=doc,
+            acao=LogDocumento.Acao.UPLOAD,
+            usuario=self.request.user,
+        )
+        if auto_aprovado:
+            LogDocumento.objects.create(
+                documento=doc,
+                acao=LogDocumento.Acao.APROVADO,
+                usuario=self.request.user,
+                comentario='Aprovado automaticamente por score de conformidade >= 0.8',
+            )
+
+    @action(detail=True, methods=['post'], url_path='validar')
+    def validar(self, request, pk=None):
+        """
+        POST /api/documentos/{id}/validar/
+        Body: { "status": "APROVADO" } ou { "status": "REJEITADO" }
+        Apenas coordenador ou admin.
+        """
+        user = request.user
+        if not (is_admin(user) or get_coordenador(user) is not None):
+            return Response(
+                {'erro': 'Apenas coordenadores ou administradores podem validar documentos.'},
+                status=drf_status.HTTP_403_FORBIDDEN,
+            )
+
+        doc = self.get_object()
+        novo_status = request.data.get('status')
+        if novo_status not in (
+            DocumentoProcesso.StatusDoc.APROVADO,
+            DocumentoProcesso.StatusDoc.REJEITADO,
+        ):
+            return Response(
+                {'erro': 'Status deve ser APROVADO ou REJEITADO.'},
+                status=drf_status.HTTP_400_BAD_REQUEST,
+            )
+
+        comentario = request.data.get('comentario', None)
+        doc.status = novo_status
+        if comentario is not None:
+            doc.observacoes = comentario
+        doc.save()
+        LogDocumento.objects.create(
+            documento=doc,
+            acao=novo_status,
+            usuario=user,
+            comentario=comentario,
+        )
+        return Response(self.get_serializer(doc).data)
+
+    @action(detail=True, methods=['get'], url_path='logs')
+    def logs(self, request, pk=None):
+        """GET /api/documentos/{id}/logs/ — histórico de ações do documento."""
+        doc = self.get_object()
+        serializer = LogDocumentoSerializer(doc.logs.all(), many=True)
+        return Response(serializer.data)
 
 
 # ── CORE da issue #46: ProcessoEstagio ────────────────────────────────────────
@@ -265,6 +342,167 @@ class ProcessoEstagioViewSet(viewsets.ModelViewSet):
         docs = processo.documentos.all().order_by('-data_upload')
         serializer = DocumentoProcessoSerializer(docs, many=True)
         return Response(serializer.data)
+
+
+# ── Geração de PDF ───────────────────────────────────────────────────────────
+
+class GerarPDFView(APIView):
+    """
+    GET /api/processos-estagio/{processo_id}/gerar-tce/
+    GET /api/processos-estagio/{processo_id}/gerar-termo-realizacao/
+
+    Retorna o PDF gerado como application/pdf.
+    Permissão: aluno do processo, supervisor da empresa, coordenador do curso, ou admin.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, processo_id, tipo_documento):
+        user = request.user
+        try:
+            processo = ProcessoEstagio.objects.select_related(
+                'aluno__usuario',
+                'aluno__curso__coordenador__usuario',
+                'empresa',
+                'supervisor__usuario',
+                'coordenador__usuario',
+            ).get(pk=processo_id)
+        except ProcessoEstagio.DoesNotExist:
+            return Response(
+                {'erro': 'Processo não encontrado.'},
+                status=drf_status.HTTP_404_NOT_FOUND,
+            )
+
+        if not is_admin(user):
+            aluno = get_aluno(user)
+            supervisor = get_supervisor(user)
+            coord = get_coordenador(user)
+            tem_acesso = False
+            if aluno is not None and processo.aluno_id == aluno.pk:
+                tem_acesso = True
+            elif supervisor is not None and processo.empresa_id == supervisor.empresa_id:
+                tem_acesso = True
+            elif coord is not None:
+                curso = getattr(processo.aluno, 'curso', None)
+                if curso is not None and curso.coordenador_id == coord.pk:
+                    tem_acesso = True
+            if not tem_acesso:
+                return Response(
+                    {'erro': 'Acesso negado.'},
+                    status=drf_status.HTTP_403_FORBIDDEN,
+                )
+
+        if tipo_documento == 'tce':
+            from .pdf_generator import gerar_tce
+            buffer = gerar_tce(processo)
+            filename = f'tce_processo_{processo_id}.pdf'
+        elif tipo_documento == 'termo-realizacao':
+            from .pdf_generator import gerar_termo_realizacao
+            buffer = gerar_termo_realizacao(processo)
+            filename = f'termo_realizacao_processo_{processo_id}.pdf'
+        else:
+            return Response(
+                {'erro': 'Tipo de documento inválido.'},
+                status=drf_status.HTTP_400_BAD_REQUEST,
+            )
+
+        from django.http import HttpResponse
+        response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+
+
+class GerarRelatorioView(APIView):
+    """
+    POST /api/processos-estagio/{processo_id}/gerar-relatorio/
+
+    Gera PDF do relatório de estágio (parcial ou final), salva como
+    DocumentoProcesso e retorna o PDF.
+
+    Apenas o aluno dono do processo pode chamar este endpoint.
+    """
+    permission_classes = [IsAuthenticated]
+
+    _CAMPOS_OBRIGATORIOS = [
+        'resumo', 'introducao', 'atividades_desenvolvidas',
+        'analise_critica', 'conclusao',
+    ]
+
+    def post(self, request, processo_id):
+        user = request.user
+        try:
+            processo = ProcessoEstagio.objects.select_related(
+                'aluno__usuario',
+                'aluno__curso__coordenador__usuario',
+                'empresa',
+                'supervisor__usuario',
+                'coordenador__usuario',
+                'professor_orientador',
+            ).get(pk=processo_id)
+        except ProcessoEstagio.DoesNotExist:
+            return Response(
+                {'erro': 'Processo não encontrado.'},
+                status=drf_status.HTTP_404_NOT_FOUND,
+            )
+
+        aluno = get_aluno(user)
+        if aluno is None or processo.aluno_id != aluno.pk:
+            return Response(
+                {'erro': 'Apenas o aluno do processo pode gerar o relatório.'},
+                status=drf_status.HTTP_403_FORBIDDEN,
+            )
+
+        faltando = [c for c in self._CAMPOS_OBRIGATORIOS if not request.data.get(c, '').strip()]
+        if faltando:
+            return Response(
+                {'erro': f'Campos obrigatórios ausentes: {", ".join(faltando)}.'},
+                status=drf_status.HTTP_400_BAD_REQUEST,
+            )
+
+        preview_raw = request.data.get('preview', False)
+        is_preview = preview_raw in (True, 'true', 'True', '1', 1)
+
+        dados = {
+            'tipo_relatorio': request.data.get('tipo_relatorio', 'parcial'),
+            'resumo': request.data.get('resumo', ''),
+            'introducao': request.data.get('introducao', ''),
+            'apresentacao_empresa': request.data.get('apresentacao_empresa', ''),
+            'atividades_desenvolvidas': request.data.get('atividades_desenvolvidas', ''),
+            'analise_critica': request.data.get('analise_critica', ''),
+            'conclusao': request.data.get('conclusao', ''),
+        }
+
+        from .pdf_generator import gerar_relatorio_estagio
+        buffer = gerar_relatorio_estagio(processo, dados)
+
+        tipo_doc = (
+            DocumentoProcesso.Tipo.RELATORIO_FINAL
+            if dados['tipo_relatorio'] == 'final'
+            else DocumentoProcesso.Tipo.RELATORIO_PARCIAL
+        )
+        tipo_nome = 'final' if dados['tipo_relatorio'] == 'final' else 'parcial'
+        filename = f'relatorio_{tipo_nome}_processo_{processo_id}.pdf'
+
+        from django.core.files.base import ContentFile
+        from django.http import HttpResponse
+
+        if not is_preview:
+            doc_processo = DocumentoProcesso(
+                processo=processo,
+                tipo=tipo_doc,
+                enviado_por=user,
+                status=DocumentoProcesso.StatusDoc.PENDENTE,
+            )
+            doc_processo.arquivo.save(filename, ContentFile(buffer.getvalue()), save=True)
+            LogDocumento.objects.create(
+                documento=doc_processo,
+                acao=LogDocumento.Acao.GERADO,
+                usuario=user,
+            )
+
+        buffer.seek(0)
+        response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
 
 
 # ── Auth ──────────────────────────────────────────────────────────────────────

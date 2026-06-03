@@ -500,3 +500,470 @@ class StateMachineUnitTest(TestCase):
         self.assertTrue(eh_terminal(CANCELADO))
         self.assertFalse(eh_terminal(PENDENTE))
         self.assertFalse(eh_terminal(APROVADO))
+
+
+# ── Documentos + PDFs ─────────────────────────────────────────────────────────
+
+from django.core.files.uploadedfile import SimpleUploadedFile
+
+from app.models import DocumentoProcesso
+
+
+def _pdf_upload(name='doc.pdf'):
+    return SimpleUploadedFile(name, b'%PDF-1.4 minimal', content_type='application/pdf')
+
+
+class DocumentoEPDFTests(APITestCase):
+    """
+    Testes de DocumentoProcesso (upload, filtros, validação, RBAC)
+    e GerarPDFView (TCE, Termo de Realização, 404, 403).
+
+    Herda do setUp da ProcessoEstagioBaseTest via composição para não duplicar
+    código — os dados são criados inline no setUp desta classe.
+    """
+
+    DOC_URL = '/api/documentos/'
+
+    def _validar_url(self, pk):
+        return f'/api/documentos/{pk}/validar/'
+
+    def _tce_url(self, pk):
+        return f'/api/processos-estagio/{pk}/gerar-tce/'
+
+    def _termo_url(self, pk):
+        return f'/api/processos-estagio/{pk}/gerar-termo-realizacao/'
+
+    def setUp(self):
+        # Coordenador A + Curso A
+        self.user_coord = Usuario.objects.create_user(
+            username='pdf_coord', password='senha123', tipo='coordenador', nome='Coord PDF',
+        )
+        self.coord = Coordenador.objects.create(
+            usuario=self.user_coord, departamento='TI',
+        )
+        self.curso = Curso.objects.create(
+            nome='Ciência da Computação',
+            coordenador=self.coord,
+            carga_horaria_minima_total=400,
+            carga_horaria_maxima_diaria=6,
+        )
+
+        # Coordenador B + Curso B (para isolamento)
+        self.user_coord_b = Usuario.objects.create_user(
+            username='pdf_coord_b', password='senha123', tipo='coordenador', nome='Coord B',
+        )
+        self.coord_b = Coordenador.objects.create(
+            usuario=self.user_coord_b, departamento='ADM',
+        )
+        self.curso_b = Curso.objects.create(
+            nome='Administração',
+            coordenador=self.coord_b,
+            carga_horaria_minima_total=300,
+            carga_horaria_maxima_diaria=6,
+        )
+
+        # Empresa
+        self.empresa = EmpresaConcedente.objects.create(
+            cnpj='99.999.999/0001-99',
+            razao_social='PDF Tech Ltda',
+            areas_atuacao='TI',
+            localizacao='Rio de Janeiro',
+            email_contato='rh@pdftech.com',
+            aprovada_ibmec=True,
+        )
+
+        # Supervisor
+        self.user_sup = Usuario.objects.create_user(
+            username='pdf_sup', password='senha123', tipo='supervisor_empresa', nome='Sup PDF',
+        )
+        self.supervisor = SupervisorEmpresa.objects.create(
+            usuario=self.user_sup, empresa=self.empresa, cargo='Gerente',
+        )
+
+        # Aluno A (Curso A, matriculado)
+        self.user_aluno = Usuario.objects.create_user(
+            username='pdf_aluno', password='senha123', tipo='aluno', nome='Aluno PDF',
+        )
+        self.aluno = Aluno.objects.create(
+            usuario=self.user_aluno,
+            cpf='777.777.777-77',
+            curso=self.curso,
+            matriculado_estagio=True,
+        )
+
+        # Aluno B (Curso B, para teste de isolamento)
+        self.user_aluno_b = Usuario.objects.create_user(
+            username='pdf_aluno_b', password='senha123', tipo='aluno', nome='Aluno B PDF',
+        )
+        self.aluno_b = Aluno.objects.create(
+            usuario=self.user_aluno_b,
+            cpf='888.888.888-88',
+            curso=self.curso_b,
+            matriculado_estagio=True,
+        )
+
+        # Processo do Aluno A
+        self.processo = ProcessoEstagio.objects.create(
+            aluno=self.aluno,
+            empresa=self.empresa,
+            supervisor=self.supervisor,
+            coordenador=self.coord,
+            status=ProcessoEstagio.Status.PENDENTE,
+            horas_semanais=20,
+            data_inicio_prevista=date(2026, 7, 1),
+            data_fim_prevista=date(2026, 12, 31),
+            plano_atividades='Desenvolvimento de APIs REST.',
+        )
+
+        # Processo do Aluno B
+        self.processo_b = ProcessoEstagio.objects.create(
+            aluno=self.aluno_b,
+            empresa=self.empresa,
+            coordenador=self.coord_b,
+            status=ProcessoEstagio.Status.PENDENTE,
+            horas_semanais=20,
+            data_inicio_prevista=date(2026, 7, 1),
+            data_fim_prevista=date(2026, 12, 31),
+            plano_atividades='Análise financeira.',
+        )
+
+    # ── helpers ────────────────────────────────────────────────────────────
+
+    def _auth(self, user):
+        self.client.force_authenticate(user=user)
+
+    def _cria_doc(self, processo=None, tipo=DocumentoProcesso.Tipo.TCE):
+        processo = processo or self.processo
+        return DocumentoProcesso.objects.create(
+            processo=processo,
+            tipo=tipo,
+            arquivo=_pdf_upload(),
+            enviado_por=self.user_aluno,
+        )
+
+    # ── 1. Upload PDF com sucesso ─────────────────────────────────────────
+
+    def test_upload_pdf_sucesso(self):
+        """Aluno faz upload de PDF válido → 201, enviado_por setado automaticamente."""
+        self._auth(self.user_aluno)
+        r = self.client.post(self.DOC_URL, {
+            'processo': self.processo.pk,
+            'tipo': DocumentoProcesso.Tipo.TCE,
+            'arquivo': _pdf_upload(),
+        }, format='multipart')
+        self.assertEqual(r.status_code, status.HTTP_201_CREATED)
+        doc = DocumentoProcesso.objects.get(pk=r.data['id'])
+        self.assertEqual(doc.enviado_por, self.user_aluno)
+
+    # ── 2. Upload formato inválido ────────────────────────────────────────
+
+    def test_upload_formato_invalido(self):
+        """Arquivo .txt é rejeitado (400)."""
+        self._auth(self.user_aluno)
+        arquivo_txt = SimpleUploadedFile('doc.txt', b'texto', content_type='text/plain')
+        r = self.client.post(self.DOC_URL, {
+            'processo': self.processo.pk,
+            'tipo': DocumentoProcesso.Tipo.TCE,
+            'arquivo': arquivo_txt,
+        }, format='multipart')
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
+
+    # ── 3. Supervisor não pode enviar relatório ───────────────────────────
+
+    def test_upload_relatorio_por_supervisor_bloqueado(self):
+        """Supervisor POST com tipo=RELATORIO_FINAL → 400."""
+        self._auth(self.user_sup)
+        r = self.client.post(self.DOC_URL, {
+            'processo': self.processo.pk,
+            'tipo': DocumentoProcesso.Tipo.RELATORIO_FINAL,
+            'arquivo': _pdf_upload(),
+        }, format='multipart')
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
+
+    # ── 4. Aluno não pode enviar avaliação de empresa ─────────────────────
+
+    def test_upload_avaliacao_por_aluno_bloqueado(self):
+        """Aluno POST com tipo=AVALIACAO_EMPRESA → 400."""
+        self._auth(self.user_aluno)
+        r = self.client.post(self.DOC_URL, {
+            'processo': self.processo.pk,
+            'tipo': DocumentoProcesso.Tipo.AVALIACAO_EMPRESA,
+            'arquivo': _pdf_upload(),
+        }, format='multipart')
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
+
+    # ── 5. Ninguém pode enviar Termo de Realização via upload ─────────────
+
+    def test_upload_termo_realizacao_bloqueado(self):
+        """TERMO_REALIZACAO é gerado pelo sistema — upload sempre retorna 400."""
+        self._auth(self.user_aluno)
+        r = self.client.post(self.DOC_URL, {
+            'processo': self.processo.pk,
+            'tipo': DocumentoProcesso.Tipo.TERMO_REALIZACAO,
+            'arquivo': _pdf_upload(),
+        }, format='multipart')
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
+
+    # ── 6. Filtro por processo ────────────────────────────────────────────
+
+    def test_filtrar_por_processo(self):
+        """GET /api/documentos/?processo=X retorna só docs daquele processo."""
+        doc = self._cria_doc(self.processo)
+        self._cria_doc(self.processo_b)
+        self._auth(self.user_aluno)
+        r = self.client.get(f'{self.DOC_URL}?processo={self.processo.pk}')
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        ids = [d['id'] for d in r.data]
+        self.assertIn(doc.pk, ids)
+        self.assertEqual(len(ids), 1)
+
+    # ── 7. Filtro por tipo ────────────────────────────────────────────────
+
+    def test_filtrar_por_tipo(self):
+        """GET /api/documentos/?tipo=TCE retorna docs TCE do aluno."""
+        doc_tce = self._cria_doc(self.processo, tipo=DocumentoProcesso.Tipo.TCE)
+        self._cria_doc(self.processo, tipo=DocumentoProcesso.Tipo.APOLICE)
+        self._auth(self.user_aluno)
+        r = self.client.get(f'{self.DOC_URL}?tipo=TCE')
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        ids = [d['id'] for d in r.data]
+        self.assertIn(doc_tce.pk, ids)
+        for d in r.data:
+            self.assertEqual(d['tipo'], 'TCE')
+
+    # ── 8. Coordenador aprova documento ──────────────────────────────────
+
+    def test_coordenador_aprova_documento(self):
+        """Coordenador POST /validar/ com status=APROVADO → 200, doc.status=APROVADO."""
+        doc = self._cria_doc(self.processo)
+        self._auth(self.user_coord)
+        r = self.client.post(self._validar_url(doc.pk), {'status': 'APROVADO'})
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        doc.refresh_from_db()
+        self.assertEqual(doc.status, DocumentoProcesso.StatusDoc.APROVADO)
+
+    # ── 9. Aluno não pode validar ─────────────────────────────────────────
+
+    def test_aluno_nao_pode_validar(self):
+        """Aluno POST /validar/ → 403."""
+        doc = self._cria_doc(self.processo)
+        self._auth(self.user_aluno)
+        r = self.client.post(self._validar_url(doc.pk), {'status': 'APROVADO'})
+        self.assertEqual(r.status_code, status.HTTP_403_FORBIDDEN)
+
+    # ── 10. Aluno A não vê docs do Aluno B ──────────────────────────────
+
+    def test_aluno_nao_ve_docs_de_outro(self):
+        """Aluno A não vê documentos do processo do Aluno B."""
+        doc_b = self._cria_doc(self.processo_b)
+        self._auth(self.user_aluno)
+        r = self.client.get(self.DOC_URL)
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        ids = [d['id'] for d in r.data]
+        self.assertNotIn(doc_b.pk, ids)
+
+    # ── 11. Gerar TCE ─────────────────────────────────────────────────────
+
+    def test_gerar_tce_pdf(self):
+        """Aluno GET gerar-tce → 200, content-type=application/pdf, inicia com %PDF."""
+        self._auth(self.user_aluno)
+        r = self.client.get(self._tce_url(self.processo.pk))
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertEqual(r['Content-Type'], 'application/pdf')
+        self.assertIn(b'%PDF', r.content)
+
+    # ── 12. Gerar Termo de Realização ─────────────────────────────────────
+
+    def test_gerar_termo_realizacao_pdf(self):
+        """Aluno GET gerar-termo-realizacao → 200, application/pdf."""
+        self._auth(self.user_aluno)
+        r = self.client.get(self._termo_url(self.processo.pk))
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertEqual(r['Content-Type'], 'application/pdf')
+        self.assertIn(b'%PDF', r.content)
+
+    # ── 13. Processo inexistente → 404 ────────────────────────────────────
+
+    def test_gerar_pdf_processo_inexistente(self):
+        """GET gerar-tce com ID inexistente → 404."""
+        self._auth(self.user_aluno)
+        r = self.client.get(self._tce_url(99999))
+        self.assertEqual(r.status_code, status.HTTP_404_NOT_FOUND)
+
+    # ── 14. Aluno B tenta gerar PDF do processo do Aluno A → 403 ─────────
+
+    def test_gerar_pdf_sem_permissao(self):
+        """Aluno B não tem acesso ao processo do Aluno A → 403."""
+        self._auth(self.user_aluno_b)
+        r = self.client.get(self._tce_url(self.processo.pk))
+        self.assertEqual(r.status_code, status.HTTP_403_FORBIDDEN)
+
+    # ── helpers de relatório ──────────────────────────────────────────────
+
+    def _relatorio_url(self, pk):
+        return f'/api/processos-estagio/{pk}/gerar-relatorio/'
+
+    def _payload_relatorio(self, tipo='parcial'):
+        return {
+            'tipo_relatorio': tipo,
+            'resumo': 'Resumo do estágio realizado.',
+            'introducao': 'Introdução ao relatório de estágio.',
+            'atividades_desenvolvidas': 'Desenvolvimento de APIs e testes unitários.',
+            'analise_critica': 'Análise das competências adquiridas.',
+            'conclusao': 'Estágio concluído com sucesso.',
+        }
+
+    # ── 15. Relatório parcial gerado e salvo ─────────────────────────────
+
+    def test_gerar_relatorio_parcial(self):
+        """Aluno POST /gerar-relatorio/ tipo=parcial → 200, PDF, doc RELATORIO_PARCIAL criado."""
+        from app.models import DocumentoProcesso as DP
+        self._auth(self.user_aluno)
+        r = self.client.post(
+            self._relatorio_url(self.processo.pk),
+            self._payload_relatorio('parcial'),
+            format='json',
+        )
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertEqual(r['Content-Type'], 'application/pdf')
+        self.assertIn(b'%PDF', r.content)
+        doc = DP.objects.filter(
+            processo=self.processo, tipo=DP.Tipo.RELATORIO_PARCIAL,
+        ).last()
+        self.assertIsNotNone(doc)
+        self.assertEqual(doc.status, DP.StatusDoc.PENDENTE)
+        self.assertEqual(doc.enviado_por, self.user_aluno)
+
+    # ── 16. Relatório final gerado ────────────────────────────────────────
+
+    def test_gerar_relatorio_final(self):
+        """Aluno POST tipo=final → 200, DocumentoProcesso com tipo=RELATORIO_FINAL."""
+        from app.models import DocumentoProcesso as DP
+        self._auth(self.user_aluno)
+        r = self.client.post(
+            self._relatorio_url(self.processo.pk),
+            self._payload_relatorio('final'),
+            format='json',
+        )
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        doc = DP.objects.filter(
+            processo=self.processo, tipo=DP.Tipo.RELATORIO_FINAL,
+        ).last()
+        self.assertIsNotNone(doc)
+
+    # ── 17. Campos obrigatórios ausentes → 400 ────────────────────────────
+
+    def test_gerar_relatorio_campos_faltando(self):
+        """POST sem campo obrigatório (resumo) → 400."""
+        self._auth(self.user_aluno)
+        payload = self._payload_relatorio()
+        del payload['resumo']
+        r = self.client.post(
+            self._relatorio_url(self.processo.pk),
+            payload,
+            format='json',
+        )
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
+
+    # ── 18. Aluno B tenta gerar relatório do processo do Aluno A → 403 ───
+
+    def test_gerar_relatorio_sem_permissao(self):
+        """Aluno B não pode gerar relatório do processo do Aluno A → 403."""
+        self._auth(self.user_aluno_b)
+        r = self.client.post(
+            self._relatorio_url(self.processo.pk),
+            self._payload_relatorio(),
+            format='json',
+        )
+        self.assertEqual(r.status_code, status.HTTP_403_FORBIDDEN)
+
+    # ── 19. Supervisor tenta gerar relatório → 403 ────────────────────────
+
+    def test_gerar_relatorio_supervisor_bloqueado(self):
+        """Supervisor POST /gerar-relatorio/ → 403 (só aluno pode)."""
+        self._auth(self.user_sup)
+        r = self.client.post(
+            self._relatorio_url(self.processo.pk),
+            self._payload_relatorio(),
+            format='json',
+        )
+        self.assertEqual(r.status_code, status.HTTP_403_FORBIDDEN)
+
+    # ── 20. Upload cria LogDocumento ──────────────────────────────────────
+
+    def test_upload_gera_log(self):
+        """Upload de documento cria LogDocumento com acao=UPLOAD."""
+        from app.models import LogDocumento
+        self._auth(self.user_aluno)
+        r = self.client.post(self.DOC_URL, {
+            'processo': self.processo.pk,
+            'tipo': DocumentoProcesso.Tipo.TCE,
+            'arquivo': _pdf_upload(),
+        }, format='multipart')
+        self.assertEqual(r.status_code, status.HTTP_201_CREATED)
+        log = LogDocumento.objects.filter(documento_id=r.data['id']).first()
+        self.assertIsNotNone(log)
+        self.assertEqual(log.acao, LogDocumento.Acao.UPLOAD)
+
+    # ── 21. Upload calcula score_conformidade ─────────────────────────────
+
+    def test_upload_calcula_score(self):
+        """Upload de documento calcula score_conformidade entre 0.0 e 1.0."""
+        self._auth(self.user_aluno)
+        r = self.client.post(self.DOC_URL, {
+            'processo': self.processo.pk,
+            'tipo': DocumentoProcesso.Tipo.TCE,
+            'arquivo': _pdf_upload(),
+        }, format='multipart')
+        self.assertEqual(r.status_code, status.HTTP_201_CREATED)
+        doc = DocumentoProcesso.objects.get(pk=r.data['id'])
+        self.assertGreaterEqual(doc.score_conformidade, 0.0)
+        self.assertLessEqual(doc.score_conformidade, 1.0)
+
+    # ── 22. Validar com comentário salva observacoes e cria log ───────────
+
+    def test_validar_com_comentario(self):
+        """Coordenador rejeita com comentário → observacoes salvo e LogDocumento criado."""
+        from app.models import LogDocumento
+        doc = self._cria_doc(self.processo)
+        self._auth(self.user_coord)
+        r = self.client.post(self._validar_url(doc.pk), {
+            'status': 'REJEITADO',
+            'comentario': 'Faltam informações na seção de atividades.',
+        })
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        doc.refresh_from_db()
+        self.assertEqual(doc.observacoes, 'Faltam informações na seção de atividades.')
+        log = LogDocumento.objects.filter(
+            documento=doc, acao=LogDocumento.Acao.REJEITADO,
+        ).first()
+        self.assertIsNotNone(log)
+        self.assertEqual(log.comentario, 'Faltam informações na seção de atividades.')
+
+    # ── 23. Endpoint /logs/ retorna histórico ─────────────────────────────
+
+    def test_logs_endpoint(self):
+        """GET /api/documentos/{id}/logs/ retorna ao menos 1 log após validação."""
+        doc = self._cria_doc(self.processo)
+        self._auth(self.user_coord)
+        self.client.post(self._validar_url(doc.pk), {'status': 'APROVADO'})
+        r = self.client.get(f'/api/documentos/{doc.pk}/logs/')
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertGreaterEqual(len(r.data), 1)
+
+    # ── 24. Preview não cria DocumentoProcesso ────────────────────────────
+
+    def test_relatorio_preview(self):
+        """POST gerar-relatorio com preview=true retorna PDF sem criar DocumentoProcesso."""
+        self._auth(self.user_aluno)
+        dados = {**self._payload_relatorio('parcial'), 'preview': True}
+        count_antes = DocumentoProcesso.objects.filter(processo=self.processo).count()
+        r = self.client.post(
+            self._relatorio_url(self.processo.pk),
+            dados,
+            format='json',
+        )
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertEqual(r['Content-Type'], 'application/pdf')
+        count_depois = DocumentoProcesso.objects.filter(processo=self.processo).count()
+        self.assertEqual(count_antes, count_depois)

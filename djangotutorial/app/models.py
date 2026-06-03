@@ -1,3 +1,4 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
@@ -29,7 +30,7 @@ class Coordenador(models.Model):
     usuario = models.OneToOneField(
         Usuario, on_delete=models.CASCADE, related_name='coordenador'
     )
-    departamento = models.CharField(max_length=100)
+    departamento = models.CharField(max_length=100, blank=True, null=True)
 
     def __str__(self):
         return self.usuario.nome
@@ -73,6 +74,22 @@ class EmpresaConcedente(models.Model):
     localizacao = models.CharField(max_length=300)
     email_contato = models.EmailField()
     aprovada_ibmec = models.BooleanField(default=False)
+    descricao = models.TextField(
+        blank=True,
+        help_text='Descrição da empresa, estrutura organizacional e principais atividades',
+    )
+    responsavel_legal_nome = models.CharField(
+        max_length=200,
+        blank=True,
+        null=True,
+        help_text='Nome do responsável legal da empresa (quem assina o TCE)',
+    )
+    responsavel_legal_cargo = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text='Cargo do responsável legal',
+    )
 
     def __str__(self):
         return self.razao_social
@@ -166,6 +183,44 @@ class ProcessoEstagio(models.Model):
     data_fim_prevista = models.DateField()
     plano_atividades = models.TextField()
     justificativa_rejeicao = models.TextField(blank=True, default='')
+    professor_orientador = models.ForeignKey(
+        'Usuario',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='processos_orientados',
+        help_text='Professor orientador do estágio pela instituição de ensino',
+    )
+    numero_seguro = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        help_text='Número da apólice de seguro contra acidentes pessoais',
+    )
+    valor_bolsa = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        help_text='Valor da bolsa mensal (obrigatório para estágio não obrigatório)',
+    )
+    valor_auxilio_transporte = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        help_text='Valor do auxílio transporte mensal (obrigatório para estágio não obrigatório)',
+    )
+    data_inicio_real = models.DateField(
+        blank=True,
+        null=True,
+        help_text='Data real de início do estágio',
+    )
+    data_fim_real = models.DateField(
+        blank=True,
+        null=True,
+        help_text='Data real de término do estágio',
+    )
 
     def __str__(self):
         return f'Processo #{self.pk} — {self.aluno} @ {self.empresa} [{self.status}]'
@@ -207,6 +262,16 @@ class DocumentoProcesso(models.Model):
         max_length=20, choices=StatusDoc.choices, default=StatusDoc.PENDENTE
     )
     versao = models.PositiveIntegerField(default=1)
+    observacoes = models.TextField(
+        blank=True,
+        null=True,
+        help_text='Observações/parecer do coordenador ao validar o documento',
+    )
+    score_conformidade = models.FloatField(
+        default=0.0,
+        validators=[MinValueValidator(0.0), MaxValueValidator(1.0)],
+        help_text='Score automático de conformidade (0.0 a 1.0)',
+    )
 
     def __str__(self):
         return f'{self.get_tipo_display()} v{self.versao} — Processo #{self.processo_id}'
@@ -214,3 +279,34 @@ class DocumentoProcesso(models.Model):
     class Meta:
         verbose_name = 'Documento de Processo'
         verbose_name_plural = 'Documentos de Processo'
+
+
+class LogDocumento(models.Model):
+    class Acao(models.TextChoices):
+        UPLOAD = 'UPLOAD', 'Upload'
+        APROVADO = 'APROVADO', 'Aprovado'
+        REJEITADO = 'REJEITADO', 'Rejeitado'
+        EDITADO = 'EDITADO', 'Editado'
+        GERADO = 'GERADO', 'Gerado pelo sistema'
+
+    documento = models.ForeignKey(
+        DocumentoProcesso,
+        on_delete=models.CASCADE,
+        related_name='logs',
+    )
+    acao = models.CharField(max_length=20, choices=Acao.choices)
+    usuario = models.ForeignKey(
+        'Usuario',
+        on_delete=models.SET_NULL,
+        null=True,
+    )
+    comentario = models.TextField(blank=True, null=True)
+    data = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-data']
+        verbose_name = 'Log de Documento'
+        verbose_name_plural = 'Logs de Documentos'
+
+    def __str__(self):
+        return f'{self.acao} - {self.documento} - {self.data}'

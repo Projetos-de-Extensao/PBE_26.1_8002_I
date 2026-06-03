@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 from .models import (
     Usuario, Curso, EmpresaConcedente,
     Aluno, Coordenador, SupervisorEmpresa,
-    ProcessoEstagio, DocumentoProcesso,
+    ProcessoEstagio, DocumentoProcesso, LogDocumento,
 )
 
 
@@ -96,3 +96,10 @@ class ProcessoEstagioAdmin(admin.ModelAdmin):
 class DocumentoProcessoAdmin(admin.ModelAdmin):
     list_display = ('processo', 'tipo', 'status', 'data_upload')
     list_filter = ('tipo', 'status')
+
+
+@admin.register(LogDocumento)
+class LogDocumentoAdmin(admin.ModelAdmin):
+    list_display = ['documento', 'acao', 'usuario', 'data']
+    list_filter = ['acao', 'data']
+    readonly_fields = ['documento', 'acao', 'usuario', 'comentario', 'data']

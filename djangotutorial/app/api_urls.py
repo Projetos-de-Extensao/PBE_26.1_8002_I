@@ -5,6 +5,7 @@ from .views import (
     CursoViewSet, EmpresaConcedenteViewSet, AlunoViewSet,
     CoordenadorViewSet, SupervisorEmpresaViewSet,
     DocumentoProcessoViewSet, ProcessoEstagioViewSet,
+    GerarPDFView, GerarRelatorioView,
     RegisterView, LoginView, LogoutView,
 )
 
@@ -22,4 +23,21 @@ urlpatterns = [
     path('auth/register/', RegisterView.as_view(), name='auth-register'),
     path('auth/login/',    LoginView.as_view(),    name='auth-login'),
     path('auth/logout/',   LogoutView.as_view(),   name='auth-logout'),
+    path(
+        'processos-estagio/<int:processo_id>/gerar-tce/',
+        GerarPDFView.as_view(),
+        {'tipo_documento': 'tce'},
+        name='gerar-tce',
+    ),
+    path(
+        'processos-estagio/<int:processo_id>/gerar-termo-realizacao/',
+        GerarPDFView.as_view(),
+        {'tipo_documento': 'termo-realizacao'},
+        name='gerar-termo-realizacao',
+    ),
+    path(
+        'processos-estagio/<int:processo_id>/gerar-relatorio/',
+        GerarRelatorioView.as_view(),
+        name='gerar-relatorio',
+    ),
 ]

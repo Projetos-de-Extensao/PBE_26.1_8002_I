@@ -1,9 +1,10 @@
 from rest_framework import serializers
 from .models import (
     Usuario, Curso, EmpresaConcedente, Aluno, Coordenador,
-    SupervisorEmpresa, ProcessoEstagio, DocumentoProcesso,
+    SupervisorEmpresa, ProcessoEstagio, DocumentoProcesso, LogDocumento,
 )
 from .state_machine import ESTADOS_VIVOS
+from .permissions import get_aluno, get_supervisor
 
 
 class UsuarioSerializer(serializers.ModelSerializer):
@@ -43,10 +44,66 @@ class SupervisorEmpresaSerializer(serializers.ModelSerializer):
 
 
 class DocumentoProcessoSerializer(serializers.ModelSerializer):
+    tipo_display = serializers.CharField(source='get_tipo_display', read_only=True)
+    enviado_por_nome = serializers.SerializerMethodField()
+
     class Meta:
         model = DocumentoProcesso
         fields = '__all__'
-        read_only_fields = ['enviado_por', 'data_upload', 'versao']
+        read_only_fields = ['enviado_por', 'data_upload', 'versao', 'observacoes', 'score_conformidade']
+
+    def get_enviado_por_nome(self, obj):
+        if obj.enviado_por_id:
+            return obj.enviado_por.nome
+        return None
+
+    def validate_arquivo(self, value):
+        if not value.name.lower().endswith('.pdf'):
+            raise serializers.ValidationError('Apenas arquivos PDF são aceitos.')
+        if value.size > 10 * 1024 * 1024:
+            raise serializers.ValidationError('O arquivo deve ter no máximo 10 MB.')
+        return value
+
+    def validate(self, data):
+        request = self.context.get('request')
+        if not request:
+            return data
+        user = request.user
+        tipo = data.get('tipo')
+
+        RELATORIOS = {DocumentoProcesso.Tipo.RELATORIO_PARCIAL, DocumentoProcesso.Tipo.RELATORIO_FINAL}
+        if tipo in RELATORIOS:
+            if get_aluno(user) is None:
+                raise serializers.ValidationError(
+                    {'tipo': 'Apenas alunos podem enviar relatórios.'}
+                )
+
+        if tipo == DocumentoProcesso.Tipo.AVALIACAO_EMPRESA:
+            if get_supervisor(user) is None:
+                raise serializers.ValidationError(
+                    {'tipo': 'Apenas supervisores da empresa podem enviar avaliação.'}
+                )
+
+        if tipo == DocumentoProcesso.Tipo.TERMO_REALIZACAO:
+            raise serializers.ValidationError(
+                {'tipo': 'Termo de Realização é gerado automaticamente pelo sistema.'}
+            )
+
+        return data
+
+
+class LogDocumentoSerializer(serializers.ModelSerializer):
+    usuario_nome = serializers.SerializerMethodField()
+
+    class Meta:
+        model = LogDocumento
+        fields = '__all__'
+        read_only_fields = ['documento', 'acao', 'usuario', 'data']
+
+    def get_usuario_nome(self, obj):
+        if obj.usuario:
+            return obj.usuario.nome
+        return None
 
 
 class ProcessoEstagioSerializer(serializers.ModelSerializer):
