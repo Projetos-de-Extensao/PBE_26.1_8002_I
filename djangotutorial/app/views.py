@@ -37,7 +37,6 @@ class CursoViewSet(viewsets.ModelViewSet):
         return Curso.objects.all()
 
     def get_permissions(self):
-        # Escrita só para admin ou coordenador do curso
         if self.action in ('update', 'partial_update', 'destroy'):
             from rest_framework.permissions import BasePermission
 
@@ -70,12 +69,6 @@ class CoordenadorViewSet(viewsets.ModelViewSet):
 # ── SolicitacaoEstagio — ViewSet com RBAC completo ────────────────────────────
 
 class SolicitacaoEstagioViewSet(viewsets.ModelViewSet):
-    """
-    RBAC aplicado em duas camadas:
-      1. has_permission  → bloqueia ações inteiras por papel (SolicitacaoEstagioPermission)
-      2. get_queryset    → filtra queryset por papel (negação por padrão: .none())
-      3. has_object_perm → valida ownership no detalhe/update/delete
-    """
     permission_classes = [IsAuthenticated, SolicitacaoEstagioPermission]
 
     def get_serializer_class(self):
@@ -97,38 +90,27 @@ class SolicitacaoEstagioViewSet(viewsets.ModelViewSet):
 
         aluno = get_aluno(user)
         if aluno is not None:
-            # Aluno vê apenas as próprias solicitações
             return SolicitacaoEstagio.objects.filter(aluno=aluno).select_related(
                 'aluno__usuario', 'empresa',
             )
 
         coordenador = get_coordenador(user)
         if coordenador is not None:
-            # Coordenador vê apenas solicitações de alunos do seu curso
             return SolicitacaoEstagio.objects.filter(
                 aluno__curso__coordenador=coordenador,
             ).select_related('aluno__usuario', 'aluno__curso', 'empresa')
 
-        # Nenhum perfil reconhecido → retorna vazio (negação por padrão)
         return SolicitacaoEstagio.objects.none()
 
     def perform_create(self, serializer):
         aluno = get_aluno(self.request.user)
         if aluno is None:
             raise PermissionDenied('Apenas alunos podem criar solicitações de estágio.')
-        # Força aluno = usuário autenticado e status inicial = PENDENTE
         serializer.save(aluno=aluno, status=SolicitacaoEstagio.Status.PENDENTE)
 
     @action(detail=True, methods=['post'], url_path='alterar-status')
     def alterar_status(self, request, pk=None):
-        """
-        Endpoint exclusivo para coordenador alterar o status de uma solicitação.
-
-        POST /api/solicitacoes-estagio/{id}/alterar-status/
-        Body: { "status": "APROVADO" }
-              { "status": "REJEITADO", "justificativa_rejeicao": "..." }
-        """
-        solicitacao = self.get_object()  # aciona has_object_permission
+        solicitacao = self.get_object()
         serializer = AlterarStatusSerializer(
             solicitacao, data=request.data, partial=True,
         )
@@ -137,14 +119,24 @@ class SolicitacaoEstagioViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-
-
-# ── Auth manual ───────────────────────────────────────────────────────────────
+# ── Auth ──────────────────────────────────────────────────────────────────────
 
 class RegisterView(APIView):
     """
-    Cria um Usuario e o perfil vinculado (Aluno ou Coordenador).
-    Corpo: { "tipo": "aluno"|"coordenador", "username": ..., "password": ..., ...campos }
+    Registra um novo usuário e cria o perfil correspondente.
+
+    Tipos aceitos: aluno, coordenador, empresa
+
+    Corpo comum:
+      { "tipo": "...", "username": "...", "password": "...", "nome": "..." }
+
+    Campos extras por tipo:
+      aluno:       cpf, curso_id (obrigatório), rg, coeficiente_rendimento
+      coordenador: departamento
+      empresa:     cnpj, razao_social, areas_atuacao, localizacao, email_contato
+
+    Retorna:
+      { "token": "...", "id": 1, "tipo": "..." }
     """
     permission_classes = [AllowAny]
 
@@ -153,20 +145,45 @@ class RegisterView(APIView):
         tipo = data.get('tipo', '').lower()
         username = data.get('username', '').strip()
         password = data.get('password', '')
+        nome = data.get('nome', '').strip()
 
+        # ── Validações básicas ────────────────────────────────────────────────
         if not username or not password:
             return Response(
                 {'erro': 'username e password são obrigatórios'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if tipo == 'aluno':
-            try:
+        if len(password) < 8:
+            return Response(
+                {'erro': 'Senha deve ter no mínimo 8 caracteres'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if tipo not in ('aluno', 'coordenador', 'empresa'):
+            return Response(
+                {'erro': 'tipo deve ser "aluno", "coordenador" ou "empresa"'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # ── Registro por tipo ─────────────────────────────────────────────────
+        user = None
+        try:
+            if tipo == 'aluno':
+                curso_id = data.get('curso_id')
+                if not curso_id:
+                    return Response(
+                        {'erro': 'curso_id é obrigatório para alunos'},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                if not Curso.objects.filter(pk=curso_id).exists():
+                    return Response(
+                        {'erro': 'Curso não encontrado'},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
                 user = Usuario.objects.create_user(
-                    username=username,
-                    password=password,
-                    tipo='aluno',
-                    nome=data.get('nome', ''),
+                    username=username, password=password,
+                    tipo='aluno', nome=nome,
                     email_institucional=data.get('email_institucional', ''),
                 )
                 Aluno.objects.create(
@@ -174,31 +191,46 @@ class RegisterView(APIView):
                     cpf=data.get('cpf', ''),
                     rg=data.get('rg', ''),
                     coeficiente_rendimento=data.get('coeficiente_rendimento', 0),
-                    curso_id=data.get('curso_id'),
+                    curso_id=curso_id,
                 )
-            except Exception as e:
-                return Response({'erro': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        elif tipo == 'coordenador':
-            try:
+            elif tipo == 'coordenador':
                 user = Usuario.objects.create_user(
-                    username=username,
-                    password=password,
-                    tipo='coordenador',
-                    nome=data.get('nome', ''),
+                    username=username, password=password,
+                    tipo='coordenador', nome=nome,
                     email_institucional=data.get('email_institucional', ''),
                 )
-                # Nota: campo 'departamento' removido do model atual;
-                # criar perfil sem ele.
-                Coordenador.objects.create(usuario=user)
-            except Exception as e:
-                return Response({'erro': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+                Coordenador.objects.create(
+                    usuario=user,
+                    departamento=data.get('departamento', ''),
+                )
 
-        else:
-            return Response(
-                {'erro': 'tipo deve ser "aluno" ou "coordenador"'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            elif tipo == 'empresa':
+                cnpj = data.get('cnpj', '').strip()
+                razao_social = data.get('razao_social', '').strip()
+                if not cnpj or not razao_social:
+                    return Response(
+                        {'erro': 'cnpj e razao_social são obrigatórios para empresas'},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                user = Usuario.objects.create_user(
+                    username=username, password=password,
+                    tipo='empresa', nome=nome,
+                    email_institucional=data.get('email_institucional', ''),
+                )
+                Empresa.objects.create(
+                    cnpj=cnpj,
+                    razao_social=razao_social,
+                    areas_atuacao=data.get('areas_atuacao', ''),
+                    localizacao=data.get('localizacao', ''),
+                    email_contato=data.get('email_contato', ''),
+                )
+
+        except Exception as e:
+            # Se o usuário foi criado mas o perfil falhou, desfaz
+            if user is not None:
+                user.delete()
+            return Response({'erro': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         token, _ = Token.objects.get_or_create(user=user)
         return Response(
@@ -209,8 +241,10 @@ class RegisterView(APIView):
 
 class LoginView(APIView):
     """
-    Autentica username/senha e retorna token DRF.
-    Corpo: { "username": ..., "password": ... }
+    Autentica username/senha e retorna token + dados do usuário.
+
+    Corpo:   { "username": "...", "password": "..." }
+    Retorna: { "token": "...", "tipo": "...", "nome": "...", "id": 1 }
     """
     permission_classes = [AllowAny]
 
@@ -224,7 +258,12 @@ class LoginView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED,
             )
         token, _ = Token.objects.get_or_create(user=user)
-        return Response({'token': token.key})
+        return Response({
+            'token': token.key,
+            'tipo': user.tipo,
+            'nome': user.nome,
+            'id': user.pk,
+        })
 
 
 class LogoutView(APIView):

@@ -5,7 +5,11 @@ from django.contrib.auth.models import AbstractUser
 class Usuario(AbstractUser):
     tipo = models.CharField(
         max_length=20,
-        choices=[('aluno', 'Aluno'), ('coordenador', 'Coordenador')],
+        choices=[
+            ('aluno', 'Aluno'),
+            ('coordenador', 'Coordenador'),
+            ('empresa', 'Empresa'),          # ← adicionado
+        ],
         default='aluno',
     )
     nome = models.CharField(max_length=100)
@@ -23,6 +27,7 @@ class Coordenador(models.Model):
     usuario = models.OneToOneField(
         Usuario, on_delete=models.CASCADE, related_name='coordenador'
     )
+    departamento = models.CharField(max_length=100, blank=True, default='')
 
     def __str__(self):
         return self.usuario.nome
@@ -34,16 +39,6 @@ class Coordenador(models.Model):
 
 class Curso(models.Model):
     nome = models.CharField(max_length=200)
-    '''
-    carga_horaria_minima_total = models.PositiveIntegerField(
-        null=True, blank=True,
-        help_text='Carga horária mínima total exigida para integralização (horas)',
-    )
-    carga_horaria_maxima_diaria = models.PositiveIntegerField(
-        null=True, blank=True,
-        help_text='Limite diário de horas permitido pela legislação/PPC',
-    )
-    '''
     coordenador = models.ForeignKey(
         Coordenador,
         on_delete=models.SET_NULL,
@@ -86,9 +81,7 @@ class Empresa(models.Model):
     areas_atuacao = models.TextField()
     localizacao = models.CharField(max_length=300)
     email_contato = models.EmailField()
-    aprovada_ibmec = models.BooleanField(
-        default=False,
-    )
+    aprovada_ibmec = models.BooleanField(default=False)
 
     def __str__(self):
         return self.razao_social
@@ -153,4 +146,3 @@ class Documento(models.Model):
 
     class Meta:
         abstract = True
-
