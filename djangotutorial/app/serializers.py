@@ -17,9 +17,21 @@ class CursoSerializer(serializers.ModelSerializer):
 
 
 class EmpresaSerializer(serializers.ModelSerializer):
+    """
+    Serializer de Empresa (Pessoa 3).
+      - aprovada_ibmec: sempre read-only na API (aprovação só pelo admin).
+      - cnpj: editável apenas na criação; imutável no update.
+    """
     class Meta:
         model = Empresa
         fields = '__all__'
+        read_only_fields = ['aprovada_ibmec']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # No update (instância existente) o CNPJ não pode ser alterado.
+        if self.instance is not None and 'cnpj' in self.fields:
+            self.fields['cnpj'].read_only = True
 
 
 class AlunoSerializer(serializers.ModelSerializer):
