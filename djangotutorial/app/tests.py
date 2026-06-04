@@ -1420,3 +1420,164 @@ class PreencherFormularioTests(APITestCase):
             processo=self.processo, tipo=DocumentoProcesso.Tipo.RELATORIO_FINAL,
         ).last()
         self.assertIsNotNone(doc)
+
+
+# ── Dashboard ─────────────────────────────────────────────────────────────────
+
+class DashboardTests(APITestCase):
+    """Testes de DashboardProcessosView, DashboardEstatisticasView e DashboardEmpresasView."""
+
+    PROCESSOS_URL    = '/api/dashboard/processos/'
+    ESTATISTICAS_URL = '/api/dashboard/estatisticas/'
+    EMPRESAS_URL     = '/api/dashboard/empresas/'
+
+    def setUp(self):
+        # Coordenador + Curso
+        self.user_coord = Usuario.objects.create_user(
+            username='dash_coord', password='senha123', tipo='coordenador', nome='Coord Dash',
+        )
+        self.coord = Coordenador.objects.create(usuario=self.user_coord)
+        self.curso = Curso.objects.create(
+            nome='Dashboard Curso',
+            coordenador=self.coord,
+            carga_horaria_minima_total=400,
+            carga_horaria_maxima_diaria=6,
+        )
+
+        # Empresa
+        self.empresa = EmpresaConcedente.objects.create(
+            cnpj='88.888.888/0001-88',
+            razao_social='Dash Corp',
+            areas_atuacao='TI',
+            localizacao='RJ',
+            email_contato='rh@dash.com',
+            aprovada_ibmec=True,
+        )
+
+        # Aluno
+        self.user_aluno = Usuario.objects.create_user(
+            username='dash_aluno', password='senha123', tipo='aluno', nome='Aluno Dash',
+        )
+        self.aluno = Aluno.objects.create(
+            usuario=self.user_aluno,
+            cpf='888.888.888-88',
+            curso=self.curso,
+            matriculado_estagio=True,
+        )
+
+        # Admin
+        self.user_admin = Usuario.objects.create_superuser(
+            username='dash_admin', password='senha123', nome='Admin Dash',
+            email='dash_admin@ibmec.edu.br',
+        )
+
+        # Modelo de formulário
+        self.modelo = ModeloFormulario.objects.create(
+            curso=self.curso,
+            criado_por=self.coord,
+            titulo='Avaliação Dashboard',
+            secoes=[
+                {
+                    'id': 'comp',
+                    'tipo': 'escala_1_4',
+                    'titulo': 'Competências',
+                    'itens': ['Proatividade', 'Comunicação'],
+                    'grafico': 'radar',
+                },
+            ],
+            ativo=True,
+        )
+
+        # Processo com respostas
+        self.processo = ProcessoEstagio.objects.create(
+            aluno=self.aluno,
+            empresa=self.empresa,
+            coordenador=self.coord,
+            status=ProcessoEstagio.Status.ATIVO,
+            horas_semanais=20,
+            data_inicio_prevista=_date(2026, 1, 1),
+            data_fim_prevista=_date(2026, 6, 30),
+            plano_atividades='Dashboard test.',
+            modelo_formulario=self.modelo,
+            valor_bolsa='2000.00',
+            respostas_formulario={
+                'secoes': {
+                    'comp': {'Proatividade': 3, 'Comunicação': 4},
+                }
+            },
+        )
+
+    def _auth(self, user):
+        self.client.force_authenticate(user=user)
+
+    # ── 1. Aluno não acessa dashboard de processos ────────────────────────
+
+    def test_aluno_bloqueado_dashboard_processos(self):
+        """Aluno GET /api/dashboard/processos/ → 403."""
+        self._auth(self.user_aluno)
+        r = self.client.get(self.PROCESSOS_URL)
+        self.assertEqual(r.status_code, status.HTTP_403_FORBIDDEN)
+
+    # ── 2. Coordenador acessa e vê só processos do seu curso ─────────────
+
+    def test_coordenador_ve_processos_do_seu_curso(self):
+        """Coordenador GET /api/dashboard/processos/ → 200, lista com o processo do seu curso."""
+        self._auth(self.user_coord)
+        r = self.client.get(self.PROCESSOS_URL)
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        ids = [p['id'] for p in r.data]
+        self.assertIn(self.processo.pk, ids)
+
+    # ── 3. Estrutura mínima do item de processo ───────────────────────────
+
+    def test_processos_campos_obrigatorios(self):
+        """Cada item de /dashboard/processos/ tem os campos esperados."""
+        self._auth(self.user_coord)
+        r = self.client.get(self.PROCESSOS_URL)
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertGreater(len(r.data), 0)
+        item = r.data[0]
+        for campo in ('id', 'aluno_nome', 'empresa_nome', 'status', 'tem_respostas'):
+            self.assertIn(campo, item)
+
+    # ── 4. Estatísticas retornam campos esperados ─────────────────────────
+
+    def test_estatisticas_campos_obrigatorios(self):
+        """GET /api/dashboard/estatisticas/ → 200 com campos total_processos e por_status."""
+        self._auth(self.user_coord)
+        r = self.client.get(self.ESTATISTICAS_URL)
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        for campo in ('total_processos', 'com_respostas', 'por_status', 'por_semestre', 'por_empresa'):
+            self.assertIn(campo, r.data)
+
+    # ── 5. Estatísticas contam processos corretamente ─────────────────────
+
+    def test_estatisticas_total_processos(self):
+        """total_processos e com_respostas refletem dados reais."""
+        self._auth(self.user_coord)
+        r = self.client.get(self.ESTATISTICAS_URL)
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertEqual(r.data['total_processos'], 1)
+        self.assertEqual(r.data['com_respostas'], 1)
+
+    # ── 6. Dashboard empresas retorna por empresa ─────────────────────────
+
+    def test_empresas_retorna_lista(self):
+        """GET /api/dashboard/empresas/ → 200, lista com a empresa do processo."""
+        self._auth(self.user_coord)
+        r = self.client.get(self.EMPRESAS_URL)
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertGreater(len(r.data), 0)
+        emp = r.data[0]
+        for campo in ('empresa_id', 'nome', 'cnpj', 'total_estagios', 'estagiarios'):
+            self.assertIn(campo, emp)
+
+    # ── 7. Admin acessa dashboard com visão global ────────────────────────
+
+    def test_admin_acessa_dashboard_global(self):
+        """Admin GET /api/dashboard/processos/ → 200 (vê tudo)."""
+        self._auth(self.user_admin)
+        r = self.client.get(self.PROCESSOS_URL)
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        ids = [p['id'] for p in r.data]
+        self.assertIn(self.processo.pk, ids)

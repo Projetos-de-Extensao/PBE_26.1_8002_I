@@ -9,6 +9,9 @@ from .views import (
     GerarPDFView, GerarRelatorioView, PreencherFormularioView,
     RegisterView, LoginView, LogoutView,
 )
+from .views_dashboard import (
+    DashboardProcessosView, DashboardEstatisticasView, DashboardEmpresasView,
+)
 
 router = DefaultRouter()
 router.register(r'cursos',               CursoViewSet,             basename='curso')
@@ -47,4 +50,7 @@ urlpatterns = [
         PreencherFormularioView.as_view(),
         name='preencher-formulario',
     ),
+    path('dashboard/processos/',     DashboardProcessosView.as_view(),    name='dashboard-processos'),
+    path('dashboard/estatisticas/',  DashboardEstatisticasView.as_view(), name='dashboard-estatisticas'),
+    path('dashboard/empresas/',      DashboardEmpresasView.as_view(),     name='dashboard-empresas'),
 ]
