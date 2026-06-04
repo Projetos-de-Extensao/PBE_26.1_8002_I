@@ -1185,3 +1185,238 @@ class ModeloFormularioTests(APITestCase):
         self.assertEqual(len(modelo.secoes), 2)
         self.assertEqual(modelo.secoes[0]['tipo'], 'escala_1_4')
         self.assertEqual(modelo.secoes[1]['tipo'], 'escala_1_4_multi')
+
+
+# ── Preencher Formulário ──────────────────────────────────────────────────────
+
+from datetime import date as _date
+
+
+def _secoes_avaliacao():
+    return [
+        {
+            'id': 'comportamental',
+            'tipo': 'escala_1_4',
+            'titulo': 'Inteligência Comportamental',
+            'itens': ['Visão', 'Adaptabilidade', 'Empatia'],
+            'grafico': 'radar',
+        },
+        {
+            'id': 'comentarios',
+            'tipo': 'texto_livre',
+            'titulo': 'Comentários Gerais',
+            'grafico': 'nenhum',
+        },
+    ]
+
+
+class PreencherFormularioTests(APITestCase):
+    """Testes de PreencherFormularioView (POST /api/processos-estagio/{id}/preencher-formulario/)."""
+
+    PREENCHER_URL = '/api/processos-estagio/{}/preencher-formulario/'
+
+    def setUp(self):
+        # Coordenador + Curso
+        self.user_coord = Usuario.objects.create_user(
+            username='pf_coord', password='senha123', tipo='coordenador', nome='Coord PF',
+        )
+        self.coord = Coordenador.objects.create(usuario=self.user_coord)
+        self.curso = Curso.objects.create(
+            nome='Engenharia de Dados',
+            coordenador=self.coord,
+            carga_horaria_minima_total=400,
+            carga_horaria_maxima_diaria=6,
+        )
+
+        # Empresa
+        self.empresa = EmpresaConcedente.objects.create(
+            cnpj='55.555.555/0001-55',
+            razao_social='Dados Corp',
+            areas_atuacao='TI',
+            localizacao='RJ',
+            email_contato='rh@dados.com',
+            aprovada_ibmec=True,
+        )
+
+        # Modelo de formulário
+        self.modelo = ModeloFormulario.objects.create(
+            curso=self.curso,
+            criado_por=self.coord,
+            titulo='Avaliação Semestral',
+            secoes=_secoes_avaliacao(),
+            ativo=True,
+        )
+
+        # Aluno A
+        self.user_aluno = Usuario.objects.create_user(
+            username='pf_aluno', password='senha123', tipo='aluno', nome='Aluno PF',
+        )
+        self.aluno = Aluno.objects.create(
+            usuario=self.user_aluno,
+            cpf='666.666.666-66',
+            curso=self.curso,
+            matriculado_estagio=True,
+        )
+
+        # Aluno B (isolamento)
+        self.user_aluno_b = Usuario.objects.create_user(
+            username='pf_aluno_b', password='senha123', tipo='aluno', nome='Aluno B PF',
+        )
+        self.aluno_b = Aluno.objects.create(
+            usuario=self.user_aluno_b,
+            cpf='777.777.777-77',
+            curso=self.curso,
+            matriculado_estagio=True,
+        )
+
+        # Processo do Aluno A com modelo atribuído
+        self.processo = ProcessoEstagio.objects.create(
+            aluno=self.aluno,
+            empresa=self.empresa,
+            coordenador=self.coord,
+            status=ProcessoEstagio.Status.PENDENTE,
+            horas_semanais=20,
+            data_inicio_prevista=_date(2026, 7, 1),
+            data_fim_prevista=_date(2026, 12, 31),
+            plano_atividades='Engenharia de dados e pipelines.',
+            modelo_formulario=self.modelo,
+        )
+
+        # Processo do Aluno B (para teste de isolamento)
+        self.processo_b = ProcessoEstagio.objects.create(
+            aluno=self.aluno_b,
+            empresa=self.empresa,
+            coordenador=self.coord,
+            status=ProcessoEstagio.Status.PENDENTE,
+            horas_semanais=20,
+            data_inicio_prevista=_date(2026, 7, 1),
+            data_fim_prevista=_date(2026, 12, 31),
+            plano_atividades='Análise de dados.',
+            modelo_formulario=self.modelo,
+        )
+
+    def _auth(self, user):
+        self.client.force_authenticate(user=user)
+
+    def _respostas_validas(self):
+        return {
+            'comportamental': {'Visão': 3, 'Adaptabilidade': 4, 'Empatia': 2},
+            'comentarios': 'Experiência muito positiva.',
+        }
+
+    def _url(self, processo=None):
+        pk = (processo or self.processo).pk
+        return self.PREENCHER_URL.format(pk)
+
+    # ── 1. Preenchimento com sucesso ──────────────────────────────────────
+
+    def test_preencher_formulario_sucesso(self):
+        """Aluno preenche formulário válido → 200, PDF, respostas salvas, DocumentoProcesso criado."""
+        self._auth(self.user_aluno)
+        r = self.client.post(
+            self._url(),
+            {'tipo_relatorio': 'parcial', 'respostas': self._respostas_validas()},
+            format='json',
+        )
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertEqual(r['Content-Type'], 'application/pdf')
+        # Respostas salvas no processo
+        self.processo.refresh_from_db()
+        self.assertIsNotNone(self.processo.respostas_formulario)
+        self.assertIn('secoes', self.processo.respostas_formulario)
+        # DocumentoProcesso criado
+        doc = DocumentoProcesso.objects.filter(
+            processo=self.processo, tipo=DocumentoProcesso.Tipo.RELATORIO_PARCIAL,
+        ).last()
+        self.assertIsNotNone(doc)
+        self.assertEqual(doc.status, DocumentoProcesso.StatusDoc.PENDENTE)
+
+    # ── 2. Preview não persiste dados ─────────────────────────────────────
+
+    def test_preencher_formulario_preview(self):
+        """Com preview=true → PDF retornado mas nada salvo."""
+        self._auth(self.user_aluno)
+        respostas_antes = self.processo.respostas_formulario
+        count_antes = DocumentoProcesso.objects.filter(processo=self.processo).count()
+        r = self.client.post(
+            self._url(),
+            {'tipo_relatorio': 'parcial', 'respostas': self._respostas_validas(), 'preview': True},
+            format='json',
+        )
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertEqual(r['Content-Type'], 'application/pdf')
+        self.processo.refresh_from_db()
+        self.assertEqual(self.processo.respostas_formulario, respostas_antes)
+        self.assertEqual(
+            DocumentoProcesso.objects.filter(processo=self.processo).count(), count_antes,
+        )
+
+    # ── 3. Processo sem modelo → 400 ─────────────────────────────────────
+
+    def test_preencher_sem_modelo(self):
+        """Processo sem modelo_formulario atribuído → 400."""
+        processo_sem_modelo = ProcessoEstagio.objects.create(
+            aluno=self.aluno,
+            empresa=self.empresa,
+            coordenador=self.coord,
+            status=ProcessoEstagio.Status.RASCUNHO,
+            horas_semanais=20,
+            data_inicio_prevista=_date(2026, 8, 1),
+            data_fim_prevista=_date(2026, 12, 31),
+            plano_atividades='Sem modelo.',
+        )
+        self._auth(self.user_aluno)
+        r = self.client.post(
+            self.PREENCHER_URL.format(processo_sem_modelo.pk),
+            {'tipo_relatorio': 'parcial', 'respostas': {}},
+            format='json',
+        )
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('erro', r.data)
+
+    # ── 4. Nota fora do range → 400 com erros_validacao ──────────────────
+
+    def test_preencher_resposta_invalida(self):
+        """Nota 5 (fora do range 1-4) em escala_1_4 → 400 com erros_validacao."""
+        self._auth(self.user_aluno)
+        respostas = {
+            'comportamental': {'Visão': 5, 'Adaptabilidade': 4, 'Empatia': 2},
+            'comentarios': 'Ok.',
+        }
+        r = self.client.post(
+            self._url(),
+            {'tipo_relatorio': 'parcial', 'respostas': respostas},
+            format='json',
+        )
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('erros_validacao', r.data)
+        self.assertTrue(len(r.data['erros_validacao']) > 0)
+
+    # ── 5. Aluno B não acessa processo do Aluno A → 403 ──────────────────
+
+    def test_preencher_outro_processo(self):
+        """Aluno B tenta preencher formulário do processo do Aluno A → 403."""
+        self._auth(self.user_aluno_b)
+        r = self.client.post(
+            self._url(self.processo),
+            {'tipo_relatorio': 'parcial', 'respostas': self._respostas_validas()},
+            format='json',
+        )
+        self.assertEqual(r.status_code, status.HTTP_403_FORBIDDEN)
+
+    # ── 6. PDF contém %PDF e DocumentoProcesso tem tipo correto ──────────
+
+    def test_pdf_avaliacao_contem_dados_aluno(self):
+        """PDF gerado contém bytes %PDF e DocumentoProcesso tem tipo RELATORIO_FINAL."""
+        self._auth(self.user_aluno)
+        r = self.client.post(
+            self._url(),
+            {'tipo_relatorio': 'final', 'respostas': self._respostas_validas()},
+            format='json',
+        )
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertIn(b'%PDF', r.content)
+        doc = DocumentoProcesso.objects.filter(
+            processo=self.processo, tipo=DocumentoProcesso.Tipo.RELATORIO_FINAL,
+        ).last()
+        self.assertIsNotNone(doc)

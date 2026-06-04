@@ -572,6 +572,112 @@ class GerarRelatorioView(APIView):
         return response
 
 
+# ── Preenchimento de formulário avaliativo ────────────────────────────────────
+
+class PreencherFormularioView(APIView):
+    """
+    POST /api/processos-estagio/{processo_id}/preencher-formulario/
+
+    Aluno preenche o formulário avaliativo do seu processo.
+    Body: { "tipo_relatorio": "parcial"|"final", "respostas": {...}, "preview": bool }
+
+    - Se preview=False: salva respostas no processo, gera PDF, cria DocumentoProcesso + log
+    - Se preview=True: gera e retorna PDF sem persistir nada
+    - Apenas o aluno dono do processo pode chamar
+    - 400 se o processo não tem modelo_formulario atribuído
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, processo_id):
+        user = request.user
+        try:
+            processo = ProcessoEstagio.objects.select_related(
+                'aluno__usuario', 'aluno__curso__coordenador__usuario',
+                'empresa', 'supervisor__usuario', 'coordenador__usuario',
+                'modelo_formulario', 'professor_orientador',
+            ).get(pk=processo_id)
+        except ProcessoEstagio.DoesNotExist:
+            return Response(
+                {'erro': 'Processo não encontrado.'},
+                status=drf_status.HTTP_404_NOT_FOUND,
+            )
+
+        aluno = get_aluno(user)
+        if aluno is None or processo.aluno_id != aluno.pk:
+            return Response(
+                {'erro': 'Acesso negado.'},
+                status=drf_status.HTTP_403_FORBIDDEN,
+            )
+
+        if not processo.modelo_formulario:
+            return Response(
+                {'erro': 'Este processo não possui um formulário de avaliação atribuído. Contate o coordenador.'},
+                status=drf_status.HTTP_400_BAD_REQUEST,
+            )
+
+        tipo_relatorio = request.data.get('tipo_relatorio', 'parcial')
+        if tipo_relatorio not in ('parcial', 'final'):
+            return Response(
+                {'erro': 'tipo_relatorio deve ser "parcial" ou "final".'},
+                status=drf_status.HTTP_400_BAD_REQUEST,
+            )
+
+        respostas = request.data.get('respostas', {})
+        if not isinstance(respostas, dict):
+            return Response(
+                {'erro': 'respostas deve ser um objeto JSON.'},
+                status=drf_status.HTTP_400_BAD_REQUEST,
+            )
+
+        from .form_validator import validar_respostas
+        erros = validar_respostas(processo.modelo_formulario.secoes, respostas)
+        if erros:
+            return Response({'erros_validacao': erros}, status=drf_status.HTTP_400_BAD_REQUEST)
+
+        preview_raw = request.data.get('preview', False)
+        is_preview = preview_raw in (True, 'true', 'True', '1', 1)
+
+        from .pdf_generator import gerar_relatorio_avaliacao
+        buffer = gerar_relatorio_avaliacao(processo, processo.modelo_formulario, respostas)
+
+        tipo_doc = (
+            DocumentoProcesso.Tipo.RELATORIO_PARCIAL
+            if tipo_relatorio == 'parcial'
+            else DocumentoProcesso.Tipo.RELATORIO_FINAL
+        )
+        filename = f'avaliacao_{tipo_relatorio}_processo_{processo_id}.pdf'
+
+        if not is_preview:
+            import datetime
+            processo.respostas_formulario = {
+                'preenchido_em': datetime.datetime.now().isoformat(),
+                'tipo_relatorio': tipo_relatorio,
+                'secoes': respostas,
+            }
+            processo.save(update_fields=['respostas_formulario'])
+
+            from django.core.files.base import ContentFile
+            doc_processo = DocumentoProcesso(
+                processo=processo,
+                tipo=tipo_doc,
+                enviado_por=user,
+                status=DocumentoProcesso.StatusDoc.PENDENTE,
+            )
+            doc_processo.arquivo.save(filename, ContentFile(buffer.getvalue()), save=True)
+            LogDocumento.objects.create(
+                documento=doc_processo,
+                acao=LogDocumento.Acao.GERADO,
+                usuario=user,
+                comentario=f'Formulário de avaliação ({tipo_relatorio}) preenchido e gerado automaticamente.',
+            )
+
+        from django.http import HttpResponse
+        buffer.seek(0)
+        response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+
+
 # ── Auth ──────────────────────────────────────────────────────────────────────
 
 class RegisterView(APIView):

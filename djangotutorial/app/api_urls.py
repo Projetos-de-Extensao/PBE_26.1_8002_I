@@ -6,7 +6,7 @@ from .views import (
     CoordenadorViewSet, SupervisorEmpresaViewSet,
     DocumentoProcessoViewSet, ProcessoEstagioViewSet,
     ModeloFormularioViewSet,
-    GerarPDFView, GerarRelatorioView,
+    GerarPDFView, GerarRelatorioView, PreencherFormularioView,
     RegisterView, LoginView, LogoutView,
 )
 
@@ -41,5 +41,10 @@ urlpatterns = [
         'processos-estagio/<int:processo_id>/gerar-relatorio/',
         GerarRelatorioView.as_view(),
         name='gerar-relatorio',
+    ),
+    path(
+        'processos-estagio/<int:processo_id>/preencher-formulario/',
+        PreencherFormularioView.as_view(),
+        name='preencher-formulario',
     ),
 ]

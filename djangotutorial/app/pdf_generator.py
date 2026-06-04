@@ -8,6 +8,7 @@ Funções exportadas:
 import io
 from datetime import date
 
+from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import cm
@@ -529,5 +530,174 @@ def gerar_relatorio_estagio(processo, dados):
 
     doc = _make_doc(buffer)
     doc.build(all_elems)
+    buffer.seek(0)
+    return buffer
+
+
+# ── Relatório de Avaliação (formulário dinâmico) ──────────────────────────────
+
+_NOTA_LABEL = {1: '1 — Ruim', 2: '2 — Regular', 3: '3 — Bom', 4: '4 — Ótimo'}
+
+_MESES_EXTENSO = [
+    '', 'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+    'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
+]
+
+
+def _tabela_avaliacao(dados_tabela, col_widths):
+    """Cria Table com estilo padrão: header cinza, grid, 1ª coluna left."""
+    t = Table(dados_tabela, colWidths=col_widths)
+    t.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTNAME', (0, 1), (0, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('TOPPADDING', (0, 0), (-1, -1), 4),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+    ]))
+    return t
+
+
+def gerar_relatorio_avaliacao(processo, modelo, respostas):
+    """Gera PDF de avaliação de estágio a partir do ModeloFormulario e das respostas do aluno."""
+    buffer = io.BytesIO()
+    doc = _make_doc(buffer)
+    titulo_st, subtitulo_st, corpo_st, clausula_st = _styles()
+
+    aluno = processo.aluno
+    empresa = processo.empresa
+    curso_nome = aluno.curso.nome if aluno.curso else '—'
+    data_inicio = processo.data_inicio_real or processo.data_inicio_prevista
+    data_fim = processo.data_fim_real or processo.data_fim_prevista
+    hoje = date.today()
+    mes_ano = f'{_MESES_EXTENSO[hoje.month]} de {hoje.year}'
+
+    orientador_nome = (
+        processo.professor_orientador.nome
+        if getattr(processo, 'professor_orientador', None)
+        else (
+            processo.coordenador.usuario.nome
+            if processo.coordenador
+            else 'Coordenação de Estágios'
+        )
+    )
+    sup_nome = (
+        processo.supervisor.usuario.nome
+        if processo.supervisor
+        else None
+    )
+
+    # ── Capa ──────────────────────────────────────────────────────────────
+    elems = [
+        Paragraph('IBMEC RJ', titulo_st),
+        Paragraph('RELATÓRIO DE AVALIAÇÃO DE ESTÁGIO', subtitulo_st),
+        Spacer(1, 0.5 * cm),
+        Paragraph(f'Aluno(a): {aluno.usuario.nome}', corpo_st),
+        Paragraph(f'Curso: {curso_nome}', corpo_st),
+        Paragraph(f'Formulário: {modelo.titulo}', corpo_st),
+        Paragraph(f'Empresa: {empresa.razao_social}', corpo_st),
+        Paragraph(f'Período: {data_inicio} a {data_fim}', corpo_st),
+        Paragraph(f'Rio de Janeiro, {mes_ano}.', corpo_st),
+        Spacer(1, 0.5 * cm),
+    ]
+
+    # ── Dados automáticos ─────────────────────────────────────────────────
+    elems.append(Paragraph('DADOS DO ESTÁGIO', clausula_st))
+
+    semanas = 1
+    if data_inicio and data_fim:
+        semanas = max(1, (data_fim - data_inicio).days // 7)
+    horas_totais = semanas * processo.horas_semanais
+
+    elems += [
+        Paragraph(f'Horas semanais: {processo.horas_semanais}h', corpo_st),
+        Paragraph(f'Horas totais estimadas: {horas_totais}h', corpo_st),
+    ]
+    if processo.valor_bolsa is not None:
+        elems.append(Paragraph(f'Remuneração mensal: R$ {processo.valor_bolsa:.2f}', corpo_st))
+    else:
+        elems.append(Paragraph('Remuneração mensal: Não informado', corpo_st))
+    if processo.valor_auxilio_transporte is not None:
+        elems.append(Paragraph(
+            f'Auxílio transporte mensal: R$ {processo.valor_auxilio_transporte:.2f}', corpo_st,
+        ))
+    if sup_nome:
+        elems.append(Paragraph(f'Gestor direto: {sup_nome}', corpo_st))
+    elems.append(Spacer(1, 0.4 * cm))
+
+    # ── Seções do modelo ──────────────────────────────────────────────────
+    usable_w = 16 * cm  # A4 - 2 × 2.5 cm margem
+
+    for secao in modelo.secoes:
+        tipo = secao.get('tipo')
+        titulo_secao = secao.get('titulo', '')
+        sid = secao.get('id')
+        itens = secao.get('itens', [])
+        colunas = secao.get('colunas', [])
+
+        if tipo == 'auto':
+            continue
+
+        elems.append(Paragraph(titulo_secao, clausula_st))
+        valor = respostas.get(sid)
+
+        if tipo == 'escala_1_4':
+            rows = [['Item', 'Nota']]
+            for item in itens:
+                nota_raw = (valor or {}).get(item, '—')
+                nota_str = _NOTA_LABEL.get(nota_raw, str(nota_raw)) if nota_raw != '—' else '—'
+                rows.append([item, nota_str])
+            elems.append(_tabela_avaliacao(rows, [12 * cm, 4 * cm]))
+
+        elif tipo == 'escala_1_4_multi':
+            n_cols = max(1, len(colunas))
+            col_w = (usable_w - 6 * cm) / n_cols
+            rows = [['Item'] + colunas]
+            for item in itens:
+                notas_item = (valor or {}).get(item, {}) if isinstance(valor, dict) else {}
+                linha = [item]
+                for col in colunas:
+                    nota_raw = notas_item.get(col, '—') if isinstance(notas_item, dict) else '—'
+                    linha.append(_NOTA_LABEL.get(nota_raw, str(nota_raw)) if nota_raw != '—' else '—')
+                rows.append(linha)
+            elems.append(_tabela_avaliacao(rows, [6 * cm] + [col_w] * n_cols))
+
+        elif tipo == 'escala_3':
+            opcoes = secao.get('opcoes', ['Suficiente', 'Insuficiente', 'Não utilizado'])
+            rows = [['Item', 'Resposta']]
+            for item in itens:
+                resp = (valor or {}).get(item, '—') if isinstance(valor, dict) else '—'
+                rows.append([item, resp])
+            elems.append(_tabela_avaliacao(rows, [12 * cm, 4 * cm]))
+
+        elif tipo == 'checkbox_duplo':
+            n_cols = max(1, len(colunas))
+            col_w = (usable_w - 10 * cm) / n_cols
+            rows = [['Área'] + colunas]
+            for item in itens:
+                marcados = (valor or {}).get(item, []) if isinstance(valor, dict) else []
+                linha = [item] + ['✓' if col in marcados else '—' for col in colunas]
+                rows.append(linha)
+            elems.append(_tabela_avaliacao(rows, [10 * cm] + [col_w] * n_cols))
+
+        elif tipo == 'texto_livre':
+            texto = valor if isinstance(valor, str) and valor.strip() else '(sem resposta)'
+            elems.append(Paragraph(texto, corpo_st))
+
+        elems.append(Spacer(1, 0.3 * cm))
+
+    # ── Assinaturas ───────────────────────────────────────────────────────
+    elems += [
+        Spacer(1, 1 * cm),
+        _linha_assinatura('ALUNO(A)', aluno.usuario.nome),
+        Spacer(1, 0.8 * cm),
+        _linha_assinatura('PROFESSOR(A) ORIENTADOR(A) / COORDENADOR(A)', orientador_nome),
+    ]
+
+    doc.build(elems)
     buffer.seek(0)
     return buffer
