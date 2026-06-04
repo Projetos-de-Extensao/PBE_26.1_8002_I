@@ -106,6 +106,30 @@ class AlunoViewSet(viewsets.ModelViewSet):
         serializer.save()
         return Response(serializer.data)
 
+    @action(detail=False, methods=['get'], url_path='meus_processos')
+    def meus_processos(self, request):
+        """
+        Solicitações de estágio do aluno autenticado.
+        Filtro opcional: ?status=PENDENTE (qualquer valor de SolicitacaoEstagio.Status).
+        """
+        aluno = get_aluno(request.user)
+        if aluno is None:
+            raise PermissionDenied('Apenas alunos possuem processos de estágio.')
+
+        qs = aluno.solicitacoes.select_related('empresa', 'coordenador').all()
+
+        status_filtro = request.query_params.get('status')
+        if status_filtro:
+            valores_validos = SolicitacaoEstagio.Status.values
+            if status_filtro not in valores_validos:
+                return Response(
+                    {'status': f'Status inválido. Opções: {", ".join(valores_validos)}'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            qs = qs.filter(status=status_filtro)
+
+        return Response(SolicitacaoEstagioSerializer(qs, many=True).data)
+
 
 class CoordenadorViewSet(viewsets.ModelViewSet):
     queryset = Coordenador.objects.select_related('usuario').all()
