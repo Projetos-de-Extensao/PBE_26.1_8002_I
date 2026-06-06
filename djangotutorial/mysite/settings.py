@@ -1,11 +1,13 @@
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-8t1+!!m5_9xz*ur*jkc^mzhc$=k+pdhw(uu^=j3j=ndk56rm29'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-8t1+!!m5_9xz*ur*jkc^mzhc$=k+pdhw(uu^=j3j=ndk56rm29')
 
-DEBUG = True
+DEBUG = os.getenv('DJANGO_DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = []
 
@@ -109,7 +111,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticated',  # ← corrigido (era AllowAny)
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
