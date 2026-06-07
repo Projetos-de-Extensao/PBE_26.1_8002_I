@@ -29,7 +29,7 @@ class Coordenador(models.Model):
     usuario = models.OneToOneField(
         Usuario, on_delete=models.CASCADE, related_name='coordenador'
     )
-    departamento = models.CharField(max_length=100)
+    departamento = models.CharField(max_length=100, blank=True, default='')
 
     def __str__(self):
         return self.usuario.nome
@@ -127,6 +127,8 @@ class Aluno(models.Model):
         verbose_name_plural = 'Alunos'
 
 
+# Nota: model Empresa da PR #52 foi substituído por EmpresaConcedente (mais completo).
+# SolicitacaoEstagio foi renomeado para ProcessoEstagio na PR #47.
 class ProcessoEstagio(models.Model):
     class Status(models.TextChoices):
         RASCUNHO = 'RASCUNHO', 'Rascunho'
