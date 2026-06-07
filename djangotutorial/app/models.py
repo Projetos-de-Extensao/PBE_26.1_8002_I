@@ -108,7 +108,7 @@ class Aluno(models.Model):
     cpf = models.CharField(max_length=14, unique=True)
     rg = models.CharField(max_length=20, blank=True, default='')
     coeficiente_rendimento = models.DecimalField(
-        max_digits=4, decimal_places=2, default=0
+        max_digits=4, decimal_places=2, default=0,
     )
     curso = models.ForeignKey(
         Curso,
@@ -117,7 +117,10 @@ class Aluno(models.Model):
         blank=True,
         related_name='alunos',
     )
-    matriculado_estagio = models.BooleanField(default=False)
+    matriculado_estagio = models.BooleanField(
+        default=False,
+        help_text='Indica se o aluno está formalmente matriculado em estágio',
+    )
 
     def __str__(self):
         return self.usuario.nome
