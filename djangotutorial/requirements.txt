@@ -1,3 +1,4 @@
 Django==4.2.30
 djangorestframework==3.16.1
 django-allauth[socialaccount]==65.14.3
+drf-spectacular==0.29.0
