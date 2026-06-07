@@ -6,13 +6,14 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
+from django.db.models import Q
 
 from .models import (
     Usuario, Curso, Empresa, Aluno, Coordenador, SolicitacaoEstagio,
 )
 from .serializers import (
     UsuarioSerializer, CursoSerializer, EmpresaSerializer,
-    AlunoSerializer, CoordenadorSerializer,
+    AlunoSerializer, CoordenadorSerializer, PerfilAlunoSerializer,
     SolicitacaoEstagioSerializer, CriarSolicitacaoSerializer,
     AlterarStatusSerializer,
 )
@@ -52,13 +53,121 @@ class CursoViewSet(viewsets.ModelViewSet):
 
 
 class EmpresaViewSet(viewsets.ModelViewSet):
-    queryset = Empresa.objects.all()
+    """
+    Lista de empresas com filtros (Pessoa 3):
+      - ?aprovada=true|false  → filtra por aprovada_ibmec
+      - ?busca=tech           → busca parcial em razão social e áreas de atuação
+
+    CNPJ e aprovada_ibmec são protegidos no update (ver EmpresaSerializer).
+
+    PENDENTE (bloqueado pelo models.py): os endpoints de self-service da
+    empresa — `meu_perfil` e `meus_processos` — dependem de um vínculo
+    Empresa.usuario (OneToOne) e do tipo 'empresa' em Usuario.tipo, que ainda
+    não existem no models.py. Quando o dono do models adicionar o vínculo,
+    ativar o esqueleto abaixo (análogo ao AlunoViewSet):
+
+        @action(detail=False, methods=['get', 'put', 'patch'], url_path='meu_perfil')
+        def meu_perfil(self, request):
+            empresa = get_empresa(request.user)   # helper a criar em permissions.py
+            ...
+
+        @action(detail=False, methods=['get'], url_path='meus_processos')
+        def meus_processos(self, request):
+            empresa = get_empresa(request.user)
+            return Response(
+                SolicitacaoEstagioSerializer(empresa.solicitacoes.all(), many=True).data
+            )
+    """
     serializer_class = EmpresaSerializer
+
+    def get_queryset(self):
+        qs = Empresa.objects.all()
+
+        aprovada = self.request.query_params.get('aprovada')
+        if aprovada is not None:
+            qs = qs.filter(aprovada_ibmec=aprovada.lower() in ('true', '1', 'sim'))
+
+        busca = self.request.query_params.get('busca')
+        if busca:
+            qs = qs.filter(
+                Q(razao_social__icontains=busca) | Q(areas_atuacao__icontains=busca)
+            )
+
+        return qs
 
 
 class AlunoViewSet(viewsets.ModelViewSet):
-    queryset = Aluno.objects.select_related('usuario', 'curso').all()
+    """
+    Isolamento de dados (Pessoa 3):
+      - admin        → todos os alunos
+      - coordenador  → apenas alunos dos seus cursos
+      - aluno        → apenas ele mesmo
+      - outros       → vazio (negação por padrão)
+    """
     serializer_class = AlunoSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        base = Aluno.objects.select_related('usuario', 'curso')
+        user = self.request.user
+
+        if is_admin(user):
+            return base.all()
+
+        coordenador = get_coordenador(user)
+        if coordenador is not None:
+            return base.filter(curso__coordenador=coordenador)
+
+        aluno = get_aluno(user)
+        if aluno is not None:
+            return base.filter(pk=aluno.pk)
+
+        return Aluno.objects.none()
+
+    @action(detail=False, methods=['get', 'put', 'patch'], url_path='meu_perfil')
+    def meu_perfil(self, request):
+        """
+        Perfil do aluno autenticado.
+          GET            → dados do próprio aluno
+          PUT / PATCH    → atualiza dados editáveis (CPF é imutável)
+        """
+        aluno = get_aluno(request.user)
+        if aluno is None:
+            raise PermissionDenied('Apenas alunos possuem perfil de aluno.')
+
+        if request.method == 'GET':
+            return Response(PerfilAlunoSerializer(aluno).data)
+
+        serializer = PerfilAlunoSerializer(
+            aluno, data=request.data, partial=(request.method == 'PATCH'),
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='meus_processos')
+    def meus_processos(self, request):
+        """
+        Solicitações de estágio do aluno autenticado.
+        Filtro opcional: ?status=PENDENTE (qualquer valor de SolicitacaoEstagio.Status).
+        """
+        aluno = get_aluno(request.user)
+        if aluno is None:
+            raise PermissionDenied('Apenas alunos possuem processos de estágio.')
+
+        qs = aluno.solicitacoes.select_related('empresa', 'coordenador').all()
+
+        status_filtro = request.query_params.get('status')
+        if status_filtro:
+            valores_validos = SolicitacaoEstagio.Status.values
+            if status_filtro not in valores_validos:
+                return Response(
+                    {'status': f'Status inválido. Opções: {", ".join(valores_validos)}'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            qs = qs.filter(status=status_filtro)
+
+        return Response(SolicitacaoEstagioSerializer(qs, many=True).data)
 
 
 class CoordenadorViewSet(viewsets.ModelViewSet):
