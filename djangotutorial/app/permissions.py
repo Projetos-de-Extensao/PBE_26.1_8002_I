@@ -2,12 +2,14 @@
 Permissões customizadas para o sistema de gestão de estágios.
 
 Hierarquia de acesso (mais permissivo → menos):
-  Admin (is_superuser / is_staff) → tudo
+  Admin (is_superuser / is_staff)                        → tudo
+  Administrativo (reitor, pro_reitor, secretaria, carreiras) → tudo que coordenador faz, para todos os cursos, exceto editar formulários
   Coordenador                     → leitura + alterar-status das solicitações do seu curso
   Aluno                           → leitura + criação das próprias solicitações
   Não autenticado                 → negado
 """
 from rest_framework import permissions
+from .models import Usuario
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────
@@ -30,6 +32,19 @@ def get_coordenador(user):
 
 def is_admin(user):
     return bool(user and user.is_authenticated and (user.is_superuser or user.is_staff))
+
+
+def is_administrativo(user):
+    """Reitor, Pró-Reitor, Secretaria, Carreiras — visão global, sem edição de formulários."""
+    return bool(
+        user and user.is_authenticated
+        and getattr(user, 'tipo', None) in Usuario.TIPOS_ADMINISTRATIVOS
+    )
+
+
+def has_global_access(user):
+    """Admin ou perfil administrativo — acesso a todos os cursos."""
+    return is_admin(user) or is_administrativo(user)
 
 
 def get_supervisor(user):
@@ -61,7 +76,7 @@ class IsAdminOrReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
             return True
-        return is_admin(request.user)
+        return has_global_access(request.user)
 
 
 class IsDonoDoProcesso(permissions.BasePermission):
@@ -69,7 +84,7 @@ class IsDonoDoProcesso(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         user = request.user
-        if is_admin(user):
+        if has_global_access(user):
             return True
         aluno = get_aluno(user)
         if aluno is not None and obj.aluno_id == aluno.pk:

@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import (
     Usuario, Curso, EmpresaConcedente, Aluno, Coordenador,
     SupervisorEmpresa, ProcessoEstagio, DocumentoProcesso, LogDocumento,
-    ModeloFormulario,
+    ModeloFormulario, AvaliacaoEmpresa, HistoricoStatusProcesso, TemplateDocumento,
 )
 from .state_machine import ESTADOS_VIVOS
 from .permissions import get_aluno, get_supervisor
@@ -271,3 +271,68 @@ class AlterarStatusSerializer(serializers.ModelSerializer):
                     'justificativa_rejeicao': 'RN11: justificativa obrigatória ao rejeitar uma solicitação.'
                 })
         return data
+
+
+class AvaliacaoEmpresaSerializer(serializers.ModelSerializer):
+    aluno_nome = serializers.SerializerMethodField()
+    empresa_nome = serializers.CharField(source='empresa.razao_social', read_only=True)
+
+    class Meta:
+        model = AvaliacaoEmpresa
+        fields = [
+            'id', 'empresa', 'processo', 'nota', 'comentario',
+            'anonimo', 'aluno_nome', 'empresa_nome', 'data_criacao', 'data_atualizacao',
+        ]
+        read_only_fields = ['empresa', 'data_criacao', 'data_atualizacao']
+
+    def get_aluno_nome(self, obj):
+        if obj.anonimo:
+            return None
+        return obj.aluno.usuario.nome
+
+    def validate_nota(self, value):
+        if value < 1 or value > 5:
+            raise serializers.ValidationError('Nota deve ser entre 1 e 5.')
+        return value
+
+    def validate(self, data):
+        request = self.context.get('request')
+        if not request:
+            return data
+        aluno = get_aluno(request.user)
+        if aluno is None:
+            raise serializers.ValidationError('Apenas alunos podem avaliar empresas.')
+
+        processo = data.get('processo')
+        if processo:
+            if processo.aluno_id != aluno.pk:
+                raise serializers.ValidationError(
+                    {'processo': 'Você só pode avaliar empresas de processos seus.'}
+                )
+            if processo.status != ProcessoEstagio.Status.ENCERRADO:
+                raise serializers.ValidationError(
+                    {'processo': 'Só é possível avaliar empresas de processos encerrados.'}
+                )
+            data['empresa'] = processo.empresa
+        return data
+
+
+class HistoricoStatusSerializer(serializers.ModelSerializer):
+    usuario_nome = serializers.CharField(source='usuario.nome', read_only=True, default=None)
+
+    class Meta:
+        model = HistoricoStatusProcesso
+        fields = ['id', 'processo', 'status_anterior', 'status_novo', 'usuario', 'usuario_nome', 'data', 'observacao']
+        read_only_fields = fields
+
+
+class TemplateDocumentoSerializer(serializers.ModelSerializer):
+    curso_nome = serializers.CharField(source='curso.nome', read_only=True, default=None)
+
+    class Meta:
+        model = TemplateDocumento
+        fields = [
+            'id', 'nome', 'descricao', 'arquivo', 'tipo', 'curso', 'curso_nome',
+            'ativo', 'criado_em', 'atualizado_em',
+        ]
+        read_only_fields = ['criado_em', 'atualizado_em']

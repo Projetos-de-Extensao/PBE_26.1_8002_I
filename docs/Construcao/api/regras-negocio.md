@@ -302,13 +302,16 @@ cd djangotutorial
 
 A PR #47 cobre o núcleo de validações que travam o pipeline básico do processo. Os RNs/RFs abaixo continuam no backlog e ficam como follow-up para próximas entregas:
 
-- **RN02 — Pré-requisitos acadêmicos do PPC.** Hoje só validamos `matriculado_estagio`. Validar disciplinas concluídas, CR mínimo e período mínimo exige um motor de regras por curso (provavelmente um JSON no `Curso` ou um app dedicado). Fica como follow-up.
 - **RN04 — Jornada diária + semanal combinadas.** O limite **legal** semanal (30h) já está; falta validar a jornada **diária** declarada e cruzá-la com o `carga_horaria_maxima_diaria` do curso. Hoje aceitamos só `horas_semanais` no payload. Fica como follow-up junto com o redesenho do payload.
-- **RN06 — Bloqueio de aprovação sem TCE + apólice de seguro.** Depende dos models de documento e do fluxo de upload (`Pessoa 5`). Fica como follow-up — quando aterrissar, vira mais uma checagem no `AlterarStatusSerializer.validate` no caso `status=APROVADO`.
-- **RN07 — Validação automática de área de atuação vs. curso.** Requer NLP/análise textual do `plano_atividades` ou taxonomia formal de áreas no `Curso`. Fica como follow-up de longo prazo (ligado a RF08 — análise automatizada).
-- **RN08 — Notificações de atraso de relatórios.** Pré-requisito: model de relatório obrigatório + scheduler (Celery/cron). Não há infra de jobs ainda. Fica como follow-up.
-- **RN10 — Campos obrigatórios da empresa.** Parcialmente coberto: `EmpresaConcedente` exige `cnpj`, `razao_social`, `areas_atuacao` e `localizacao` no model (constraint de banco). Falta uma validação explícita no `EmpresaConcedenteSerializer` com mensagens de erro padronizadas. Fica como follow-up.
-- **RF18 — Abertura formal por escolha de vaga.** Parcialmente coberto: hoje o aluno descreve a oportunidade no `plano_atividades`, sem model `Vaga`. Quando entrar o catálogo de vagas, o `CriarProcessoSerializer` recebe `vaga_id` e a validação passa a vincular processo a vaga. Fica como follow-up.
+- **RN06 — Validação automática de área de atuação vs. curso.** Requer NLP/análise textual do `plano_atividades` ou taxonomia formal de áreas no `Curso`. Fica como follow-up de longo prazo (ligado a RF08 — análise automatizada).
+- **RN08 — Campos obrigatórios da empresa.** Parcialmente coberto: `EmpresaConcedente` exige `cnpj`, `razao_social`, `areas_atuacao` e `localizacao` no model (constraint de banco). Falta uma validação explícita no `EmpresaConcedenteSerializer` com mensagens de erro padronizadas. Fica como follow-up.
+- **RF16 — Abertura formal por escolha de vaga.** Parcialmente coberto: hoje o aluno descreve a oportunidade no `plano_atividades`, sem model `Vaga`. Quando entrar o catálogo de vagas, o `CriarProcessoSerializer` recebe `vaga_id` e a validação passa a vincular processo a vaga. Fica como follow-up.
+
+### Removidos do escopo
+
+- **RN02 (antigo) — Pré-requisitos acadêmicos do PPC.** Removido do escopo: não temos acesso aos PPCs dos cursos para implementar a validação.
+- **RN08 (antigo) — Notificações de atraso de relatórios.** Removido do escopo junto com RF12 (Notificações): requer infra de jobs (Celery/cron) que está fora do escopo desta entrega.
+- **RF17 (antigo) — Assinatura digital.** Removido do escopo: a assinatura dos documentos será feita por fora do sistema.
 
 ## Autor(es)
 

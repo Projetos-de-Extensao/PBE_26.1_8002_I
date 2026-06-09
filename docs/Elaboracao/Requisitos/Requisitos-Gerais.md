@@ -4,8 +4,6 @@
 - Acompanhamento de status em tempo real e interfaces intuitivas.
 - Um motor de regras de negócio capaz de validar pré-requisitos acadêmicos específicos de cada curso e limites de carga horária.
 - Gestão documental completa, incluindo a geração automática do Termo de Compromisso de Estágio (TCE), Planos de Atividades e controle de apólices de seguro.
-- Comunicação proativa através de notificações automáticas sobre pendências, prazos e alterações de status.
-
 Através deste levantamento, a equipe de desenvolvimento possui as diretrizes exatas do que deve ser implementado para entregar um sistema que reduza erros e otimize o tempo de resposta da coordenação.
 
 ## Requisitos Funcionais 
@@ -23,15 +21,13 @@ Através deste levantamento, a equipe de desenvolvimento possui as diretrizes ex
 |RF09| **Gestão de Status**	O sistema deve gerenciar estados do processo para acompanhamento em tempo real |
 |RF10| **Aprovação/Reprovação**	O sistema valida e o coordenador tem a possibilidade de interferir na decisão caso necessário |
 |RF11| **Justificativa Obrigatória**	O sistema deve exigir justificativa em caso de rejeição|
-|RF12| **Notificações**	O sistema deve notificar usuários sobre mudanças|
-|RF13| **Histórico**	O sistema deve armazenar histórico completo com data e assinatura de usuário |
-|RF14| **Reenvio de Documentos**	O sistema deve permitir correções e reenvios |
-|RF15| **Cálculo de Horas**	O sistema deve contabilizar automaticamente horas |
-|RF16| **Validação de Jornada**	O sistema deve verificar limites legais de carga horária|
-|RF17| **Assinatura de Documentos**	O sistema deve permitir assinatura digital|
-|RF18| **Abertura de Solicitação**	O aluno deve iniciar o processo informando a vaga que ele pretende preencher |
-|RF19| **Filtros de Pesquisa** O sistema deve permitir filtros por curso, empresa, aluno, status, período e situação documental. |
-|RF20| **Armazenamento de documentos** O sistema deve armazenar e versionar os documentos vinculados a cada etapa do processo. |
+|RF12| **Histórico**	O sistema deve armazenar histórico completo com data e assinatura de usuário |
+|RF13| **Reenvio de Documentos**	O sistema deve permitir correções e reenvios |
+|RF14| **Cálculo de Horas**	O sistema deve contabilizar automaticamente horas |
+|RF15| **Validação de Jornada**	O sistema deve verificar limites legais de carga horária|
+|RF16| **Abertura de Solicitação**	O aluno deve iniciar o processo informando a vaga que ele pretende preencher |
+|RF17| **Filtros de Pesquisa** O sistema deve permitir filtros por curso, empresa, aluno, status, período e situação documental. |
+|RF18| **Armazenamento de documentos** O sistema deve armazenar e versionar os documentos vinculados a cada etapa do processo. |
 
 ## Requisitos Não-Funcionais 
 
@@ -53,20 +49,19 @@ Através deste levantamento, a equipe de desenvolvimento possui as diretrizes ex
 |ID|Descrição|
 |----|-------------|
 |RN01| O sistema só deve permitir que o aluno realize login na plataforma se ele estiver devidamente matriculado na disciplina "Estágio Supervisionado" |
-|RN02| O sistema deve bloquear automaticamente a abertura de qualquer solicitação caso o aluno não cumpra os pré-requisitos acadêmicos estabelecidos pelo Projeto Pedagógico do Curso |
-|RN03| O sistema deve impedir a aprovação do estágio caso a carga horária oferecida pela empresa seja incompatível com a quantidade mínima de horas exigida pelo curso do aluno |
-|RN04| O sistema deve controlar a jornada de estágio e emitir um alerta/bloqueio se a carga horária informada ultrapassar os limites diários e semanais permitidos por lei |
-|RN05| O sistema deve restringir e controlar o tempo máximo que um aluno pode estagiar em uma mesma empresa concedente |
-|RN06| O estágio só poderá ter seu status alterado para "Aprovado" e ser iniciado após a validação de todos os requisitos legais obrigatórios, o que inclui a aprovação do Plano de Atividades e a anexação de uma Apólice de Seguro válida |
-|RN07| O sistema deve realizar uma validação prévia (automática) para verificar se as atividades propostas pela empresa têm relação com o curso do aluno, bloqueando atividades fora da área de formação, mediante análise baseada nos documentos do curso |
-|RN08| Se houver atraso na entrega de relatórios obrigatórios, o sistema deve disparar notificações automaticamente para as partes envolvidas.|
-|RN09| O aluno não pode prosseguir com a formalização do estágio em uma empresa que não tenha sido previamente aprovada/homologada pela faculdade no sistema |
-|RN10| Toda empresa cadastrada deve possuir, obrigatoriamente, os dados: CNPJ, Razão Social (Nome), Áreas com vagas disponíveis e Localização |
+|RN02| O sistema deve impedir a aprovação do estágio caso a carga horária oferecida pela empresa seja incompatível com a quantidade mínima de horas exigida pelo curso do aluno |
+|RN03| O sistema deve controlar a jornada de estágio e emitir um alerta/bloqueio se a carga horária informada ultrapassar os limites diários e semanais permitidos por lei |
+|RN04| O sistema deve restringir e controlar o tempo máximo que um aluno pode estagiar em uma mesma empresa concedente |
+|RN05| O estágio só poderá ter seu status alterado para "Aprovado" e ser iniciado após a validação de todos os requisitos legais obrigatórios, o que inclui a aprovação do TCE e a anexação de uma Apólice de Seguro válida |
+|RN06| O sistema deve realizar uma validação prévia (automática) para verificar se as atividades propostas pela empresa têm relação com o curso do aluno, bloqueando atividades fora da área de formação, mediante análise baseada nos documentos do curso |
+|RN07| O aluno não pode prosseguir com a formalização do estágio em uma empresa que não tenha sido previamente aprovada/homologada pela faculdade no sistema |
+|RN08| Toda empresa cadastrada deve possuir, obrigatoriamente, os dados: CNPJ, Razão Social (Nome), Áreas com vagas disponíveis e Localização |
 
 ## Autor(es)
 | Data | Versão | Descrição | Autor(es) |
 | -- | -- | -- | -- |
 | 15/04/2026 | 1.0 | Criação do documento | Letícia Valladão |
+| 09/06/2026 | 1.1 | Remoção de RF12 (Notificações), RF17 (Assinatura Digital), RN02 (Pré-requisitos PPC) e RN08 (Notificações de atraso) — fora do escopo. Renumeração dos itens subsequentes. | Roger |
 
 
 ## Dados do Documento

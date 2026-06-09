@@ -8,7 +8,13 @@ class Usuario(AbstractUser):
         ('aluno', 'Aluno'),
         ('coordenador', 'Coordenador'),
         ('supervisor_empresa', 'Supervisor de Empresa'),
+        ('reitor', 'Reitor'),
+        ('pro_reitor', 'Pró-Reitor'),
+        ('secretaria', 'Secretaria'),
+        ('carreiras', 'Carreiras'),
     ]
+
+    TIPOS_ADMINISTRATIVOS = frozenset({'reitor', 'pro_reitor', 'secretaria', 'carreiras'})
 
     tipo = models.CharField(
         max_length=20,
@@ -367,3 +373,83 @@ class ModeloFormulario(models.Model):
 
     def __str__(self):
         return f'{self.titulo} — {self.curso.nome}'
+
+
+class AvaliacaoEmpresa(models.Model):
+    empresa = models.ForeignKey(
+        EmpresaConcedente, on_delete=models.CASCADE, related_name='avaliacoes',
+    )
+    aluno = models.ForeignKey(
+        Aluno, on_delete=models.CASCADE, related_name='avaliacoes_empresas',
+    )
+    processo = models.OneToOneField(
+        ProcessoEstagio, on_delete=models.CASCADE, related_name='avaliacao_empresa',
+    )
+    nota = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+    )
+    comentario = models.TextField(blank=True, default='')
+    anonimo = models.BooleanField(default=True)
+    data_criacao = models.DateTimeField(auto_now_add=True)
+    data_atualizacao = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Avaliação de Empresa'
+        verbose_name_plural = 'Avaliações de Empresas'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['processo'], name='unique_avaliacao_por_processo',
+            ),
+        ]
+
+    def __str__(self):
+        return f'Avaliação {self.nota}★ — {self.empresa.razao_social}'
+
+
+class HistoricoStatusProcesso(models.Model):
+    processo = models.ForeignKey(
+        ProcessoEstagio, on_delete=models.CASCADE, related_name='historico_status',
+    )
+    status_anterior = models.CharField(max_length=30, choices=ProcessoEstagio.Status.choices)
+    status_novo = models.CharField(max_length=30, choices=ProcessoEstagio.Status.choices)
+    usuario = models.ForeignKey(
+        Usuario, on_delete=models.SET_NULL, null=True,
+    )
+    data = models.DateTimeField(auto_now_add=True)
+    observacao = models.TextField(blank=True, default='')
+
+    class Meta:
+        verbose_name = 'Histórico de Status'
+        verbose_name_plural = 'Históricos de Status'
+        ordering = ['-data']
+
+    def __str__(self):
+        return f'{self.status_anterior} → {self.status_novo} — Processo #{self.processo_id}'
+
+
+class TemplateDocumento(models.Model):
+    class TipoTemplate(models.TextChoices):
+        TCE = 'TCE', 'Termo de Compromisso de Estágio'
+        RELATORIO = 'RELATORIO', 'Relatório'
+        AVALIACAO = 'AVALIACAO', 'Avaliação'
+        OUTRO = 'OUTRO', 'Outro'
+
+    nome = models.CharField(max_length=200)
+    descricao = models.TextField(blank=True, default='')
+    arquivo = models.FileField(upload_to='templates-documentos/')
+    tipo = models.CharField(max_length=20, choices=TipoTemplate.choices, default=TipoTemplate.OUTRO)
+    curso = models.ForeignKey(
+        Curso, on_delete=models.CASCADE, null=True, blank=True,
+        related_name='templates_documentos',
+    )
+    ativo = models.BooleanField(default=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Template de Documento'
+        verbose_name_plural = 'Templates de Documentos'
+        ordering = ['-criado_em']
+
+    def __str__(self):
+        return self.nome

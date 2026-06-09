@@ -15,11 +15,15 @@ from rest_framework.test import APITestCase
 
 from app.models import (
     Aluno,
+    AvaliacaoEmpresa,
     Coordenador,
     Curso,
+    DocumentoProcesso,
     EmpresaConcedente,
+    HistoricoStatusProcesso,
     ProcessoEstagio,
     SupervisorEmpresa,
+    TemplateDocumento,
     Usuario,
 )
 from app.state_machine import (
@@ -472,6 +476,68 @@ class AlterarStatusTest(ProcessoEstagioBaseTest):
             resp.status_code,
             (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND),
         )
+
+    def test_aluno_nao_pode_cancelar_aprovado_403(self):
+        """Aluno não pode cancelar processo APROVADO → 403."""
+        proc = self._criar_processo_pendente(aluno=self.aluno_matriculado)
+        proc.status = ProcessoEstagio.Status.APROVADO
+        proc.save()
+        self.client.force_authenticate(user=self.user_aluno1)
+        resp = self.client.post(
+            _status_url(proc.pk),
+            {'status': 'CANCELADO'},
+            format='json',
+        )
+        self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIn('RASCUNHO ou PENDENTE', resp.data['detail'])
+
+    def test_aluno_nao_pode_cancelar_ativo_403(self):
+        """Aluno não pode cancelar processo ATIVO → 403."""
+        proc = self._criar_processo_pendente(aluno=self.aluno_matriculado)
+        proc.status = ProcessoEstagio.Status.ATIVO
+        proc.save()
+        self.client.force_authenticate(user=self.user_aluno1)
+        resp = self.client.post(
+            _status_url(proc.pk),
+            {'status': 'CANCELADO'},
+            format='json',
+        )
+        self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_coord_ativa_sem_tce_aprovado_400_rn05(self):
+        """RN05: APROVADO→ATIVO sem TCE aprovado → 400."""
+        proc = self._criar_processo_pendente(aluno=self.aluno_matriculado)
+        proc.status = ProcessoEstagio.Status.APROVADO
+        proc.save()
+        self.client.force_authenticate(user=self.user_coord_eng)
+        resp = self.client.post(
+            _status_url(proc.pk),
+            {'status': 'ATIVO'},
+            format='json',
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('TCE', str(resp.data))
+
+    def test_coord_ativa_com_tce_aprovado_200_rn05(self):
+        """RN05: APROVADO→ATIVO com TCE aprovado → 200."""
+        proc = self._criar_processo_pendente(aluno=self.aluno_matriculado)
+        proc.status = ProcessoEstagio.Status.APROVADO
+        proc.save()
+        DocumentoProcesso.objects.create(
+            processo=proc,
+            tipo=DocumentoProcesso.Tipo.TCE,
+            status=DocumentoProcesso.StatusDoc.APROVADO,
+            arquivo='documentos/tce_teste.pdf',
+        )
+        self.client.force_authenticate(user=self.user_coord_eng)
+        resp = self.client.post(
+            _status_url(proc.pk),
+            {'status': 'ATIVO'},
+            format='json',
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        proc.refresh_from_db()
+        self.assertEqual(proc.status, ProcessoEstagio.Status.ATIVO)
 
 
 # ── State machine (unit tests do módulo) ────────────────────────────────────
@@ -1581,3 +1647,354 @@ class DashboardTests(APITestCase):
         self.assertEqual(r.status_code, status.HTTP_200_OK)
         ids = [p['id'] for p in r.data]
         self.assertIn(self.processo.pk, ids)
+
+
+# ── Roles administrativos ────────────────────────────────────────────────────
+
+class RolesAdministrativosTest(APITestCase):
+    """Testes de permissão para reitor, pro_reitor, secretaria, carreiras."""
+
+    def setUp(self):
+        self.coord_user = Usuario.objects.create_user(
+            username='coord_ra', password='s123', tipo='coordenador', nome='Coord RA',
+        )
+        self.coord = Coordenador.objects.create(usuario=self.coord_user, departamento='Eng')
+        self.curso = Curso.objects.create(nome='Engenharia', coordenador=self.coord)
+        self.aluno_user = Usuario.objects.create_user(
+            username='aluno_ra', password='s123', tipo='aluno', nome='Aluno RA',
+        )
+        self.aluno = Aluno.objects.create(
+            usuario=self.aluno_user, cpf='111.111.111-11',
+            curso=self.curso, matriculado_estagio=True,
+        )
+        self.empresa = EmpresaConcedente.objects.create(
+            cnpj='99.999.999/0001-99', razao_social='Empresa RA',
+            areas_atuacao='TI', localizacao='SP', email_contato='ra@e.com',
+            aprovada_ibmec=True,
+        )
+        self.processo = ProcessoEstagio.objects.create(
+            aluno=self.aluno, empresa=self.empresa, coordenador=self.coord,
+            status=ProcessoEstagio.Status.PENDENTE, horas_semanais=20,
+            data_inicio_prevista=date(2026, 7, 1), data_fim_prevista=date(2026, 12, 31),
+            plano_atividades='RA test.',
+        )
+        self.secretaria = Usuario.objects.create_user(
+            username='secretaria_ra', password='s123', tipo='secretaria', nome='Secretaria',
+        )
+
+    def test_secretaria_lista_todos_processos(self):
+        """Secretaria vê processos de todos os cursos."""
+        self.client.force_authenticate(user=self.secretaria)
+        r = self.client.get('/api/processos-estagio/')
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(r.data), 1)
+
+    def test_secretaria_altera_status_200(self):
+        """Secretaria pode alterar status como coordenador."""
+        self.client.force_authenticate(user=self.secretaria)
+        r = self.client.post(
+            f'/api/processos-estagio/{self.processo.pk}/alterar_status/',
+            {'status': 'APROVADO'}, format='json',
+        )
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+    def test_secretaria_acessa_dashboard(self):
+        """Secretaria acessa dashboard de processos."""
+        self.client.force_authenticate(user=self.secretaria)
+        r = self.client.get('/api/dashboard/processos/')
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+    def test_secretaria_nao_pode_criar_formulario(self):
+        """Secretaria não pode criar modelo de formulário."""
+        self.client.force_authenticate(user=self.secretaria)
+        r = self.client.post(
+            '/api/modelos-formulario/',
+            {'curso': self.curso.pk, 'titulo': 'Form', 'secoes': []},
+            format='json',
+        )
+        self.assertEqual(r.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_secretaria_pode_ler_formularios(self):
+        """Secretaria pode listar formulários."""
+        self.client.force_authenticate(user=self.secretaria)
+        r = self.client.get('/api/modelos-formulario/')
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+
+
+# ── Avaliação de empresa ─────────────────────────────────────────────────────
+
+class AvaliacaoEmpresaTest(APITestCase):
+    URL = '/api/avaliacoes-empresa/'
+
+    def setUp(self):
+        self.coord_user = Usuario.objects.create_user(
+            username='coord_av', password='s123', tipo='coordenador', nome='Coord AV',
+        )
+        self.coord = Coordenador.objects.create(usuario=self.coord_user, departamento='Eng')
+        self.curso = Curso.objects.create(nome='Engenharia', coordenador=self.coord)
+        self.aluno_user = Usuario.objects.create_user(
+            username='aluno_av', password='s123', tipo='aluno', nome='Aluno AV',
+        )
+        self.aluno = Aluno.objects.create(
+            usuario=self.aluno_user, cpf='222.222.222-22',
+            curso=self.curso, matriculado_estagio=True,
+        )
+        self.empresa = EmpresaConcedente.objects.create(
+            cnpj='88.888.888/0001-88', razao_social='Empresa AV',
+            areas_atuacao='TI', localizacao='SP', email_contato='av@e.com',
+            aprovada_ibmec=True,
+        )
+        self.processo_encerrado = ProcessoEstagio.objects.create(
+            aluno=self.aluno, empresa=self.empresa, coordenador=self.coord,
+            status=ProcessoEstagio.Status.ENCERRADO, horas_semanais=20,
+            data_inicio_prevista=date(2026, 1, 1), data_fim_prevista=date(2026, 6, 30),
+            plano_atividades='AV test.',
+        )
+        self.processo_ativo = ProcessoEstagio.objects.create(
+            aluno=self.aluno, empresa=self.empresa, coordenador=self.coord,
+            status=ProcessoEstagio.Status.ATIVO, horas_semanais=20,
+            data_inicio_prevista=date(2026, 7, 1), data_fim_prevista=date(2026, 12, 31),
+            plano_atividades='AV test 2.',
+        )
+
+    def test_aluno_avalia_processo_encerrado_201(self):
+        """Aluno cria avaliação de empresa de processo encerrado → 201."""
+        self.client.force_authenticate(user=self.aluno_user)
+        r = self.client.post(self.URL, {
+            'processo': self.processo_encerrado.pk,
+            'nota': 4,
+            'comentario': 'Boa empresa.',
+            'anonimo': True,
+        }, format='json')
+        self.assertEqual(r.status_code, status.HTTP_201_CREATED)
+        self.assertIsNone(r.data['aluno_nome'])
+
+    def test_aluno_nao_avalia_processo_ativo_400(self):
+        """Aluno não pode avaliar empresa de processo ATIVO → 400."""
+        self.client.force_authenticate(user=self.aluno_user)
+        r = self.client.post(self.URL, {
+            'processo': self.processo_ativo.pk,
+            'nota': 3,
+        }, format='json')
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_avaliacao_duplicada_400(self):
+        """Apenas 1 avaliação por processo → 400 na segunda tentativa."""
+        self.client.force_authenticate(user=self.aluno_user)
+        self.client.post(self.URL, {
+            'processo': self.processo_encerrado.pk, 'nota': 5,
+        }, format='json')
+        r = self.client.post(self.URL, {
+            'processo': self.processo_encerrado.pk, 'nota': 3,
+        }, format='json')
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_avaliacao_nao_anonima_mostra_nome(self):
+        """Avaliação com anonimo=False mostra nome do aluno."""
+        self.client.force_authenticate(user=self.aluno_user)
+        r = self.client.post(self.URL, {
+            'processo': self.processo_encerrado.pk,
+            'nota': 4, 'anonimo': False,
+        }, format='json')
+        self.assertEqual(r.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(r.data['aluno_nome'], 'Aluno AV')
+
+    def test_aluno_pode_editar_propria_avaliacao(self):
+        """Aluno pode atualizar nota da própria avaliação."""
+        self.client.force_authenticate(user=self.aluno_user)
+        r1 = self.client.post(self.URL, {
+            'processo': self.processo_encerrado.pk, 'nota': 3,
+        }, format='json')
+        av_id = r1.data['id']
+        r2 = self.client.patch(f'{self.URL}{av_id}/', {'nota': 5}, format='json')
+        self.assertEqual(r2.status_code, status.HTTP_200_OK)
+        self.assertEqual(r2.data['nota'], 5)
+
+    def test_coordenador_ve_avaliacoes_do_curso(self):
+        """Coordenador vê avaliações de processos dos alunos do seu curso."""
+        AvaliacaoEmpresa.objects.create(
+            empresa=self.empresa, aluno=self.aluno,
+            processo=self.processo_encerrado, nota=4,
+        )
+        self.client.force_authenticate(user=self.coord_user)
+        r = self.client.get(self.URL)
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(r.data), 1)
+
+
+class BuscaPorNomeAlunoTest(ProcessoEstagioBaseTest):
+    """Parte 3.4 — SearchFilter no ProcessoEstagioViewSet."""
+
+    URL = '/api/processos-estagio/'
+
+    def setUp(self):
+        super().setUp()
+        self.proc1 = self._criar_processo_pendente(aluno=self.aluno_matriculado)
+        self.proc2 = self._criar_processo_pendente(aluno=self.aluno_curso_adm)
+
+    def test_supervisor_busca_por_nome_retorna_filtrado(self):
+        """Supervisor busca por nome do aluno e recebe apenas processos correspondentes."""
+        self.proc1.empresa = self.empresa_aprovada
+        self.proc1.save()
+        self.proc2.empresa = self.empresa_aprovada
+        self.proc2.save()
+        self.client.force_authenticate(user=self.user_sup)
+        r = self.client.get(self.URL, {'search': 'Aluno 1'})
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(r.data), 1)
+        self.assertEqual(r.data[0]['aluno'], self.aluno_matriculado.pk)
+
+    def test_busca_por_username(self):
+        """Busca por username do aluno funciona."""
+        self.client.force_authenticate(user=self.user_admin)
+        r = self.client.get(self.URL, {'search': 'aluno3'})
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(r.data), 1)
+        self.assertEqual(r.data[0]['aluno'], self.aluno_curso_adm.pk)
+
+    def test_busca_sem_resultado(self):
+        """Busca por nome inexistente retorna lista vazia."""
+        self.client.force_authenticate(user=self.user_admin)
+        r = self.client.get(self.URL, {'search': 'Inexistente'})
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(r.data), 0)
+
+
+class HistoricoStatusTest(ProcessoEstagioBaseTest):
+    """Parte 3.6 — Audit trail de transições de status."""
+
+    def test_alterar_status_cria_registro_historico(self):
+        """Cada alteração de status registra no histórico."""
+        proc = self._criar_processo_pendente()
+        self.client.force_authenticate(user=self.user_coord_eng)
+        r = self.client.post(
+            _status_url(proc.pk),
+            {'status': APROVADO},
+            format='json',
+        )
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        hist = HistoricoStatusProcesso.objects.filter(processo=proc)
+        self.assertEqual(hist.count(), 1)
+        reg = hist.first()
+        self.assertEqual(reg.status_anterior, PENDENTE)
+        self.assertEqual(reg.status_novo, APROVADO)
+        self.assertEqual(reg.usuario, self.user_coord_eng)
+
+    def test_historico_endpoint_retorna_registros(self):
+        """GET /api/processos-estagio/{id}/historico/ lista transições."""
+        proc = self._criar_processo_pendente()
+        self.client.force_authenticate(user=self.user_coord_eng)
+        self.client.post(_status_url(proc.pk), {'status': APROVADO}, format='json')
+        r = self.client.get(f'/api/processos-estagio/{proc.pk}/historico/')
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(r.data), 1)
+        self.assertEqual(r.data[0]['status_anterior'], PENDENTE)
+        self.assertEqual(r.data[0]['status_novo'], APROVADO)
+
+    def test_multiplas_transicoes_registradas_em_ordem(self):
+        """Múltiplas transições aparecem ordenadas por data desc."""
+        proc = self._criar_processo_pendente()
+        self.client.force_authenticate(user=self.user_coord_eng)
+        self.client.post(_status_url(proc.pk), {'status': APROVADO}, format='json')
+        # Create TCE for ATIVO transition
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        DocumentoProcesso.objects.create(
+            processo=proc, tipo=DocumentoProcesso.Tipo.TCE,
+            status=DocumentoProcesso.StatusDoc.APROVADO,
+            arquivo=SimpleUploadedFile('tce.pdf', b'%PDF-test'),
+        )
+        self.client.post(_status_url(proc.pk), {'status': ATIVO}, format='json')
+        hist = HistoricoStatusProcesso.objects.filter(processo=proc)
+        self.assertEqual(hist.count(), 2)
+        self.assertEqual(hist[0].status_novo, ATIVO)
+        self.assertEqual(hist[1].status_novo, APROVADO)
+
+    def test_historico_registra_observacao(self):
+        """Observação enviada na request é salva no histórico."""
+        proc = self._criar_processo_pendente()
+        self.client.force_authenticate(user=self.user_coord_eng)
+        self.client.post(
+            _status_url(proc.pk),
+            {'status': APROVADO, 'observacao': 'Tudo certo'},
+            format='json',
+        )
+        reg = HistoricoStatusProcesso.objects.get(processo=proc)
+        self.assertEqual(reg.observacao, 'Tudo certo')
+
+
+class TemplateDocumentoTest(APITestCase):
+    """Parte 3.5 — Repositório de templates de documentos."""
+
+    URL = '/api/templates-documentos/'
+
+    def setUp(self):
+        self.coord_user = Usuario.objects.create_user(
+            username='coord_tpl', password='senha123', tipo='coordenador', nome='Coord TPL',
+        )
+        self.coord = Coordenador.objects.create(usuario=self.coord_user, departamento='Eng')
+        self.curso = Curso.objects.create(nome='Engenharia', coordenador=self.coord)
+
+        self.aluno_user = Usuario.objects.create_user(
+            username='aluno_tpl', password='senha123', tipo='aluno', nome='Aluno TPL',
+        )
+        Aluno.objects.create(usuario=self.aluno_user, cpf='999.999.999-99', curso=self.curso)
+
+        self.admin_user = Usuario.objects.create_superuser(
+            username='admin_tpl', password='senha123', nome='Admin TPL', email='a@b.com',
+        )
+
+    def _upload_file(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        return SimpleUploadedFile('template.pdf', b'%PDF-test', content_type='application/pdf')
+
+    def test_coordenador_cria_template(self):
+        """Coordenador pode criar template de documento."""
+        self.client.force_authenticate(user=self.coord_user)
+        r = self.client.post(self.URL, {
+            'nome': 'Modelo TCE', 'tipo': 'TCE',
+            'curso': self.curso.pk, 'arquivo': self._upload_file(),
+        }, format='multipart')
+        self.assertEqual(r.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(r.data['nome'], 'Modelo TCE')
+
+    def test_aluno_nao_pode_criar_template(self):
+        """Aluno não pode criar template — 403."""
+        self.client.force_authenticate(user=self.aluno_user)
+        r = self.client.post(self.URL, {
+            'nome': 'Hack', 'tipo': 'OUTRO',
+            'arquivo': self._upload_file(),
+        }, format='multipart')
+        self.assertEqual(r.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_aluno_ve_apenas_templates_ativos(self):
+        """Aluno vê apenas templates ativos."""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        TemplateDocumento.objects.create(
+            nome='Ativo', tipo='TCE', ativo=True,
+            arquivo=SimpleUploadedFile('a.pdf', b'%PDF'),
+        )
+        TemplateDocumento.objects.create(
+            nome='Inativo', tipo='TCE', ativo=False,
+            arquivo=SimpleUploadedFile('b.pdf', b'%PDF'),
+        )
+        self.client.force_authenticate(user=self.aluno_user)
+        r = self.client.get(self.URL)
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(r.data), 1)
+        self.assertEqual(r.data[0]['nome'], 'Ativo')
+
+    def test_coordenador_ve_todos_templates(self):
+        """Coordenador vê ativos e inativos."""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        TemplateDocumento.objects.create(
+            nome='Ativo', tipo='TCE', ativo=True,
+            arquivo=SimpleUploadedFile('a.pdf', b'%PDF'),
+        )
+        TemplateDocumento.objects.create(
+            nome='Inativo', tipo='TCE', ativo=False,
+            arquivo=SimpleUploadedFile('b.pdf', b'%PDF'),
+        )
+        self.client.force_authenticate(user=self.coord_user)
+        r = self.client.get(self.URL)
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(r.data), 2)

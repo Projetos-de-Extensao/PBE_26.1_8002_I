@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from .models import (
     ProcessoEstagio, EmpresaConcedente, DocumentoProcesso, ModeloFormulario,
 )
-from .permissions import get_coordenador, is_admin
+from .permissions import get_coordenador, is_admin, has_global_access
 from .dashboard_utils import (
     calcular_semestre,
     agregar_escala_1_4,
@@ -21,7 +21,7 @@ from .dashboard_utils import (
 def _base_queryset(user):
     """Retorna queryset de processos filtrado por papel do usuário."""
     coord = get_coordenador(user)
-    if is_admin(user):
+    if has_global_access(user):
         return ProcessoEstagio.objects.select_related(
             'aluno__usuario', 'aluno__curso', 'empresa', 'coordenador',
         ).all()
@@ -100,7 +100,7 @@ class DashboardProcessosView(APIView):
     def get(self, request):
         user = request.user
         coord = get_coordenador(user)
-        if not is_admin(user) and coord is None:
+        if not has_global_access(user) and coord is None:
             return Response(
                 {'erro': 'Acesso restrito a coordenadores e administradores.'},
                 status=drf_status.HTTP_403_FORBIDDEN,
@@ -119,7 +119,7 @@ class DashboardEstatisticasView(APIView):
     def get(self, request):
         user = request.user
         coord = get_coordenador(user)
-        if not is_admin(user) and coord is None:
+        if not has_global_access(user) and coord is None:
             return Response(
                 {'erro': 'Acesso restrito a coordenadores e administradores.'},
                 status=drf_status.HTTP_403_FORBIDDEN,
@@ -218,7 +218,7 @@ class DashboardEmpresasView(APIView):
     def get(self, request):
         user = request.user
         coord = get_coordenador(user)
-        if not is_admin(user) and coord is None:
+        if not has_global_access(user) and coord is None:
             return Response(
                 {'erro': 'Acesso restrito a coordenadores e administradores.'},
                 status=drf_status.HTTP_403_FORBIDDEN,

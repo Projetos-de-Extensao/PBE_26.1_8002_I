@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status as drf_status
+from rest_framework import viewsets, status as drf_status, filters
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.views import APIView
@@ -10,7 +10,7 @@ from django.contrib.auth import authenticate
 from .models import (
     Usuario, Curso, EmpresaConcedente, Aluno, Coordenador,
     SupervisorEmpresa, ProcessoEstagio, DocumentoProcesso, LogDocumento,
-    ModeloFormulario,
+    ModeloFormulario, AvaliacaoEmpresa, HistoricoStatusProcesso, TemplateDocumento,
 )
 from .serializers import (
     UsuarioSerializer, CursoSerializer, EmpresaConcedenteSerializer,
@@ -18,11 +18,12 @@ from .serializers import (
     CoordenadorSerializer, SupervisorEmpresaSerializer,
     DocumentoProcessoSerializer, LogDocumentoSerializer,
     ProcessoEstagioSerializer, CriarProcessoSerializer, AlterarStatusSerializer,
-    ModeloFormularioSerializer,
+    ModeloFormularioSerializer, AvaliacaoEmpresaSerializer, HistoricoStatusSerializer,
+    TemplateDocumentoSerializer,
 )
 from .score_utils import calcular_score_conformidade
 from .permissions import (
-    get_aluno, get_coordenador, get_supervisor, is_admin,
+    get_aluno, get_coordenador, get_supervisor, is_admin, is_administrativo, has_global_access,
     IsAluno, IsCoordenador, IsSupervisorEmpresa, IsAdminOrReadOnly, IsDonoDoProcesso,
 )
 from .state_machine import (
@@ -40,7 +41,7 @@ class CursoViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if is_admin(user):
+        if has_global_access(user):
             return Curso.objects.all()
         coordenador = get_coordenador(user)
         if coordenador is not None:
@@ -74,7 +75,7 @@ class AlunoViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         base = Aluno.objects.select_related('usuario', 'curso')
-        if is_admin(user):
+        if has_global_access(user):
             return base.all()
         aluno = get_aluno(user)
         if aluno is not None:
@@ -89,7 +90,7 @@ class AlunoViewSet(viewsets.ModelViewSet):
         Listagens e visões de coordenador usam o List (sem dados sensíveis)."""
         user = self.request.user
         if self.action in ('retrieve', 'update', 'partial_update'):
-            if is_admin(user):
+            if has_global_access(user):
                 return AlunoDetailSerializer
             aluno = get_aluno(user)
             if aluno is not None:
@@ -107,7 +108,7 @@ class CoordenadorViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         base = Coordenador.objects.select_related('usuario')
-        if is_admin(user):
+        if has_global_access(user):
             return base.all()
         coord = get_coordenador(user)
         if coord is not None:
@@ -122,7 +123,7 @@ class SupervisorEmpresaViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         base = SupervisorEmpresa.objects.select_related('usuario', 'empresa')
-        if is_admin(user):
+        if has_global_access(user):
             return base.all()
         supervisor = get_supervisor(user)
         if supervisor is not None:
@@ -152,7 +153,7 @@ class DocumentoProcessoViewSet(viewsets.ModelViewSet):
             base = base.filter(status=doc_status)
 
         # ── isolamento por papel ──────────────────────────────────────────
-        if is_admin(user):
+        if has_global_access(user):
             return base
         aluno = get_aluno(user)
         if aluno is not None:
@@ -194,7 +195,7 @@ class DocumentoProcessoViewSet(viewsets.ModelViewSet):
         Apenas coordenador ou admin.
         """
         user = request.user
-        if not (is_admin(user) or get_coordenador(user) is not None):
+        if not (has_global_access(user) or get_coordenador(user) is not None):
             return Response(
                 {'erro': 'Apenas coordenadores ou administradores podem validar documentos.'},
                 status=drf_status.HTTP_403_FORBIDDEN,
@@ -248,7 +249,7 @@ class ModeloFormularioViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         base = ModeloFormulario.objects.select_related('curso', 'criado_por__usuario')
-        if is_admin(user):
+        if has_global_access(user):
             return base.all()
         coord = get_coordenador(user)
         if coord is not None:
@@ -265,7 +266,7 @@ class ModeloFormularioViewSet(viewsets.ModelViewSet):
         user = self.request.user
         coord = get_coordenador(user)
         if coord is None and not is_admin(user):
-            raise PermissionDenied('Apenas coordenadores podem criar modelos de formulário.')
+            raise PermissionDenied('Apenas coordenadores e admins podem criar modelos de formulário.')
         if coord is not None:
             curso = serializer.validated_data.get('curso')
             if curso and curso.coordenador_id != coord.pk:
@@ -307,6 +308,8 @@ class ProcessoEstagioViewSet(viewsets.ModelViewSet):
     Admin: acesso total.
     """
     permission_classes = [IsAuthenticated]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['aluno__usuario__nome', 'aluno__usuario__username']
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -321,7 +324,7 @@ class ProcessoEstagioViewSet(viewsets.ModelViewSet):
             'aluno__usuario', 'aluno__curso',
             'empresa', 'coordenador__usuario', 'supervisor',
         )
-        if is_admin(user):
+        if has_global_access(user):
             return base.all()
         aluno = get_aluno(user)
         if aluno is not None:
@@ -371,7 +374,7 @@ class ProcessoEstagioViewSet(viewsets.ModelViewSet):
 
         # 2. Permissão por papel
         user = request.user
-        if not is_admin(user):
+        if not has_global_access(user):
             aluno = get_aluno(user)
             coord = get_coordenador(user)
 
@@ -381,11 +384,20 @@ class ProcessoEstagioViewSet(viewsets.ModelViewSet):
                         {'detail': 'Sem permissão neste processo.'},
                         status=drf_status.HTTP_403_FORBIDDEN,
                     )
+                pode_cancelar = (
+                    novo_status == CANCELADO
+                    and processo.status in (RASCUNHO, PENDENTE)
+                )
                 permitido = (
                     (processo.status == RASCUNHO and novo_status == PENDENTE)
-                    or novo_status == CANCELADO
+                    or pode_cancelar
                 )
                 if not permitido:
+                    if novo_status == CANCELADO:
+                        return Response(
+                            {'detail': 'Aluno só pode cancelar processos com status RASCUNHO ou PENDENTE.'},
+                            status=drf_status.HTTP_403_FORBIDDEN,
+                        )
                     return Response(
                         {'detail': 'Ação não permitida para aluno neste contexto.'},
                         status=drf_status.HTTP_403_FORBIDDEN,
@@ -409,12 +421,34 @@ class ProcessoEstagioViewSet(viewsets.ModelViewSet):
                     status=drf_status.HTTP_403_FORBIDDEN,
                 )
 
-        # 3. Validar via serializer (RN11) e persistir
+        # 3. RN05: APROVADO→ATIVO exige TCE aprovado
+        if processo.status == APROVADO and novo_status == ATIVO:
+            tem_tce_aprovado = DocumentoProcesso.objects.filter(
+                processo=processo,
+                tipo=DocumentoProcesso.Tipo.TCE,
+                status=DocumentoProcesso.StatusDoc.APROVADO,
+            ).exists()
+            if not tem_tce_aprovado:
+                return Response(
+                    {'detail': 'RN05: é necessário que o TCE assinado esteja aprovado para ativar o estágio.'},
+                    status=drf_status.HTTP_400_BAD_REQUEST,
+                )
+
+        # 4. Validar via serializer (RN11) e persistir
+        status_anterior = processo.status
         serializer = AlterarStatusSerializer(processo, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        # 4. Retorna o processo full atualizado
+        # 5. Registrar no histórico de status
+        HistoricoStatusProcesso.objects.create(
+            processo=processo,
+            status_anterior=status_anterior,
+            status_novo=novo_status,
+            usuario=request.user,
+            observacao=request.data.get('observacao', ''),
+        )
+
         processo.refresh_from_db()
         return Response(ProcessoEstagioSerializer(processo).data)
 
@@ -423,6 +457,13 @@ class ProcessoEstagioViewSet(viewsets.ModelViewSet):
         processo = self.get_object()
         docs = processo.documentos.all().order_by('-data_upload')
         serializer = DocumentoProcessoSerializer(docs, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def historico(self, request, pk=None):
+        processo = self.get_object()
+        registros = processo.historico_status.all()
+        serializer = HistoricoStatusSerializer(registros, many=True)
         return Response(serializer.data)
 
 
@@ -454,7 +495,7 @@ class GerarPDFView(APIView):
                 status=drf_status.HTTP_404_NOT_FOUND,
             )
 
-        if not is_admin(user):
+        if not has_global_access(user):
             aluno = get_aluno(user)
             supervisor = get_supervisor(user)
             coord = get_coordenador(user)
@@ -693,6 +734,86 @@ class PreencherFormularioView(APIView):
         return response
 
 
+# ── Avaliação de empresa ─────────────────────────────────────────────────────
+
+class AvaliacaoEmpresaViewSet(viewsets.ModelViewSet):
+    """
+    Aluno: cria/edita avaliação de empresa de processo ENCERRADO seu (1 por processo).
+    Coordenador/Admin/Administrativo: leitura de todas as avaliações dos seus cursos.
+    Empresa (supervisor): leitura das avaliações da sua empresa.
+    """
+    serializer_class = AvaliacaoEmpresaSerializer
+    permission_classes = [IsAuthenticated]
+    http_method_names = ['get', 'post', 'put', 'patch', 'head', 'options']
+
+    def get_queryset(self):
+        user = self.request.user
+        base = AvaliacaoEmpresa.objects.select_related(
+            'empresa', 'aluno__usuario', 'processo',
+        )
+        if has_global_access(user):
+            return base.all()
+        aluno = get_aluno(user)
+        if aluno is not None:
+            return base.filter(aluno=aluno)
+        coord = get_coordenador(user)
+        if coord is not None:
+            return base.filter(processo__aluno__curso__coordenador=coord)
+        supervisor = get_supervisor(user)
+        if supervisor is not None:
+            return base.filter(empresa=supervisor.empresa)
+        return base.none()
+
+    def perform_create(self, serializer):
+        aluno = get_aluno(self.request.user)
+        if aluno is None:
+            raise PermissionDenied('Apenas alunos podem avaliar empresas.')
+        serializer.save(aluno=aluno)
+
+    def perform_update(self, serializer):
+        aluno = get_aluno(self.request.user)
+        if aluno is None or serializer.instance.aluno_id != aluno.pk:
+            raise PermissionDenied('Apenas o autor da avaliação pode editá-la.')
+        serializer.save()
+
+
+class TemplateDocumentoViewSet(viewsets.ModelViewSet):
+    """
+    Coordenador/Admin: CRUD de templates de documentos.
+    Aluno/Supervisor: somente leitura dos templates ativos.
+    """
+    serializer_class = TemplateDocumentoSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        base = TemplateDocumento.objects.select_related('curso')
+        if has_global_access(user) or is_admin(user):
+            return base.all()
+        coord = get_coordenador(user)
+        if coord is not None:
+            return base.all()
+        return base.filter(ativo=True)
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        if not has_global_access(user) and get_coordenador(user) is None:
+            raise PermissionDenied('Apenas coordenadores ou administradores podem criar templates.')
+        serializer.save()
+
+    def perform_update(self, serializer):
+        user = self.request.user
+        if not has_global_access(user) and get_coordenador(user) is None:
+            raise PermissionDenied('Apenas coordenadores ou administradores podem editar templates.')
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        user = self.request.user
+        if not has_global_access(user) and get_coordenador(user) is None:
+            raise PermissionDenied('Apenas coordenadores ou administradores podem excluir templates.')
+        instance.delete()
+
+
 # ── Auth ──────────────────────────────────────────────────────────────────────
 
 class RegisterView(APIView):
@@ -782,9 +903,22 @@ class RegisterView(APIView):
             except Exception as e:
                 return Response({'erro': str(e)}, status=drf_status.HTTP_400_BAD_REQUEST)
 
+        elif tipo in Usuario.TIPOS_ADMINISTRATIVOS:
+            try:
+                user = Usuario.objects.create_user(
+                    username=username, password=password, tipo=tipo,
+                    nome=data.get('nome', ''),
+                    email_institucional=data.get('email_institucional', ''),
+                )
+            except Exception as e:
+                return Response({'erro': str(e)}, status=drf_status.HTTP_400_BAD_REQUEST)
+
         else:
+            tipos_validos = ', '.join(
+                [c[0] for c in Usuario.TIPO_CHOICES]
+            )
             return Response(
-                {'erro': 'tipo deve ser "aluno", "coordenador" ou "supervisor_empresa".'},
+                {'erro': f'tipo inválido. Opções: {tipos_validos}'},
                 status=drf_status.HTTP_400_BAD_REQUEST,
             )
 
