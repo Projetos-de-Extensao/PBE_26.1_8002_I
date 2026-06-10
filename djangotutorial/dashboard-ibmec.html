@@ -1,0 +1,2683 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EstágioIBMEC — Gestão de Estágios</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/prop-types@15/prop-types.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/recharts@2.12.7/umd/Recharts.min.js"></script>
+  <script src="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+  <script>
+    if (window['pdfjsLib']) {
+      window['pdfjsLib'].GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+    }
+  </script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #222637;
+      --border: #2e3347;
+      --accent: #6c63ff;
+      --accent2: #00d4aa;
+      --accent3: #ff6b6b;
+      --accent4: #ffd166;
+      --text: #e8eaf0;
+      --muted: #7b82a0;
+      --radius: 12px;
+    }
+    html, body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif; }
+    *::-webkit-scrollbar { width: 8px; height: 8px; }
+    *::-webkit-scrollbar-track { background: var(--bg); }
+    *::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; }
+    *::-webkit-scrollbar-thumb:hover { background: var(--border); }
+    .surface { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+    .surface2 { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); }
+    .input { background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 8px 12px; width: 100%; font-size: 13px; }
+    .input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(108,99,255,.2); }
+    .input::placeholder { color: var(--muted); }
+    .btn { padding: 8px 14px; border-radius: 8px; font-weight: 500; font-size: 13px; transition: all .15s; cursor: pointer; border: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-primary:hover { background: #5b52e0; }
+    .btn-primary:disabled { background: var(--surface2); color: var(--muted); cursor: not-allowed; }
+    .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: var(--border); }
+    .btn-success { background: var(--accent2); color: #052b22; }
+    .btn-success:hover { background: #00b896; }
+    .btn-danger { background: var(--accent3); color: white; }
+    .btn-danger:hover { background: #e85555; }
+    .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { color: var(--text); border-color: var(--accent); }
+    .badge { padding: 3px 10px; border-radius: 9999px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+    .modal-bg { background: rgba(0,0,0,.7); backdrop-filter: blur(4px); }
+    .spinner { border: 3px solid var(--surface2); border-top-color: var(--accent); border-radius: 50%; width: 24px; height: 24px; animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .section-label { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; padding: 14px 16px 6px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 16px; color: var(--muted); font-size: 13px; transition: all .12s; cursor: pointer; border-left: 3px solid transparent; }
+    .nav-item:hover { color: var(--text); background: rgba(108,99,255,.06); }
+    .nav-item.active { color: var(--accent); background: rgba(108,99,255,.12); border-left-color: var(--accent); }
+    .aluno-card { display: flex; align-items: center; gap: 10px; padding: 8px 12px; margin: 4px 10px; border-radius: 10px; border: 1px solid transparent; cursor: pointer; transition: all .12s; }
+    .aluno-card:hover { background: rgba(108,99,255,.06); }
+    .aluno-card.active { background: rgba(108,99,255,.12); border-color: var(--accent); }
+    .aluno-card .info { min-width: 0; flex: 1; }
+    .aluno-card .info .name { color: var(--text); font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .aluno-card .info .meta { color: var(--muted); font-size: 11px; }
+    .avatar { display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; color: white; font-weight: 700; flex-shrink: 0; }
+    .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+    .kpi .label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; }
+    .kpi .value { font-size: 26px; font-weight: 700; color: var(--text); line-height: 1.1; }
+    .kpi .sub { color: var(--muted); font-size: 11px; margin-top: 4px; }
+    .pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; }
+    .pill-4 { background: rgba(0,212,170,.15); color: var(--accent2); }
+    .pill-3 { background: rgba(108,99,255,.15); color: var(--accent); }
+    .pill-2 { background: rgba(255,209,102,.15); color: var(--accent4); }
+    .pill-1 { background: rgba(255,107,107,.15); color: var(--accent3); }
+    .score-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .score-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .score-row:last-child { border-bottom: none; }
+    .table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .table thead th { text-align: left; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; padding: 12px 14px; border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; }
+    .table tbody td { padding: 12px 14px; border-bottom: 1px solid rgba(46,51,71,.5); color: var(--text); }
+    .table tbody tr:hover { background: rgba(108,99,255,.04); }
+    .table .sub { color: var(--muted); font-size: 11px; }
+    .empresa-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; transition: all .15s; cursor: pointer; }
+    .empresa-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .empresa-card.active { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(108,99,255,.2); }
+    .rating-bar { background: var(--bg); height: 8px; border-radius: 4px; overflow: hidden; }
+    .rating-bar > div { height: 100%; border-radius: 4px; transition: width .3s; }
+    .tag { display: inline-block; padding: 3px 10px; border-radius: 9999px; font-size: 11px; font-weight: 500; background: rgba(108,99,255,.12); color: var(--accent); }
+    .tag-muted { background: rgba(123,130,160,.12); color: var(--muted); }
+    .tag-yes { background: rgba(0,212,170,.15); color: var(--accent2); }
+    .star { color: var(--accent4); }
+    .star-empty { color: var(--border); }
+    .drop-area { border: 2px dashed var(--border); border-radius: var(--radius); padding: 32px; text-align: center; cursor: pointer; transition: all .15s; }
+    .drop-area:hover { border-color: var(--accent); background: rgba(108,99,255,.04); }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel" data-presets="env,react">
+    const { useState, useEffect, useMemo, useContext, createContext, useCallback, useRef } = React;
+    const RC = window.Recharts || {};
+    const { RadarChart, Radar, PieChart, Pie, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Cell } = RC;
+
+    // ═══════════════════════════════════════════════════════
+    //  API
+    // ═══════════════════════════════════════════════════════
+    const API_BASE = '/api';
+    const tokenKey = 'ibmec_token';
+    const userKey = 'ibmec_user';
+    const getToken = () => localStorage.getItem(tokenKey);
+
+    async function apiRequest(path, options = {}) {
+      const token = getToken();
+      const headers = { ...(options.headers || {}) };
+      const isFormData = options.body instanceof FormData;
+      if (!isFormData && options.body && typeof options.body !== 'string') {
+        options.body = JSON.stringify(options.body);
+        headers['Content-Type'] = 'application/json';
+      } else if (typeof options.body === 'string') {
+        headers['Content-Type'] = 'application/json';
+      }
+      if (token) headers['Authorization'] = `Token ${token}`;
+      const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+      if (!res.ok) {
+        let data;
+        try { data = await res.json(); } catch { data = { erro: res.statusText }; }
+        const err = new Error(data.erro || data.detail || JSON.stringify(data));
+        err.status = res.status; err.data = data;
+        throw err;
+      }
+      if (res.status === 204) return null;
+      const ct = res.headers.get('Content-Type') || '';
+      if (ct.includes('application/json')) return res.json();
+      return res;
+    }
+
+    async function apiDownload(path, options = {}) {
+      const token = getToken();
+      const headers = { ...(options.headers || {}) };
+      if (options.body && typeof options.body !== 'string') {
+        options.body = JSON.stringify(options.body);
+        headers['Content-Type'] = 'application/json';
+      }
+      if (token) headers['Authorization'] = `Token ${token}`;
+      const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+      if (!res.ok) {
+        let data; try { data = await res.json(); } catch { data = { erro: res.statusText }; }
+        const err = new Error(data.erro || JSON.stringify(data));
+        err.status = res.status; err.data = data;
+        throw err;
+      }
+      const blob = await res.blob();
+      return URL.createObjectURL(blob);
+    }
+
+    const Api = {
+      login: (u, p) => apiRequest('/auth/login/', { method: 'POST', body: { username: u, password: p } }),
+      logout: () => apiRequest('/auth/logout/', { method: 'POST' }),
+      register: (d) => apiRequest('/auth/register/', { method: 'POST', body: d }),
+      cursos: () => apiRequest('/cursos/'),
+      empresas: () => apiRequest('/empresas/'),
+      empresa: (id) => apiRequest(`/empresas/${id}/`),
+      criarEmpresa: (d) => apiRequest('/empresas/', { method: 'POST', body: d }),
+      alunos: () => apiRequest('/alunos/'),
+      supervisores: () => apiRequest('/supervisores-empresa/'),
+      modelosFormulario: () => apiRequest('/modelos-formulario/'),
+      atualizarModelo: (id, d) => apiRequest(`/modelos-formulario/${id}/`, { method: 'PUT', body: d }),
+      processos: () => apiRequest('/processos-estagio/'),
+      processo: (id) => apiRequest(`/processos-estagio/${id}/`),
+      criarProcesso: (d) => apiRequest('/processos-estagio/', { method: 'POST', body: d }),
+      alterarStatus: (id, status, justif) => apiRequest(`/processos-estagio/${id}/alterar_status/`, { method: 'POST', body: { status, justificativa_rejeicao: justif || '' } }),
+      documentosProcesso: (id) => apiRequest(`/processos-estagio/${id}/documentos/`),
+      documentos: () => apiRequest('/documentos/'),
+      uploadDocumento: (processoId, tipo, arquivo) => {
+        const fd = new FormData();
+        fd.append('processo', processoId);
+        fd.append('tipo', tipo);
+        fd.append('arquivo', arquivo);
+        return apiRequest('/documentos/', { method: 'POST', body: fd });
+      },
+      validarDocumento: (id, status, com) => apiRequest(`/documentos/${id}/validar/`, { method: 'POST', body: { status, comentario: com || '' } }),
+      gerarTCE: (id) => apiDownload(`/processos-estagio/${id}/gerar-tce/`),
+      gerarTermo: (id) => apiDownload(`/processos-estagio/${id}/gerar-termo-realizacao/`),
+      gerarRelatorio: (id, d) => apiDownload(`/processos-estagio/${id}/gerar-relatorio/`, { method: 'POST', body: d }),
+      preencherFormulario: (id, d) => apiDownload(`/processos-estagio/${id}/preencher-formulario/`, { method: 'POST', body: d }),
+      dashProcessos: (qs = '') => apiRequest(`/dashboard/processos/${qs}`),
+      dashEstatisticas: (qs = '') => apiRequest(`/dashboard/estatisticas/${qs}`),
+      dashEmpresas: (qs = '') => apiRequest(`/dashboard/empresas/${qs}`),
+    };
+
+    // ═══════════════════════════════════════════════════════
+    //  CONSTANTS
+    // ═══════════════════════════════════════════════════════
+    const STATUS_PROC = {
+      RASCUNHO: { label: 'Rascunho', color: 'var(--muted)', bg: 'rgba(123,130,160,.15)' },
+      PENDENTE: { label: 'Pendente', color: 'var(--accent4)', bg: 'rgba(255,209,102,.15)' },
+      APROVADO: { label: 'Aprovado', color: 'var(--accent2)', bg: 'rgba(0,212,170,.15)' },
+      REJEITADO: { label: 'Rejeitado', color: 'var(--accent3)', bg: 'rgba(255,107,107,.15)' },
+      CORRECAO_SOLICITADA: { label: 'Correção', color: 'var(--accent4)', bg: 'rgba(255,209,102,.15)' },
+      ATIVO: { label: 'Ativo', color: 'var(--accent2)', bg: 'rgba(0,212,170,.15)' },
+      ENCERRADO: { label: 'Concluído', color: 'var(--accent)', bg: 'rgba(108,99,255,.15)' },
+      CANCELADO: { label: 'Cancelado', color: 'var(--muted)', bg: 'rgba(123,130,160,.15)' },
+    };
+    const STATUS_DOC = {
+      PENDENTE: { label: 'Pendente', color: 'var(--accent4)', bg: 'rgba(255,209,102,.15)' },
+      APROVADO: { label: 'Aprovado', color: 'var(--accent2)', bg: 'rgba(0,212,170,.15)' },
+      REJEITADO: { label: 'Rejeitado', color: 'var(--accent3)', bg: 'rgba(255,107,107,.15)' },
+    };
+    const TIPO_DOC = {
+      TCE: 'Termo de Compromisso', APOLICE: 'Apólice de Seguro',
+      RELATORIO_PARCIAL: 'Relatório Parcial', RELATORIO_FINAL: 'Relatório Final',
+      AVALIACAO_EMPRESA: 'Avaliação da Empresa', TERMO_REALIZACAO: 'Termo de Realização',
+      OUTRO: 'Outro',
+    };
+    const TRANSICOES = {
+      RASCUNHO: ['PENDENTE', 'CANCELADO'],
+      PENDENTE: ['APROVADO', 'REJEITADO', 'CORRECAO_SOLICITADA', 'CANCELADO'],
+      APROVADO: ['ATIVO', 'CANCELADO'],
+      CORRECAO_SOLICITADA: ['PENDENTE', 'CANCELADO'],
+      ATIVO: ['ENCERRADO', 'CANCELADO'],
+      REJEITADO: [], ENCERRADO: [], CANCELADO: [],
+    };
+    const SCORE_LABELS = { 1: 'Insuficiente', 2: 'Regular', 3: 'Bom', 4: 'Ótimo' };
+    // Status visíveis na sidebar e Dashboard individual.
+    // Rejeitado e Cancelado aparecem APENAS na aba Relatórios.
+    const STATUS_DASHBOARD = ['PENDENTE', 'APROVADO', 'CORRECAO_SOLICITADA', 'ATIVO', 'ENCERRADO'];
+    // Tipos de visão global read-only: veem tudo, não editam formulário nem validam docs.
+    const TIPOS_VISAO_GLOBAL = ['secretaria', 'casa', 'reitor', 'pro_reitor'];
+    const isVisaoGlobal = (user) => !!user && TIPOS_VISAO_GLOBAL.includes(user.tipo);
+    const CARGO_LABEL = {
+      coordenador: 'Coordenador', aluno: 'Aluno', supervisor_empresa: 'Supervisor',
+      secretaria: 'Secretaria', casa: 'CASA', reitor: 'Reitor', pro_reitor: 'Pró-Reitor',
+    };
+    // Status do processo em que o aluno pode AGIR (preencher, gerar docs).
+    const STATUS_ALUNO_PODE_AGIR = ['APROVADO', 'ATIVO'];
+    // Status em que o aluno pode cancelar o próprio processo.
+    const STATUS_ALUNO_PODE_CANCELAR = ['PENDENTE', 'APROVADO', 'CORRECAO_SOLICITADA'];
+
+    // Abre uma URL gerada por blob (preferindo nova aba, com fallback de download).
+    // Evita pop-up blocker disparando o click via <a> em vez de window.open síncrono.
+    function abrirBlobUrl(url, filename) {
+      const a = document.createElement('a');
+      a.href = url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      if (filename) a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1000);
+    }
+    const CHART_PALETTE = ['#6c63ff', '#00d4aa', '#ffd166', '#ff6b6b', '#7b82a0', '#a78bfa', '#34d399', '#fb923c'];
+
+    // ═══════════════════════════════════════════════════════
+    //  HELPERS
+    // ═══════════════════════════════════════════════════════
+    function calcSemestre(dStr) {
+      if (!dStr) return null;
+      const d = new Date(dStr);
+      if (isNaN(d)) return null;
+      const sem = d.getUTCMonth() < 6 ? 1 : 2;
+      return `${d.getUTCFullYear()}.${sem}`;
+    }
+    function corPorId(id) {
+      const palette = ['#6c63ff', '#00d4aa', '#ffd166', '#ff6b6b', '#a78bfa', '#34d399', '#fb923c', '#22d3ee'];
+      const n = String(id || '0').split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+      return palette[n % palette.length];
+    }
+    function iniciaisDeNome(nome) {
+      if (!nome) return '?';
+      const ps = nome.trim().split(/\s+/);
+      if (ps.length === 1) return ps[0].slice(0, 2).toUpperCase();
+      return (ps[0][0] + ps[ps.length - 1][0]).toUpperCase();
+    }
+    function calcHorasTotais(processo) {
+      if (!processo.data_inicio_prevista || !processo.horas_semanais) return null;
+      const ini = new Date(processo.data_inicio_prevista);
+      const fim = processo.data_fim_real ? new Date(processo.data_fim_real)
+                : (processo.data_fim_prevista ? new Date(processo.data_fim_prevista) : new Date());
+      const dias = Math.max(0, (fim - ini) / 86400000);
+      return Math.round((dias / 7) * processo.horas_semanais);
+    }
+    function calcScoreProcesso(processo, modelo) {
+      const rf = processo?.respostas_formulario;
+      if (!rf || !modelo) return null;
+      const secs = rf.secoes || {};
+      let soma = 0, n = 0;
+      (modelo.secoes || []).forEach(sec => {
+        const v = secs[sec.id];
+        if (sec.tipo === 'escala_1_4' && v && typeof v === 'object') {
+          Object.values(v).forEach(x => { if (typeof x === 'number' && x >= 1 && x <= 4) { soma += x; n++; } });
+        } else if (sec.tipo === 'escala_1_4_multi' && v && typeof v === 'object') {
+          Object.values(v).forEach(linha => {
+            if (linha && typeof linha === 'object') {
+              Object.values(linha).forEach(x => { if (typeof x === 'number' && x >= 1 && x <= 4) { soma += x; n++; } });
+            }
+          });
+        }
+      });
+      return n > 0 ? +(soma / n).toFixed(2) : null;
+    }
+    function gerarSemestres(n = 6) {
+      const now = new Date();
+      let y = now.getFullYear();
+      let s = now.getMonth() < 6 ? 1 : 2;
+      const out = [];
+      for (let i = 0; i < n; i++) {
+        out.push(`${y}.${s}`);
+        s -= 1;
+        if (s === 0) { s = 2; y -= 1; }
+      }
+      return out;
+    }
+    async function extrairTextoPdf(file) {
+      if (!window.pdfjsLib) throw new Error('PDF.js não carregado.');
+      const buf = await file.arrayBuffer();
+      const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+      let texto = '';
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const c = await page.getTextContent();
+        texto += c.items.map(it => it.str).join(' ') + '\n';
+      }
+      return texto;
+    }
+    function extrairCamposDoTexto(texto) {
+      const t = texto.replace(/\s+/g, ' ');
+      const out = {};
+      const mCnpj = t.match(/\b\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}\b/);
+      if (mCnpj) out.cnpj = mCnpj[0];
+      const datas = [];
+      const re1 = /\b(\d{2})\/(\d{2})\/(\d{4})\b/g;
+      let m; while ((m = re1.exec(t)) !== null) datas.push(`${m[3]}-${m[2]}-${m[1]}`);
+      const re2 = /\b(\d{4})-(\d{2})-(\d{2})\b/g;
+      while ((m = re2.exec(t)) !== null) datas.push(`${m[1]}-${m[2]}-${m[3]}`);
+      if (datas[0]) out.data_inicio_prevista = datas[0];
+      if (datas[1]) out.data_fim_prevista = datas[1];
+      const mH = t.match(/(\d{1,2})\s*(?:horas?\s*semanais?|h\/?semana|h\s*por\s*semana)/i) || t.match(/carga\s*hor[aá]ria.*?(\d{1,2})\s*h/i);
+      if (mH) out.horas_semanais = parseInt(mH[1], 10);
+      const mB = t.match(/bolsa[^0-9]{0,30}R?\$?\s*([\d.,]+)/i) || t.match(/valor[^0-9]{0,30}R?\$?\s*([\d.,]+)/i);
+      if (mB) {
+        const num = parseFloat(mB[1].replace(/\./g, '').replace(',', '.'));
+        if (!isNaN(num)) out.valor_bolsa = num;
+      }
+      const mE = t.match(/(?:raz[aã]o\s*social|empresa)[:\s]+([A-Z][A-Za-zÀ-ÿ0-9 .,&'-]{4,80})/i);
+      if (mE) out.empresa_nome_extraido = mE[1].trim();
+      return out;
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  CONTEXTS
+    // ═══════════════════════════════════════════════════════
+    const ToastContext = createContext(null);
+    function ToastProvider({ children }) {
+      const [toasts, setToasts] = useState([]);
+      const push = useCallback((msg, type = 'info') => {
+        const id = Math.random().toString(36).slice(2);
+        setToasts(t => [...t, { id, msg, type }]);
+        setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 4000);
+      }, []);
+      const api = useMemo(() => ({
+        info: (m) => push(m, 'info'),
+        success: (m) => push(m, 'success'),
+        error: (m) => push(m, 'error'),
+      }), [push]);
+      return (
+        <ToastContext.Provider value={api}>
+          {children}
+          <div className="fixed bottom-4 right-4 z-50 space-y-2">
+            {toasts.map(t => {
+              const bg = t.type === 'success' ? 'var(--accent2)' : t.type === 'error' ? 'var(--accent3)' : 'var(--accent)';
+              const fg = t.type === 'success' ? '#052b22' : 'white';
+              return <div key={t.id} style={{ background: bg, color: fg }} className="px-4 py-3 rounded-lg shadow-lg min-w-[280px] max-w-md text-sm font-medium">{t.msg}</div>;
+            })}
+          </div>
+        </ToastContext.Provider>
+      );
+    }
+    const useToast = () => useContext(ToastContext);
+
+    const AuthContext = createContext(null);
+    function AuthProvider({ children }) {
+      const [user, setUser] = useState(() => {
+        try { return JSON.parse(localStorage.getItem(userKey) || 'null'); } catch { return null; }
+      });
+      const login = useCallback(async (u, p) => {
+        const d = await Api.login(u, p);
+        localStorage.setItem(tokenKey, d.token);
+        localStorage.setItem(userKey, JSON.stringify(d));
+        setUser(d); return d;
+      }, []);
+      const logout = useCallback(async () => {
+        try { await Api.logout(); } catch {}
+        localStorage.removeItem(tokenKey); localStorage.removeItem(userKey);
+        setUser(null);
+      }, []);
+      const value = useMemo(() => ({ user, login, logout }), [user, login, logout]);
+      return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+    }
+    const useAuth = () => useContext(AuthContext);
+
+    // ═══════════════════════════════════════════════════════
+    //  UI PRIMITIVES
+    // ═══════════════════════════════════════════════════════
+    const Spinner = ({ size = 24 }) => <div className="spinner" style={{ width: size, height: size }} />;
+    const LoadingBlock = ({ label = 'Carregando…' }) => (
+      <div className="flex items-center justify-center gap-3 py-12"><Spinner /><span style={{ color: 'var(--muted)' }}>{label}</span></div>
+    );
+    const ErrorBlock = ({ error, onRetry }) => (
+      <div className="surface p-6 text-center">
+        <div style={{ color: 'var(--accent3)' }} className="mb-3">⚠ {error?.message || 'Erro desconhecido'}</div>
+        {onRetry && <button className="btn btn-secondary" onClick={onRetry}>Tentar novamente</button>}
+      </div>
+    );
+    const Badge = ({ label, color, bg, icon }) => (
+      <span className="badge" style={{ color, background: bg }}>{icon}{label}</span>
+    );
+    const StatusBadge = ({ status }) => {
+      const s = STATUS_PROC[status] || { label: status, color: 'var(--muted)', bg: 'rgba(123,130,160,.15)' };
+      return <Badge label={s.label} color={s.color} bg={s.bg} />;
+    };
+    const DocStatusBadge = ({ status }) => {
+      const s = STATUS_DOC[status] || { label: status, color: 'var(--muted)', bg: 'rgba(123,130,160,.15)' };
+      return <Badge label={s.label} color={s.color} bg={s.bg} />;
+    };
+    const DataRow = ({ label, value }) => (
+      <div><div style={{ color: 'var(--muted)' }} className="text-xs uppercase mb-0.5">{label}</div><div className="text-sm">{value || '—'}</div></div>
+    );
+    const Avatar = ({ nome, id, size = 32 }) => (
+      <div className="avatar" style={{ width: size, height: size, background: corPorId(id || nome), fontSize: size * 0.36 }}>{iniciaisDeNome(nome)}</div>
+    );
+    const KpiCard = ({ icon, label, value, sub, color }) => (
+      <div className="kpi">
+        <div style={{ fontSize: 18, marginBottom: 6 }}>{icon}</div>
+        <div className="label">{label}</div>
+        <div className="value" style={color ? { color } : undefined}>{value ?? '—'}</div>
+        {sub && <div className="sub">{sub}</div>}
+      </div>
+    );
+    const ScorePill = ({ n }) => {
+      if (n == null || !SCORE_LABELS[n]) return <span style={{ color: 'var(--muted)' }}>—</span>;
+      return <span className={`pill pill-${n}`}>{n} – {SCORE_LABELS[n]}</span>;
+    };
+    const StarRating = ({ value, max = 5 }) => {
+      const full = Math.floor(value || 0);
+      const half = (value || 0) - full >= 0.5;
+      return (
+        <span>
+          {Array.from({ length: max }).map((_, i) => {
+            const filled = i < full || (i === full && half);
+            return <span key={i} className={filled ? 'star' : 'star-empty'}>★</span>;
+          })}
+        </span>
+      );
+    };
+    function Modal({ open, onClose, title, children, size = 'md' }) {
+      if (!open) return null;
+      const sizes = { sm: 'max-w-md', md: 'max-w-2xl', lg: 'max-w-4xl', xl: 'max-w-6xl' };
+      return (
+        <div className="fixed inset-0 z-40 modal-bg flex items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
+          <div className={`surface w-full ${sizes[size]} my-8`} onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4" style={{ borderBottom: '1px solid var(--border)' }}>
+              <h3 className="text-lg font-semibold">{title}</h3>
+              <button className="text-2xl leading-none" style={{ color: 'var(--muted)' }} onClick={onClose}>×</button>
+            </div>
+            <div className="p-6" style={{ maxHeight: '70vh', overflowY: 'auto' }}>{children}</div>
+          </div>
+        </div>
+      );
+    }
+
+    // ConfirmModal: confirmação para ações destrutivas, com justificativa opcional/obrigatória.
+    // `onConfirm` recebe a justificativa como argumento (string). Pode ser async.
+    function ConfirmModal({ open, onClose, title, message, justificativaLabel, justificativaObrigatoria, confirmLabel = 'Confirmar', confirmVariant = 'danger', onConfirm }) {
+      const [justif, setJustif] = useState('');
+      const [working, setWorking] = useState(false);
+      useEffect(() => { if (open) { setJustif(''); setWorking(false); } }, [open]);
+      if (!open) return null;
+      const podeConfirmar = !justificativaObrigatoria || justif.trim().length > 0;
+      async function go() {
+        if (!podeConfirmar) return;
+        setWorking(true);
+        try { await onConfirm(justif.trim()); }
+        finally { setWorking(false); }
+      }
+      const variantClass = { danger: 'btn-danger', success: 'btn-success', primary: 'btn-primary' }[confirmVariant] || 'btn-danger';
+      return (
+        <Modal open onClose={onClose} title={title} size="sm">
+          <div className="space-y-4">
+            <div className="text-sm" style={{ color: 'var(--text)' }}>{message}</div>
+            {justificativaLabel != null && (
+              <div>
+                <label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>
+                  {justificativaLabel}{justificativaObrigatoria && <span style={{ color: 'var(--accent3)' }}> *</span>}
+                </label>
+                <textarea className="input" rows="3" value={justif} onChange={e => setJustif(e.target.value)} placeholder={justificativaObrigatoria ? 'Obrigatório' : 'Opcional'} />
+              </div>
+            )}
+            <div className="flex justify-end gap-2 pt-2" style={{ borderTop: '1px solid var(--border)' }}>
+              <button className="btn btn-secondary" onClick={onClose} disabled={working}>Voltar</button>
+              <button className={`btn ${variantClass}`} onClick={go} disabled={!podeConfirmar || working}>
+                {working ? <Spinner size={14} /> : confirmLabel}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  ICONS (SVG inline)
+    // ═══════════════════════════════════════════════════════
+    const Icon = {
+      capelo: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.66 4 3 6 3s6-1.34 6-3v-5"/></svg>,
+      dashboard: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>,
+      relatorios: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>,
+      empresas: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>,
+      home: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+      docs: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>,
+      cog: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
+      eye: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>,
+      file: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>,
+      user: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+      phone: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>,
+      mail: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
+      globe: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
+    };
+
+    // ═══════════════════════════════════════════════════════
+    //  LOGIN / REGISTER
+    // ═══════════════════════════════════════════════════════
+    function LoginPage({ onGoRegister }) {
+      const { login } = useAuth();
+      const toast = useToast();
+      const [u, setU] = useState(''); const [p, setP] = useState(''); const [load, setLoad] = useState(false);
+      async function submit(e) {
+        e.preventDefault(); setLoad(true);
+        try { await login(u, p); toast.success('Bem-vindo!'); }
+        catch (err) { toast.error(err.message || 'Falha no login'); }
+        finally { setLoad(false); }
+      }
+      return (
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <div className="surface p-8 w-full max-w-md">
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center gap-2 mb-2" style={{ color: 'var(--accent)' }}>{Icon.capelo}<span className="text-2xl font-bold">EstágioIBMEC</span></div>
+              <p style={{ color: 'var(--muted)' }} className="text-sm">Gestão de Estágios</p>
+            </div>
+            <form onSubmit={submit} className="space-y-3">
+              <div><label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>Usuário</label>
+                <input className="input" value={u} onChange={e => setU(e.target.value)} required autoFocus /></div>
+              <div><label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>Senha</label>
+                <input className="input" type="password" value={p} onChange={e => setP(e.target.value)} required /></div>
+              <button type="submit" className="btn btn-primary w-full mt-4" disabled={load}>
+                {load ? <Spinner size={16} /> : 'Entrar'}
+              </button>
+            </form>
+            <div className="text-center mt-6 text-sm">
+              <button className="hover:underline" style={{ color: 'var(--accent)' }} onClick={onGoRegister}>Não tem conta? Registre-se</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function RegisterPage({ onGoLogin }) {
+      const toast = useToast();
+      const { login } = useAuth();
+      const [tipo, setTipo] = useState('aluno');
+      const [cursos, setCursos] = useState([]);
+      const [empresas, setEmpresas] = useState([]);
+      const [form, setForm] = useState({ username: '', password: '', nome: '', email_institucional: '', cpf: '', rg: '', coeficiente_rendimento: 0, curso_id: '', matriculado_estagio: true, departamento: '', empresa_id: '', cargo: '' });
+      const [load, setLoad] = useState(false);
+      useEffect(() => {
+        Api.cursos().then(setCursos).catch(() => {});
+        Api.empresas().then(setEmpresas).catch(() => {});
+      }, []);
+      const upd = (k, v) => setForm(s => ({ ...s, [k]: v }));
+      async function submit(e) {
+        e.preventDefault(); setLoad(true);
+        try {
+          const body = { tipo, username: form.username, password: form.password, nome: form.nome, email_institucional: form.email_institucional };
+          if (tipo === 'aluno') Object.assign(body, { cpf: form.cpf, rg: form.rg, coeficiente_rendimento: form.coeficiente_rendimento, curso_id: form.curso_id || null, matriculado_estagio: form.matriculado_estagio });
+          else if (tipo === 'coordenador') body.departamento = form.departamento;
+          else if (tipo === 'supervisor_empresa') { body.empresa_id = form.empresa_id; body.cargo = form.cargo; }
+          await Api.register(body);
+          toast.success('Conta criada!');
+          await login(form.username, form.password);
+        } catch (err) { toast.error(err.message); }
+        finally { setLoad(false); }
+      }
+      return (
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <div className="surface p-8 w-full max-w-2xl my-8">
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center gap-2 mb-2" style={{ color: 'var(--accent)' }}>{Icon.capelo}<span className="text-2xl font-bold">EstágioIBMEC</span></div>
+              <p style={{ color: 'var(--muted)' }} className="text-sm">Criar conta</p>
+            </div>
+            <form onSubmit={submit} className="space-y-3">
+              <div><label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>Tipo</label>
+                <select className="input" value={tipo} onChange={e => setTipo(e.target.value)}>
+                  <option value="aluno">Aluno</option><option value="coordenador">Coordenador</option><option value="supervisor_empresa">Supervisor de Empresa</option>
+                </select></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>Usuário</label><input className="input" value={form.username} onChange={e => upd('username', e.target.value)} required /></div>
+                <div><label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>Senha</label><input className="input" type="password" value={form.password} onChange={e => upd('password', e.target.value)} required /></div>
+                <div><label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>Nome completo</label><input className="input" value={form.nome} onChange={e => upd('nome', e.target.value)} required /></div>
+                <div><label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>E-mail</label><input className="input" type="email" value={form.email_institucional} onChange={e => upd('email_institucional', e.target.value)} /></div>
+              </div>
+              {tipo === 'aluno' && (<div className="grid grid-cols-2 gap-3">
+                <div><label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>CPF</label><input className="input" value={form.cpf} onChange={e => upd('cpf', e.target.value)} required /></div>
+                <div><label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>RG</label><input className="input" value={form.rg} onChange={e => upd('rg', e.target.value)} /></div>
+                <div><label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>Curso</label><select className="input" value={form.curso_id} onChange={e => upd('curso_id', e.target.value)}><option value="">— Selecione —</option>{cursos.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}</select></div>
+                <div><label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>CR</label><input className="input" type="number" step="0.01" value={form.coeficiente_rendimento} onChange={e => upd('coeficiente_rendimento', e.target.value)} /></div>
+              </div>)}
+              {tipo === 'coordenador' && (<div><label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>Departamento</label><input className="input" value={form.departamento} onChange={e => upd('departamento', e.target.value)} required /></div>)}
+              {tipo === 'supervisor_empresa' && (<div className="grid grid-cols-2 gap-3">
+                <div><label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>Empresa</label><select className="input" value={form.empresa_id} onChange={e => upd('empresa_id', e.target.value)} required><option value="">— Selecione —</option>{empresas.map(e => <option key={e.id} value={e.id}>{e.razao_social}</option>)}</select></div>
+                <div><label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>Cargo</label><input className="input" value={form.cargo} onChange={e => upd('cargo', e.target.value)} /></div>
+              </div>)}
+              <button type="submit" className="btn btn-primary w-full mt-4" disabled={load}>{load ? <Spinner size={16} /> : 'Criar conta'}</button>
+              <div className="text-center text-sm"><button type="button" className="hover:underline" style={{ color: 'var(--accent)' }} onClick={onGoLogin}>Já tem conta? Entre</button></div>
+            </form>
+          </div>
+        </div>
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  COORDENADOR — SIDEBAR + APP
+    // ═══════════════════════════════════════════════════════
+    function CoordSidebar({ active, onNav, alunos, selectedId, onSelectAluno, onConfigForm }) {
+      const { user, logout } = useAuth();
+      return (
+        <aside className="surface" style={{ width: 240, height: '100vh', borderRadius: 0, borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+          <div className="flex items-center gap-2 p-4" style={{ color: 'var(--accent)', borderBottom: '1px solid var(--border)' }}>
+            {Icon.capelo}<span className="font-bold">EstágioIBMEC</span>
+          </div>
+          <div className="flex-1 overflow-y-auto" style={{ minHeight: 0 }}>
+            <div className="section-label">Menu</div>
+            <div className={`nav-item ${active === 'dashboard' ? 'active' : ''}`} onClick={() => onNav('dashboard')}>{Icon.dashboard}<span>Dashboard</span></div>
+            <div className={`nav-item ${active === 'relatorios' ? 'active' : ''}`} onClick={() => onNav('relatorios')}>{Icon.relatorios}<span>Relatórios</span></div>
+            <div className={`nav-item ${active === 'empresas' ? 'active' : ''}`} onClick={() => onNav('empresas')}>{Icon.empresas}<span>Empresas</span></div>
+
+            <div className="section-label">Alunos</div>
+            {alunos.length === 0 && <div className="px-4 py-2 text-xs" style={{ color: 'var(--muted)' }}>Nenhum aluno</div>}
+            {alunos.map(a => (
+              <div key={a.id} className={`aluno-card ${selectedId === a.id ? 'active' : ''}`} onClick={() => { onSelectAluno(a.id); onNav('dashboard'); }}>
+                <Avatar nome={a.aluno_nome} id={a.id} size={32} />
+                <div className="info">
+                  <div className="name">{a.aluno_nome || 'Sem nome'}</div>
+                  <div className="meta">{(a.curso_nome || '').slice(0, 14)}{a.aluno_periodo ? ` · ${a.aluno_periodo}º` : ''}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ padding: 12, borderTop: '1px solid var(--border)' }}>
+            {!isVisaoGlobal(user) && (
+              <button className="btn btn-primary w-full" onClick={onConfigForm}>{Icon.cog}<span>Formulário</span></button>
+            )}
+            <div className="flex items-center gap-2 mt-3 px-1">
+              <Avatar nome={user?.nome || user?.username} id={user?.id} size={28} />
+              <div className="flex-1 min-w-0">
+                <div className="text-xs truncate">{user?.nome || user?.username}</div>
+                <div className="text-[10px]" style={{ color: 'var(--muted)' }}>{CARGO_LABEL[user?.tipo] || user?.tipo}</div>
+                <button onClick={logout} className="text-[10px] uppercase" style={{ color: 'var(--muted)' }}>Sair</button>
+              </div>
+            </div>
+          </div>
+        </aside>
+      );
+    }
+
+    function CoordApp() {
+      const toast = useToast();
+      const [page, setPage] = useState('dashboard');
+      const [processosResumo, setProcessosResumo] = useState([]);
+      const [processosFull, setProcessosFull] = useState({});
+      const [modelos, setModelos] = useState([]);
+      const [selectedId, setSelectedId] = useState(null);
+      const [loading, setLoading] = useState(true);
+      const [error, setError] = useState(null);
+      const [configFormOpen, setConfigFormOpen] = useState(false);
+
+      const load = useCallback(async () => {
+        setLoading(true); setError(null);
+        try {
+          const [resumo, ms] = await Promise.all([Api.dashProcessos(), Api.modelosFormulario()]);
+          setProcessosResumo(resumo);
+          setModelos(ms);
+          // carrega todos os processos completos em paralelo
+          const full = await Promise.all(resumo.map(p => Api.processo(p.id).catch(() => null)));
+          const fullMap = {};
+          resumo.forEach((p, i) => { if (full[i]) fullMap[p.id] = full[i]; });
+          setProcessosFull(fullMap);
+          // auto-seleção considera só status visíveis na sidebar
+          const visiveis = resumo.filter(p => STATUS_DASHBOARD.includes(p.status));
+          if (visiveis.length > 0 && !selectedId) setSelectedId(visiveis[0].id);
+        } catch (e) { setError(e); }
+        finally { setLoading(false); }
+      }, [selectedId]);
+      useEffect(() => { load(); }, []);
+
+      const processosDashboard = useMemo(
+        () => processosResumo.filter(p => STATUS_DASHBOARD.includes(p.status)),
+        [processosResumo]
+      );
+
+      const modeloIndex = useMemo(() => {
+        const m = {};
+        modelos.forEach(x => { m[x.id] = x; });
+        return m;
+      }, [modelos]);
+
+      const modeloCurso = modelos[0] || null;
+
+      async function salvarModelo(patch) {
+        if (!modeloCurso) return;
+        try {
+          await Api.atualizarModelo(modeloCurso.id, { ...modeloCurso, titulo: patch.titulo, secoes: patch.secoes });
+          toast.success('Formulário atualizado.');
+          setConfigFormOpen(false);
+          const ms = await Api.modelosFormulario();
+          setModelos(ms);
+        } catch (e) { toast.error(e.message); }
+      }
+
+      const selectedResumo = processosResumo.find(p => p.id === selectedId);
+      const selectedFull = selectedId ? processosFull[selectedId] : null;
+      const selectedModelo = selectedFull?.modelo_formulario ? modeloIndex[selectedFull.modelo_formulario] : modeloCurso;
+
+      return (
+        <div className="flex" style={{ height: '100vh' }}>
+          <CoordSidebar active={page} onNav={setPage} alunos={processosDashboard} selectedId={selectedId} onSelectAluno={setSelectedId} onConfigForm={() => setConfigFormOpen(true)} />
+          <main className="flex-1 overflow-y-auto" style={{ padding: 24 }}>
+            {loading ? <LoadingBlock label="Carregando processos…" /> : error ? <ErrorBlock error={error} onRetry={load} /> :
+              page === 'dashboard' ? <AlunoDetailDashboard resumo={selectedResumo} processo={selectedFull} modelo={selectedModelo} /> :
+              page === 'relatorios' ? <CoordRelatorios processosResumo={processosResumo} processosFull={processosFull} modeloIndex={modeloIndex} modeloCurso={modeloCurso} onAbrirAluno={(id) => { setSelectedId(id); setPage('dashboard'); }} /> :
+              page === 'empresas' ? <CoordEmpresas processosResumo={processosResumo} processosFull={processosFull} modeloIndex={modeloIndex} modeloCurso={modeloCurso} onAbrirAluno={(id) => { setSelectedId(id); setPage('dashboard'); }} /> :
+              null}
+          </main>
+          {configFormOpen && modeloCurso && <FormularioEditor model={modeloCurso} onClose={() => setConfigFormOpen(false)} onSave={salvarModelo} />}
+          {configFormOpen && !modeloCurso && (
+            <Modal open title="Formulário de Avaliação" onClose={() => setConfigFormOpen(false)} size="md">
+              <div className="text-sm" style={{ color: 'var(--muted)' }}>Nenhum formulário configurado para este curso. Contate o administrador.</div>
+            </Modal>
+          )}
+        </div>
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  COORD — ALUNO DETAIL DASHBOARD
+    // ═══════════════════════════════════════════════════════
+    function AlunoDetailDashboard({ resumo, processo, modelo }) {
+      if (!resumo) return (
+        <div className="surface p-12 text-center"><div style={{ fontSize: 48, marginBottom: 12 }}>👈</div>
+          <h3 className="text-lg font-semibold">Selecione um aluno na barra lateral</h3>
+          <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>Escolha um aluno para ver o dashboard individual.</p>
+        </div>
+      );
+      if (!STATUS_DASHBOARD.includes(resumo.status)) return (
+        <div className="surface p-12 text-center"><div style={{ fontSize: 48, marginBottom: 12 }}>🗂</div>
+          <h3 className="text-lg font-semibold">Processo {STATUS_PROC[resumo.status]?.label || resumo.status}</h3>
+          <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>Processos rejeitados e cancelados ficam disponíveis apenas na aba Relatórios.</p>
+        </div>
+      );
+      const horasTotais = processo ? calcHorasTotais(processo) : null;
+      const score = processo && modelo ? calcScoreProcesso(processo, modelo) : null;
+      const semestre = processo ? calcSemestre(processo.data_inicio_prevista) : null;
+      return (
+        <div className="space-y-5">
+          {/* HEADER */}
+          <div className="surface p-5">
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div className="flex items-start gap-4">
+                <Avatar nome={resumo.aluno_nome} id={resumo.id} size={56} />
+                <div>
+                  <h1 className="text-2xl font-bold">{resumo.aluno_nome || 'Aluno'}</h1>
+                  <div className="text-sm mt-1" style={{ color: 'var(--muted)' }}>
+                    Matrícula {resumo.aluno_matricula || '—'} · {resumo.curso_nome || '—'}
+                    {resumo.aluno_periodo ? ` · ${resumo.aluno_periodo}º período` : ''}
+                    {resumo.empresa_nome ? ` · ${resumo.empresa_nome}` : ''}
+                    {semestre ? ` · ${semestre}` : ''}
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <StatusBadge status={resumo.status} />
+                {horasTotais != null && <Badge label={`${horasTotais}h`} color="var(--accent)" bg="rgba(108,99,255,.15)" icon="⏱" />}
+                {score != null && <Badge label={`Score ${score.toFixed(2)}`} color="var(--accent2)" bg="rgba(0,212,170,.15)" icon="⭐" />}
+              </div>
+            </div>
+          </div>
+
+          {/* KPIs */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+            <KpiCard icon="⏱️" label="Horas" value={horasTotais != null ? `${horasTotais}h` : '—'} sub={resumo.horas_semanais ? `${resumo.horas_semanais}h/sem` : null} />
+            <KpiCard icon="💰" label="Remuneração" value={resumo.remuneracao != null ? `R$${resumo.remuneracao.toFixed(0)}` : '—'} sub="Mensal" />
+            <KpiCard icon="📅" label="Início" value={processo?.data_inicio_prevista ? new Date(processo.data_inicio_prevista).toLocaleDateString('pt-BR') : '—'} sub={semestre} />
+            <KpiCard icon="🏢" label="Empresa" value={(resumo.empresa_nome || '—').slice(0, 14)} sub={resumo.empresa_nome && resumo.empresa_nome.length > 14 ? resumo.empresa_nome.slice(14, 30) : null} />
+            <KpiCard icon="⭐" label="Score" value={score != null ? score.toFixed(2) : '—'} sub="Avaliação exp." color="var(--accent2)" />
+          </div>
+
+          {/* DOCUMENTOS */}
+          {processo && <DocumentosDoProcesso processoId={processo.id} />}
+
+          {/* RESPOSTAS */}
+          {!processo?.respostas_formulario ? (
+            <div className="surface p-10 text-center">
+              <div style={{ fontSize: 40, marginBottom: 12 }}>📝</div>
+              <h3 className="text-lg font-semibold">Avaliação não preenchida</h3>
+              <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>Este aluno ainda não preencheu a avaliação de estágio.</p>
+            </div>
+          ) : !modelo ? (
+            <div className="surface p-6 text-sm" style={{ color: 'var(--muted)' }}>Não foi possível carregar o modelo do formulário.</div>
+          ) : (
+            <RenderRespostas processo={processo} modelo={modelo} />
+          )}
+        </div>
+      );
+    }
+
+    function DocumentosDoProcesso({ processoId }) {
+      const { user } = useAuth();
+      const [docs, setDocs] = useState(null);
+      const [erro, setErro] = useState(null);
+      const load = useCallback(async () => {
+        try { setDocs(await Api.documentosProcesso(processoId)); }
+        catch (e) { setErro(e); }
+      }, [processoId]);
+      useEffect(() => { setDocs(null); setErro(null); load(); }, [load]);
+      // Coordenador pode validar; secretaria/CASA/reitor/pro_reitor não.
+      const canValidate = user?.tipo === 'coordenador';
+      return (
+        <div className="surface p-5">
+          <div className="font-semibold mb-3">Documentos do processo {docs ? `(${docs.length})` : ''}</div>
+          {erro ? <ErrorBlock error={erro} onRetry={load} /> :
+           docs === null ? <LoadingBlock /> :
+           <DocumentosLista documentos={docs} canValidate={canValidate} onChanged={load} />}
+        </div>
+      );
+    }
+
+    function RenderRespostas({ processo, modelo }) {
+      const secsResp = processo.respostas_formulario?.secoes || {};
+      const secoes = modelo.secoes || [];
+      const cardsCharts = secoes.filter(s => ['escala_1_4', 'escala_1_4_multi', 'escala_3', 'checkbox_duplo', 'texto_livre'].includes(s.tipo));
+      // separa as seções escala_1_4 pequenas em "pills" (até 6 itens) vs radar
+      return (
+        <div className="space-y-5">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {cardsCharts.map(sec => (
+              <SecaoRender key={sec.id} sec={sec} resposta={secsResp[sec.id]} />
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    function SecaoRender({ sec, resposta }) {
+      const tipo = sec.tipo;
+      const titulo = sec.titulo || sec.id;
+      const subt = tipo === 'escala_1_4' || tipo === 'escala_1_4_multi' ? 'Escala 1 – 4' : tipo === 'escala_3' ? 'Suficiente / Insuficiente / Não utilizado' : '';
+      if (!resposta) {
+        return (
+          <div className="surface p-4">
+            <h3 className="font-semibold mb-1">{titulo}</h3>
+            {subt && <div className="text-xs mb-3" style={{ color: 'var(--muted)' }}>{subt}</div>}
+            <div className="text-sm" style={{ color: 'var(--muted)' }}>Sem resposta.</div>
+          </div>
+        );
+      }
+      // ESCALA_1_4 -> radar OU pills
+      if (tipo === 'escala_1_4') {
+        const itens = Object.entries(resposta).filter(([k, v]) => typeof v === 'number');
+        const data = itens.map(([k, v]) => ({ subject: k.length > 22 ? k.slice(0, 20) + '…' : k, A: v, full: 4 }));
+        const usePills = itens.length <= 5;
+        return (
+          <div className="surface p-4">
+            <h3 className="font-semibold mb-1">{titulo}</h3>
+            <div className="text-xs mb-3" style={{ color: 'var(--muted)' }}>{subt}</div>
+            {usePills ? (
+              <div>{itens.map(([k, v]) => (
+                <div key={k} className="score-row"><span className="text-sm">{k}</span><ScorePill n={v} /></div>
+              ))}</div>
+            ) : (
+              <ResponsiveContainer width="100%" height={260}>
+                <RadarChart data={data}>
+                  <PolarGrid stroke="var(--border)" />
+                  <PolarAngleAxis dataKey="subject" stroke="var(--muted)" tick={{ fontSize: 10 }} />
+                  <PolarRadiusAxis angle={90} domain={[0, 4]} stroke="var(--muted)" />
+                  <Radar dataKey="A" stroke="var(--accent)" fill="var(--accent)" fillOpacity={0.4} />
+                  <Tooltip contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }} />
+                </RadarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        );
+      }
+      // ESCALA_1_4_MULTI -> grouped bar
+      if (tipo === 'escala_1_4_multi') {
+        const colunas = sec.colunas || [];
+        const itens = Object.entries(resposta);
+        const data = itens.map(([k, v]) => {
+          const row = { name: k.length > 16 ? k.slice(0, 14) + '…' : k };
+          colunas.forEach(c => { row[c] = (v && typeof v === 'object' && typeof v[c] === 'number') ? v[c] : 0; });
+          return row;
+        });
+        return (
+          <div className="surface p-4">
+            <h3 className="font-semibold mb-1">{titulo}</h3>
+            <div className="text-xs mb-3" style={{ color: 'var(--muted)' }}>{subt}</div>
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={data}>
+                <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
+                <XAxis dataKey="name" stroke="var(--muted)" tick={{ fontSize: 10 }} />
+                <YAxis stroke="var(--muted)" domain={[0, 4]} />
+                <Tooltip contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }} />
+                <Legend />
+                {colunas.map((c, i) => <Bar key={c} dataKey={c} fill={CHART_PALETTE[i % CHART_PALETTE.length]} radius={[4, 4, 0, 0]} />)}
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        );
+      }
+      // ESCALA_3 -> lista com pills coloridas
+      if (tipo === 'escala_3') {
+        const colorMap = { 'Suficiente': 'tag-yes', 'Insuficiente': 'tag', 'Não utilizado': 'tag-muted' };
+        return (
+          <div className="surface p-4">
+            <h3 className="font-semibold mb-1">{titulo}</h3>
+            <div className="text-xs mb-3" style={{ color: 'var(--muted)' }}>{subt}</div>
+            <div className="space-y-2">
+              {Object.entries(resposta).map(([k, v]) => (
+                <div key={k} className="score-row">
+                  <span className="text-sm">{k}</span>
+                  <span className={colorMap[v] || 'tag-muted'} style={{ padding: '4px 10px', borderRadius: 9999, fontSize: 11, fontWeight: 600 }}>{v}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
+      // CHECKBOX_DUPLO -> lista com tags
+      if (tipo === 'checkbox_duplo') {
+        return (
+          <div className="surface p-4">
+            <h3 className="font-semibold mb-1">{titulo}</h3>
+            <div className="text-xs mb-3" style={{ color: 'var(--muted)' }}>Selecionados pelo aluno</div>
+            <div className="space-y-2">
+              {Object.entries(resposta).map(([k, vs]) => (
+                <div key={k} className="score-row">
+                  <span className="text-sm">{k}</span>
+                  <span className="flex flex-wrap gap-1 justify-end">
+                    {(vs || []).map(c => <span key={c} className="tag-yes" style={{ padding: '3px 9px', borderRadius: 9999, fontSize: 11 }}>{c}</span>)}
+                    {(!vs || vs.length === 0) && <span className="tag-muted" style={{ padding: '3px 9px', borderRadius: 9999, fontSize: 11 }}>—</span>}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
+      // TEXTO_LIVRE
+      if (tipo === 'texto_livre') {
+        return (
+          <div className="surface p-4">
+            <h3 className="font-semibold mb-1">{titulo}</h3>
+            <div className="text-xs mb-3" style={{ color: 'var(--muted)' }}>Resposta livre</div>
+            <p className="text-sm whitespace-pre-wrap">{resposta}</p>
+          </div>
+        );
+      }
+      return null;
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  COORD — RELATÓRIOS
+    // ═══════════════════════════════════════════════════════
+    function CoordRelatorios({ processosResumo, processosFull, modeloIndex, modeloCurso, onAbrirAluno }) {
+      const [filtros, setFiltros] = useState({ semestre: '', status: '', curso: '', score: '', busca: '' });
+      const [sort, setSort] = useState({ col: 'aluno', dir: 'asc' });
+      const cursosUniq = useMemo(() => {
+        const m = new Map();
+        processosResumo.forEach(p => { if (p.curso_id) m.set(p.curso_id, p.curso_nome); });
+        return Array.from(m.entries()).map(([id, nome]) => ({ id, nome }));
+      }, [processosResumo]);
+      const semestresUniq = useMemo(() => {
+        const s = new Set();
+        processosResumo.forEach(p => { if (p.semestre) s.add(p.semestre); });
+        return Array.from(s).sort().reverse();
+      }, [processosResumo]);
+
+      const rows = useMemo(() => {
+        return processosResumo.map(p => {
+          const full = processosFull[p.id];
+          const modelo = full?.modelo_formulario ? modeloIndex[full.modelo_formulario] : modeloCurso;
+          const score = full && modelo ? calcScoreProcesso(full, modelo) : null;
+          const horas = full ? calcHorasTotais(full) : null;
+          return { ...p, score, horasTotais: horas };
+        });
+      }, [processosResumo, processosFull, modeloIndex, modeloCurso]);
+
+      const filtered = useMemo(() => {
+        return rows.filter(r => {
+          if (filtros.semestre && r.semestre !== filtros.semestre) return false;
+          if (filtros.status && r.status !== filtros.status) return false;
+          if (filtros.curso && String(r.curso_id) !== String(filtros.curso)) return false;
+          if (filtros.score) {
+            const min = parseFloat(filtros.score);
+            if (filtros.score === '=4.0') { if (r.score !== 4) return false; }
+            else if (r.score == null || r.score < min) return false;
+          }
+          if (filtros.busca) {
+            const q = filtros.busca.toLowerCase();
+            if (!(r.aluno_nome || '').toLowerCase().includes(q)) return false;
+          }
+          return true;
+        });
+      }, [rows, filtros]);
+
+      const sorted = useMemo(() => {
+        const copy = [...filtered];
+        const col = sort.col, dir = sort.dir === 'asc' ? 1 : -1;
+        copy.sort((a, b) => {
+          let va, vb;
+          if (col === 'aluno') { va = a.aluno_nome || ''; vb = b.aluno_nome || ''; }
+          else if (col === 'semestre') { va = a.semestre || ''; vb = b.semestre || ''; }
+          else if (col === 'empresa') { va = a.empresa_nome || ''; vb = b.empresa_nome || ''; }
+          else if (col === 'horas') { va = a.horasTotais ?? -1; vb = b.horasTotais ?? -1; }
+          else if (col === 'rem') { va = a.remuneracao ?? -1; vb = b.remuneracao ?? -1; }
+          else if (col === 'score') { va = a.score ?? -1; vb = b.score ?? -1; }
+          else if (col === 'status') { va = a.status || ''; vb = b.status || ''; }
+          else return 0;
+          if (va < vb) return -1 * dir;
+          if (va > vb) return 1 * dir;
+          return 0;
+        });
+        return copy;
+      }, [filtered, sort]);
+
+      const stats = useMemo(() => {
+        const a = filtered.length;
+        const h = filtered.filter(x => x.horasTotais != null);
+        const totalH = h.reduce((s, x) => s + x.horasTotais, 0);
+        const sc = filtered.filter(x => x.score != null);
+        const sScore = sc.reduce((s, x) => s + x.score, 0);
+        const r = filtered.filter(x => x.remuneracao != null);
+        const sR = r.reduce((s, x) => s + x.remuneracao, 0);
+        const av = filtered.filter(x => x.tem_respostas).length;
+        return {
+          alunos: a,
+          mediaHoras: h.length ? Math.round(totalH / h.length) : null,
+          mediaScore: sc.length ? +(sScore / sc.length).toFixed(2) : null,
+          mediaRem: r.length ? Math.round(sR / r.length) : null,
+          pctAval: a > 0 ? Math.round((av / a) * 100) : 0,
+        };
+      }, [filtered]);
+
+      const toggleSort = (col) => setSort(s => s.col === col ? { col, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { col, dir: 'asc' });
+
+      function scoreDotColor(s) { if (s == null) return 'var(--muted)'; if (s >= 3.5) return 'var(--accent2)'; if (s >= 2.5) return 'var(--accent4)'; return 'var(--accent3)'; }
+
+      const limpar = () => setFiltros({ semestre: '', status: '', curso: '', score: '', busca: '' });
+
+      const chartHoras = sorted.map(r => ({ name: (r.aluno_nome || '?').split(' ')[0], v: r.horasTotais || 0 }));
+      const chartScore = sorted.map(r => ({ name: (r.aluno_nome || '?').split(' ')[0], v: r.score || 0 }));
+      const chartRem = sorted.map(r => ({ name: (r.aluno_nome || '?').split(' ')[0], v: r.remuneracao || 0 }));
+      const semestreCount = {};
+      sorted.forEach(r => { if (r.semestre) semestreCount[r.semestre] = (semestreCount[r.semestre] || 0) + 1; });
+      const chartSem = Object.entries(semestreCount).map(([k, v]) => ({ name: k, value: v }));
+
+      return (
+        <div className="space-y-5">
+          <div>
+            <h1 className="text-2xl font-bold">Relatórios</h1>
+            <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>Visualize, filtre e compare todos os processos de estágio</p>
+          </div>
+
+          {/* FILTROS */}
+          <div className="surface p-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 items-end">
+              <div><label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>Semestre</label>
+                <select className="input" value={filtros.semestre} onChange={e => setFiltros(f => ({ ...f, semestre: e.target.value }))}>
+                  <option value="">Todos</option>{semestresUniq.map(s => <option key={s} value={s}>{s}</option>)}
+                </select></div>
+              <div><label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>Status</label>
+                <select className="input" value={filtros.status} onChange={e => setFiltros(f => ({ ...f, status: e.target.value }))}>
+                  <option value="">Todos</option>{Object.keys(STATUS_PROC).map(s => <option key={s} value={s}>{STATUS_PROC[s].label}</option>)}
+                </select></div>
+              <div><label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>Curso</label>
+                <select className="input" value={filtros.curso} onChange={e => setFiltros(f => ({ ...f, curso: e.target.value }))}>
+                  <option value="">Todos</option>{cursosUniq.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+                </select></div>
+              <div><label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>Score mín</label>
+                <select className="input" value={filtros.score} onChange={e => setFiltros(f => ({ ...f, score: e.target.value }))}>
+                  <option value="">Qualquer</option><option value="3.0">≥ 3.0</option><option value="3.5">≥ 3.5</option><option value="=4.0">= 4.0</option>
+                </select></div>
+              <div className="lg:col-span-2 flex gap-2">
+                <input className="input" placeholder="🔍 Buscar por nome…" value={filtros.busca} onChange={e => setFiltros(f => ({ ...f, busca: e.target.value }))} />
+                <button className="btn btn-ghost" onClick={limpar}>Limpar</button>
+              </div>
+            </div>
+          </div>
+
+          {/* MINI STATS */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <KpiCard label="Alunos" value={stats.alunos} />
+            <KpiCard label="Média horas" value={stats.mediaHoras != null ? `${stats.mediaHoras}h` : '—'} />
+            <KpiCard label="Score médio" value={stats.mediaScore != null ? stats.mediaScore.toFixed(2) : '—'} color="var(--accent2)" />
+            <KpiCard label="Média rem." value={stats.mediaRem != null ? `R$${stats.mediaRem}` : '—'} />
+            <KpiCard label="Com avaliação" value={`${stats.pctAval}%`} />
+          </div>
+
+          {/* TABELA */}
+          <div className="surface overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="table">
+                <thead><tr>
+                  <th onClick={() => toggleSort('aluno')}>Aluno ↕</th>
+                  <th onClick={() => toggleSort('semestre')}>Semestre ↕</th>
+                  <th onClick={() => toggleSort('empresa')}>Empresa ↕</th>
+                  <th onClick={() => toggleSort('horas')}>Horas ↕</th>
+                  <th onClick={() => toggleSort('rem')}>Remuneração ↕</th>
+                  <th onClick={() => toggleSort('score')}>Score ↕</th>
+                  <th onClick={() => toggleSort('status')}>Status ↕</th>
+                  <th>Ações</th>
+                </tr></thead>
+                <tbody>
+                  {sorted.map(r => (
+                    <tr key={r.id}>
+                      <td>
+                        <div className="font-semibold">{r.aluno_nome}</div>
+                        <div className="sub">{r.curso_nome}{r.aluno_periodo ? ` · ${r.aluno_periodo}º` : ''}</div>
+                      </td>
+                      <td>{r.semestre || '—'}</td>
+                      <td>{r.empresa_nome || '—'}</td>
+                      <td>{r.horasTotais != null ? `${r.horasTotais}h` : '—'}</td>
+                      <td>{r.remuneracao != null ? `R$${r.remuneracao.toFixed(0)}` : '—'}</td>
+                      <td>
+                        <span className="flex items-center gap-2"><span className="score-dot" style={{ background: scoreDotColor(r.score) }} />{r.score != null ? r.score.toFixed(1) : '—'}</span>
+                      </td>
+                      <td><StatusBadge status={r.status} /></td>
+                      <td>
+                        <button className="btn btn-ghost" style={{ padding: '4px 8px' }} title="Ver no Dashboard" onClick={() => onAbrirAluno(r.id)}>{Icon.eye}</button>
+                      </td>
+                    </tr>
+                  ))}
+                  {sorted.length === 0 && <tr><td colSpan="8" style={{ textAlign: 'center', padding: 30, color: 'var(--muted)' }}>Nenhum resultado encontrado</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* CHARTS COMPARATIVOS */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="surface p-4">
+              <h3 className="font-semibold mb-3">Comparativo: Horas</h3>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={chartHoras} layout="vertical">
+                  <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
+                  <XAxis type="number" stroke="var(--muted)" />
+                  <YAxis dataKey="name" type="category" stroke="var(--muted)" width={80} />
+                  <Tooltip contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }} />
+                  <Bar dataKey="v" fill="var(--accent)" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="surface p-4">
+              <h3 className="font-semibold mb-3">Comparativo: Score</h3>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={chartScore} layout="vertical">
+                  <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
+                  <XAxis type="number" domain={[0, 4]} stroke="var(--muted)" />
+                  <YAxis dataKey="name" type="category" stroke="var(--muted)" width={80} />
+                  <Tooltip contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }} />
+                  <Bar dataKey="v" fill="var(--accent2)" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="surface p-4">
+              <h3 className="font-semibold mb-3">Comparativo: Remuneração</h3>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={chartRem}>
+                  <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
+                  <XAxis dataKey="name" stroke="var(--muted)" tick={{ fontSize: 10 }} />
+                  <YAxis stroke="var(--muted)" />
+                  <Tooltip contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }} />
+                  <Bar dataKey="v" fill="var(--accent4)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="surface p-4">
+              <h3 className="font-semibold mb-3">Semestres representados</h3>
+              {chartSem.length === 0 ? <div className="text-sm" style={{ color: 'var(--muted)' }}>Sem dados</div> : (
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie data={chartSem} dataKey="value" nameKey="name" innerRadius={50} outerRadius={80} label>
+                      {chartSem.map((_, i) => <Cell key={i} fill={CHART_PALETTE[i % CHART_PALETTE.length]} />)}
+                    </Pie>
+                    <Tooltip contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }} />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  COORD — EMPRESAS
+    // ═══════════════════════════════════════════════════════
+    function CoordEmpresas({ processosResumo, processosFull, modeloIndex, modeloCurso, onAbrirAluno }) {
+      const [dados, setDados] = useState(null);
+      const [empresasDetalhe, setEmpresasDetalhe] = useState({});
+      const [loading, setLoading] = useState(true);
+      const [error, setError] = useState(null);
+      const [selectedId, setSelectedId] = useState(null);
+
+      useEffect(() => {
+        Api.dashEmpresas().then(d => { setDados(d); if (d[0]) setSelectedId(d[0].empresa_id); }).catch(setError).finally(() => setLoading(false));
+        Api.empresas().then(emps => {
+          const m = {}; emps.forEach(e => { m[e.id] = e; }); setEmpresasDetalhe(m);
+        }).catch(() => {});
+      }, []);
+
+      const sel = dados ? dados.find(d => d.empresa_id === selectedId) : null;
+      const empDet = sel ? empresasDetalhe[sel.empresa_id] : null;
+
+      const stagiariosDaEmp = useMemo(
+        () => processosResumo.filter(p => p.empresa_id === selectedId),
+        [processosResumo, selectedId]
+      );
+
+      const radarEmpresa = useMemo(() => {
+        if (!modeloCurso || !sel) return [];
+        const secEscala = (modeloCurso.secoes || []).find(s => s.tipo === 'escala_1_4');
+        if (!secEscala) return [];
+        const itens = secEscala.itens || [];
+        const acum = {};
+        stagiariosDaEmp.forEach(r => {
+          const full = processosFull[r.id];
+          const v = full?.respostas_formulario?.secoes?.[secEscala.id];
+          if (v && typeof v === 'object') {
+            itens.forEach(it => {
+              if (typeof v[it] === 'number') {
+                if (!acum[it]) acum[it] = { soma: 0, n: 0 };
+                acum[it].soma += v[it]; acum[it].n += 1;
+              }
+            });
+          }
+        });
+        return itens.map(it => ({
+          subject: it.length > 18 ? it.slice(0, 16) + '…' : it,
+          A: acum[it] ? +(acum[it].soma / acum[it].n).toFixed(2) : 0,
+          full: 4,
+        }));
+      }, [modeloCurso, sel, processosFull, stagiariosDaEmp]);
+
+      const ranking = useMemo(
+        () => dados ? [...dados].filter(d => d.avaliacao_media != null).sort((a, b) => b.avaliacao_media - a.avaliacao_media) : [],
+        [dados]
+      );
+      const rankData = ranking.map(d => ({ name: d.nome.slice(0, 18), v: d.avaliacao_media }));
+      const remData = (dados || []).map(d => ({ name: d.nome.slice(0, 18), v: d.media_remuneracao || 0 }));
+
+      if (loading) return <LoadingBlock />;
+      if (error) return <ErrorBlock error={error} />;
+      if (!dados) return <LoadingBlock />;
+
+      return (
+        <div className="space-y-5">
+          <div>
+            <h1 className="text-2xl font-bold">Empresas Parceiras</h1>
+            <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>Dados cadastrais, avaliações dos estagiários e histórico de estágios</p>
+          </div>
+
+          {/* GRID */}
+          <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
+            {dados.map(emp => (
+              <div key={emp.empresa_id} className={`empresa-card ${selectedId === emp.empresa_id ? 'active' : ''}`} onClick={() => setSelectedId(emp.empresa_id)}>
+                <div className="flex items-start gap-3 mb-3">
+                  <Avatar nome={emp.nome} id={emp.empresa_id} size={44} />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold truncate">{emp.nome}</div>
+                    <div className="text-xs" style={{ color: 'var(--muted)' }}>{emp.cnpj}</div>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between" style={{ borderTop: '1px solid var(--border)', paddingTop: 12 }}>
+                  <div>
+                    <div className="text-xs" style={{ color: 'var(--muted)' }}>Avaliação</div>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <StarRating value={(emp.avaliacao_media || 0) * 5 / 4} />
+                      <span className="text-sm font-semibold">{emp.avaliacao_media != null ? emp.avaliacao_media.toFixed(1) : '—'}</span>
+                    </div>
+                  </div>
+                  <span className="tag">{emp.total_estagios} estagiário{emp.total_estagios !== 1 ? 's' : ''}</span>
+                </div>
+              </div>
+            ))}
+            {dados.length === 0 && <div className="surface p-8 text-center" style={{ color: 'var(--muted)', gridColumn: '1 / -1' }}>Nenhuma empresa</div>}
+          </div>
+
+          {/* DETALHE */}
+          {sel && (
+            <div className="surface p-5">
+              <div className="flex items-start gap-4 mb-4 flex-wrap">
+                <Avatar nome={sel.nome} id={sel.empresa_id} size={54} />
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-xl font-bold">{sel.nome}</h2>
+                  <div className="text-sm" style={{ color: 'var(--muted)' }}>{empDet?.areas_atuacao || '—'} · {empDet?.localizacao || '—'}</div>
+                </div>
+                <Badge label="Parceira" color="var(--accent2)" bg="rgba(0,212,170,.15)" />
+                <span className="tag">{sel.total_estagios} estagiário{sel.total_estagios !== 1 ? 's' : ''}</span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                {/* DADOS */}
+                <div style={{ borderRight: '1px solid var(--border)', paddingRight: 16 }}>
+                  <div className="section-label" style={{ padding: 0, marginBottom: 12 }}>Dados da empresa</div>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex items-center gap-2">{Icon.user}<span style={{ color: 'var(--muted)' }}>Resp.:</span> {empDet?.responsavel_legal_nome || '—'}</div>
+                    <div className="flex items-center gap-2">{Icon.mail}<span style={{ color: 'var(--muted)' }}>E-mail:</span> {empDet?.email_contato || '—'}</div>
+                    <div className="flex items-center gap-2">{Icon.empresas}<span style={{ color: 'var(--muted)' }}>CNPJ:</span> {sel.cnpj}</div>
+                    <div className="pt-3 mt-3" style={{ borderTop: '1px solid var(--border)' }}>
+                      <DataRow label="Estagiários" value={sel.total_estagios} />
+                      <div className="mt-2"><DataRow label="Média horas/sem" value={sel.media_horas_semanais != null ? `${sel.media_horas_semanais}h` : '—'} /></div>
+                      <div className="mt-2"><DataRow label="Remuneração média" value={sel.media_remuneracao != null ? `R$${sel.media_remuneracao.toFixed(0)}` : '—'} /></div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* AVALIAÇÃO DOS ESTAGIÁRIOS */}
+                <div style={{ borderRight: '1px solid var(--border)', paddingRight: 16 }}>
+                  <div className="section-label" style={{ padding: 0, marginBottom: 12 }}>Avaliação dos estagiários</div>
+                  {radarEmpresa.length === 0 ? (
+                    <div className="text-sm" style={{ color: 'var(--muted)' }}>Sem avaliações.</div>
+                  ) : (
+                    <div className="space-y-3">
+                      {radarEmpresa.map(r => {
+                        const pct = (r.A / 4) * 100;
+                        const cor = r.A >= 3.5 ? 'var(--accent2)' : r.A >= 2.5 ? 'var(--accent)' : r.A >= 1.5 ? 'var(--accent4)' : 'var(--accent3)';
+                        return (
+                          <div key={r.subject}>
+                            <div className="flex justify-between text-xs mb-1"><span>{r.subject}</span><span style={{ color: cor, fontWeight: 600 }}>{r.A.toFixed(1)}</span></div>
+                            <div className="rating-bar"><div style={{ width: `${pct}%`, background: cor }} /></div>
+                          </div>
+                        );
+                      })}
+                      {radarEmpresa.some(r => r.A > 0 && r.A <= 2) && (
+                        <div className="mt-3 p-2 rounded text-xs" style={{ background: 'rgba(255,209,102,.1)', color: 'var(--accent4)' }}>⚠ Critérios com nota baixa identificados</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* ESTAGIÁRIOS + ÁREAS */}
+                <div>
+                  <div className="section-label" style={{ padding: 0, marginBottom: 8 }}>Áreas</div>
+                  <div className="flex flex-wrap gap-1 mb-4">
+                    {(empDet?.areas_atuacao || '').split(/[,;·\n]/).map((a, i) => a.trim() && <span key={i} className="tag">{a.trim()}</span>)}
+                  </div>
+                  <div className="section-label" style={{ padding: 0, marginBottom: 8 }}>Estagiários</div>
+                  <div className="space-y-2">
+                    {stagiariosDaEmp.map(s => (
+                      <div key={s.id} className="flex items-center gap-2 surface2 p-2 cursor-pointer hover:border-purple-500" onClick={() => onAbrirAluno(s.id)}>
+                        <Avatar nome={s.aluno_nome} id={s.id} size={28} />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium truncate">{s.aluno_nome}</div>
+                          <div className="text-xs" style={{ color: 'var(--muted)' }}>{s.horas_semanais}h/sem</div>
+                        </div>
+                      </div>
+                    ))}
+                    {stagiariosDaEmp.length === 0 && <div className="text-xs" style={{ color: 'var(--muted)' }}>Nenhum estagiário.</div>}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* CHARTS COMPARATIVOS */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="surface p-4">
+              <h3 className="font-semibold mb-3">Ranking — Score Médio</h3>
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={rankData} layout="vertical">
+                  <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
+                  <XAxis type="number" domain={[0, 4]} stroke="var(--muted)" />
+                  <YAxis dataKey="name" type="category" stroke="var(--muted)" width={120} />
+                  <Tooltip contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }} />
+                  <Bar dataKey="v" fill="var(--accent)" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="surface p-4">
+              <h3 className="font-semibold mb-3">Remuneração Mensal por Empresa</h3>
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={remData}>
+                  <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
+                  <XAxis dataKey="name" stroke="var(--muted)" tick={{ fontSize: 10 }} />
+                  <YAxis stroke="var(--muted)" />
+                  <Tooltip contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }} />
+                  <Bar dataKey="v" fill="var(--accent2)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  FORMULÁRIO EDITOR (acessível pela sidebar do coord)
+    // ═══════════════════════════════════════════════════════
+    function FormularioEditor({ model, onClose, onSave }) {
+      const [titulo, setTitulo] = useState(model.titulo || '');
+      const [secoes, setSecoes] = useState(model.secoes || []);
+      const [salv, setSalv] = useState(false);
+      function addSecao(tipo) {
+        const base = { id: `secao_${Date.now()}`, tipo, titulo: 'Nova seção', grafico: 'nenhum' };
+        if (['escala_1_4', 'escala_3'].includes(tipo)) base.itens = ['Item 1'];
+        if (tipo === 'escala_3') base.opcoes = ['Suficiente', 'Insuficiente', 'Não utilizado'];
+        if (['escala_1_4_multi', 'checkbox_duplo'].includes(tipo)) { base.itens = ['Item 1']; base.colunas = ['Coluna 1']; }
+        setSecoes(s => [...s, base]);
+      }
+      function updSecao(i, p) { setSecoes(s => s.map((x, j) => j === i ? { ...x, ...p } : x)); }
+      function move(i, dir) {
+        const ni = i + dir; if (ni < 0 || ni >= secoes.length) return;
+        setSecoes(s => { const c = [...s]; [c[i], c[ni]] = [c[ni], c[i]]; return c; });
+      }
+      function rem(i) { setSecoes(s => s.filter((_, j) => j !== i)); }
+      async function submit() {
+        if (!titulo.trim()) { alert('Título obrigatório.'); return; }
+        setSalv(true);
+        try { await onSave({ titulo, secoes }); } finally { setSalv(false); }
+      }
+      return (
+        <Modal open title="Editar Formulário de Avaliação" onClose={onClose} size="xl">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>Título</label>
+              <input className="input" value={titulo} onChange={e => setTitulo(e.target.value)} />
+              <div className="text-xs mt-1" style={{ color: 'var(--muted)' }}>Curso: {model.curso_nome || '—'}</div>
+            </div>
+            <div className="surface2 p-3">
+              <div className="font-semibold mb-2">Adicionar seção</div>
+              <div className="flex flex-wrap gap-2">
+                {['escala_1_4', 'escala_1_4_multi', 'escala_3', 'checkbox_duplo', 'texto_livre', 'auto'].map(t => (
+                  <button key={t} className="btn btn-secondary" style={{ fontSize: 11 }} onClick={() => addSecao(t)}>+ {t}</button>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-3">
+              {secoes.map((sec, i) => <SecaoEditor key={sec.id || i} sec={sec} idx={i} total={secoes.length} onChange={p => updSecao(i, p)} onMove={d => move(i, d)} onRemove={() => rem(i)} />)}
+              {secoes.length === 0 && <div className="text-center py-8" style={{ color: 'var(--muted)' }}>Nenhuma seção ainda.</div>}
+            </div>
+            <div className="flex justify-end gap-2 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
+              <button className="btn btn-secondary" onClick={onClose}>Cancelar</button>
+              <button className="btn btn-primary" disabled={salv} onClick={submit}>{salv ? <Spinner size={14} /> : 'Salvar alterações'}</button>
+            </div>
+          </div>
+        </Modal>
+      );
+    }
+
+    function SecaoEditor({ sec, idx, total, onChange, onMove, onRemove }) {
+      const updArr = (field, value) => onChange({ [field]: value.split('\n').map(s => s.trim()).filter(Boolean) });
+      return (
+        <div className="surface p-3" style={{ borderLeft: '3px solid var(--accent)' }}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <span className="tag">{sec.tipo}</span>
+              <span className="text-xs" style={{ color: 'var(--muted)' }}>#{idx + 1}</span>
+            </div>
+            <div className="flex gap-1">
+              <button className="btn btn-secondary" style={{ padding: '4px 8px' }} disabled={idx === 0} onClick={() => onMove(-1)}>↑</button>
+              <button className="btn btn-secondary" style={{ padding: '4px 8px' }} disabled={idx === total - 1} onClick={() => onMove(1)}>↓</button>
+              <button className="btn btn-danger" style={{ padding: '4px 8px' }} onClick={onRemove}>✕</button>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div><label className="block text-xs mb-1" style={{ color: 'var(--muted)' }}>ID</label><input className="input" value={sec.id || ''} onChange={e => onChange({ id: e.target.value })} /></div>
+            <div><label className="block text-xs mb-1" style={{ color: 'var(--muted)' }}>Título</label><input className="input" value={sec.titulo || ''} onChange={e => onChange({ titulo: e.target.value })} /></div>
+            <div><label className="block text-xs mb-1" style={{ color: 'var(--muted)' }}>Gráfico</label>
+              <select className="input" value={sec.grafico || 'nenhum'} onChange={e => onChange({ grafico: e.target.value })}>
+                <option>nenhum</option><option>radar</option><option>barras</option><option>barras_agrupadas</option><option>pizza</option>
+              </select></div>
+            {sec.tipo !== 'auto' && sec.tipo !== 'texto_livre' && (
+              <div className="md:col-span-2"><label className="block text-xs mb-1" style={{ color: 'var(--muted)' }}>Itens (um por linha)</label>
+                <textarea className="input font-mono text-xs" rows="3" value={(sec.itens || []).join('\n')} onChange={e => updArr('itens', e.target.value)} /></div>
+            )}
+            {['escala_1_4_multi', 'checkbox_duplo'].includes(sec.tipo) && (
+              <div className="md:col-span-2"><label className="block text-xs mb-1" style={{ color: 'var(--muted)' }}>Colunas (uma por linha)</label>
+                <textarea className="input font-mono text-xs" rows="2" value={(sec.colunas || []).join('\n')} onChange={e => updArr('colunas', e.target.value)} /></div>
+            )}
+            {sec.tipo === 'escala_3' && (
+              <div className="md:col-span-2"><label className="block text-xs mb-1" style={{ color: 'var(--muted)' }}>Opções (uma por linha)</label>
+                <textarea className="input font-mono text-xs" rows="3" value={(sec.opcoes || []).join('\n')} onChange={e => updArr('opcoes', e.target.value)} /></div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  ALUNO — APP
+    // ═══════════════════════════════════════════════════════
+    function AlunoApp() {
+      const [page, setPage] = useState('home');
+      const items = [
+        { id: 'home', label: 'Início', icon: Icon.home },
+        { id: 'processo', label: 'Meu Processo', icon: Icon.relatorios },
+        { id: 'documentos', label: 'Documentos', icon: Icon.docs },
+      ];
+      return (
+        <div className="flex" style={{ height: '100vh' }}>
+          <SimpleSidebar active={page} onNav={setPage} items={items} />
+          <main className="flex-1 overflow-y-auto" style={{ padding: 24 }}>
+            {page === 'home' && <AlunoHome onNavigate={setPage} />}
+            {page === 'processo' && <AlunoProcesso />}
+            {page === 'documentos' && <AlunoDocumentos />}
+          </main>
+        </div>
+      );
+    }
+
+    function SimpleSidebar({ active, onNav, items }) {
+      const { user, logout } = useAuth();
+      return (
+        <aside className="surface" style={{ width: 240, height: '100vh', borderRadius: 0, borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+          <div className="flex items-center gap-2 p-4" style={{ color: 'var(--accent)', borderBottom: '1px solid var(--border)' }}>
+            {Icon.capelo}<span className="font-bold">EstágioIBMEC</span>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            <div className="section-label">Menu</div>
+            {items.map(it => (
+              <div key={it.id} className={`nav-item ${active === it.id ? 'active' : ''}`} onClick={() => onNav(it.id)}>{it.icon}<span>{it.label}</span></div>
+            ))}
+          </div>
+          <div style={{ padding: 12, borderTop: '1px solid var(--border)' }}>
+            <div className="flex items-center gap-2">
+              <Avatar nome={user?.nome || user?.username} id={user?.id} size={32} />
+              <div className="flex-1 min-w-0">
+                <div className="text-xs truncate">{user?.nome || user?.username}</div>
+                <button onClick={logout} className="text-[10px] uppercase" style={{ color: 'var(--muted)' }}>Sair</button>
+              </div>
+            </div>
+          </div>
+        </aside>
+      );
+    }
+
+    function AlunoHome({ onNavigate }) {
+      const [processo, setProcesso] = useState(null);
+      const [loading, setLoading] = useState(true);
+      const [wizardOpen, setWizardOpen] = useState(false);
+      const load = useCallback(async () => {
+        setLoading(true);
+        try { const ps = await Api.processos(); setProcesso(ps[0] || null); }
+        finally { setLoading(false); }
+      }, []);
+      useEffect(() => { load(); }, [load]);
+      if (loading) return <LoadingBlock />;
+      if (!processo) return (
+        <>
+          <div className="surface p-10 text-center">
+            <div style={{ fontSize: 48, marginBottom: 12 }}>📋</div>
+            <h2 className="text-xl font-semibold">Nenhum processo de estágio</h2>
+            <p className="mt-2 mb-5" style={{ color: 'var(--muted)' }}>Comece agora preenchendo o formulário de abertura.</p>
+            <button className="btn btn-primary" onClick={() => setWizardOpen(true)}>+ Iniciar Processo de Estágio</button>
+          </div>
+          {wizardOpen && <IniciarProcessoWizard onClose={() => setWizardOpen(false)} onCriado={() => { setWizardOpen(false); load(); }} />}
+        </>
+      );
+      return (
+        <div className="space-y-5">
+          <h1 className="text-2xl font-bold">Bem-vindo(a)!</h1>
+          <div className="surface p-5">
+            <div className="flex justify-between items-start gap-3 flex-wrap">
+              <div>
+                <div className="text-xs uppercase" style={{ color: 'var(--muted)' }}>Processo atual</div>
+                <div className="text-xl font-semibold mt-1">Processo #{processo.id}</div>
+              </div>
+              <StatusBadge status={processo.status} />
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-5">
+              <KpiCard label="Horas/sem" value={processo.horas_semanais} />
+              <KpiCard label="Início" value={processo.data_inicio_prevista} />
+              <KpiCard label="Fim" value={processo.data_fim_prevista} />
+              <KpiCard label="Bolsa" value={processo.valor_bolsa != null ? `R$${parseFloat(processo.valor_bolsa).toFixed(0)}` : '—'} color="var(--accent2)" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <button className="surface p-5 text-left" style={{ transition: 'all .15s' }} onClick={() => onNavigate('processo')}>
+              <div style={{ fontSize: 22, marginBottom: 6 }}>📋</div>
+              <div className="font-semibold">Ver meu processo</div>
+              <div className="text-sm mt-1" style={{ color: 'var(--muted)' }}>Detalhes, status, plano</div>
+            </button>
+            <button className="surface p-5 text-left" onClick={() => onNavigate('documentos')}>
+              <div style={{ fontSize: 22, marginBottom: 6 }}>📄</div>
+              <div className="font-semibold">Documentos</div>
+              <div className="text-sm mt-1" style={{ color: 'var(--muted)' }}>TCE, avaliações</div>
+            </button>
+            <button className="surface p-5 text-left" onClick={() => onNavigate('documentos')}>
+              <div style={{ fontSize: 22, marginBottom: 6 }}>📝</div>
+              <div className="font-semibold">Preencher avaliação</div>
+              <div className="text-sm mt-1" style={{ color: 'var(--muted)' }}>Formulário do estágio</div>
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    function AlunoProcesso() {
+      const [processos, setProcessos] = useState(null);
+      const [loading, setLoading] = useState(true);
+      const [wizardOpen, setWizardOpen] = useState(false);
+      const [selected, setSelected] = useState(null);
+      const load = useCallback(async () => {
+        setLoading(true);
+        try { setProcessos(await Api.processos()); }
+        finally { setLoading(false); }
+      }, []);
+      useEffect(() => { load(); }, [load]);
+      if (loading) return <LoadingBlock />;
+      return (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold">Meus Processos</h1>
+            <button className="btn btn-primary" onClick={() => setWizardOpen(true)}>+ Iniciar Novo Processo</button>
+          </div>
+          {wizardOpen && <IniciarProcessoWizard onClose={() => setWizardOpen(false)} onCriado={() => { setWizardOpen(false); load(); }} />}
+          <div className="space-y-3">
+            {(processos || []).map(p => (
+              <div key={p.id} className="surface p-4 cursor-pointer" onClick={() => setSelected(p)}>
+                <div className="flex justify-between items-center gap-3">
+                  <div>
+                    <div className="font-semibold">Processo #{p.id}</div>
+                    <div className="text-xs mt-1" style={{ color: 'var(--muted)' }}>{p.horas_semanais}h/sem · {p.data_inicio_prevista} → {p.data_fim_prevista}</div>
+                  </div>
+                  <StatusBadge status={p.status} />
+                </div>
+              </div>
+            ))}
+            {(!processos || processos.length === 0) && <div className="surface p-8 text-center" style={{ color: 'var(--muted)' }}>Nenhum processo.</div>}
+          </div>
+          {selected && <ProcessoDetailModal processo={selected} onClose={() => setSelected(null)} onChanged={load} role="aluno" />}
+        </div>
+      );
+    }
+
+    function AlunoDocumentos() {
+      const toast = useToast();
+      const [processo, setProcesso] = useState(null);
+      const [documentos, setDocumentos] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const [relatorioModal, setRelatorioModal] = useState(null); // 'parcial' | 'final' | null
+      const [uploadOpen, setUploadOpen] = useState(false);
+      const load = useCallback(async () => {
+        setLoading(true);
+        try {
+          const ps = await Api.processos();
+          const p = ps[0]; if (!p) { setProcesso(null); setDocumentos([]); return; }
+          setProcesso(p); setDocumentos(await Api.documentosProcesso(p.id));
+        } finally { setLoading(false); }
+      }, []);
+      useEffect(() => { load(); }, [load]);
+      async function gerar(tipo) {
+        try {
+          let url;
+          let filename;
+          if (tipo === 'tce') { url = await Api.gerarTCE(processo.id); filename = `tce_${processo.id}.pdf`; }
+          else if (tipo === 'termo') { url = await Api.gerarTermo(processo.id); filename = `termo_${processo.id}.pdf`; }
+          abrirBlobUrl(url, filename);
+        } catch (e) { toast.error(e.message); }
+      }
+      if (loading) return <LoadingBlock />;
+      if (!processo) return <div className="surface p-8 text-center" style={{ color: 'var(--muted)' }}>Sem processo.</div>;
+
+      const podeAgir = STATUS_ALUNO_PODE_AGIR.includes(processo.status);
+      const temParcial = documentos.some(d => d.tipo === 'RELATORIO_PARCIAL');
+      const temFinal = documentos.some(d => d.tipo === 'RELATORIO_FINAL');
+
+      return (
+        <div className="space-y-5">
+          <h1 className="text-2xl font-bold">Documentos</h1>
+
+          {!podeAgir && (
+            <div className="surface p-4" style={{ borderLeft: `4px solid var(--accent3)`, background: 'rgba(255,107,107,.08)' }}>
+              <div className="font-semibold">Este processo foi {STATUS_PROC[processo.status]?.label?.toLowerCase() || processo.status.toLowerCase()}.</div>
+              <div className="text-sm mt-1" style={{ color: 'var(--muted)' }}>Nenhuma ação adicional está disponível. Você pode visualizar os documentos abaixo.</div>
+            </div>
+          )}
+
+          {podeAgir && (
+            <div className="surface p-5">
+              <div className="font-semibold mb-3">Ações disponíveis</div>
+              <div className="flex flex-wrap gap-2">
+                <button className="btn btn-primary" onClick={() => gerar('tce')}>📄 Gerar TCE</button>
+                <button className="btn btn-primary" onClick={() => gerar('termo')}>📄 Termo de Realização</button>
+                <button className="btn btn-success" disabled={temParcial} onClick={() => setRelatorioModal('parcial')}>
+                  📝 Preencher Relatório Parcial{temParcial ? ' (enviado)' : ''}
+                </button>
+                {temParcial && (
+                  <button className="btn btn-success" disabled={temFinal} onClick={() => setRelatorioModal('final')}>
+                    📝 Preencher Relatório Final{temFinal ? ' (enviado)' : ''}
+                  </button>
+                )}
+                <button className="btn btn-secondary" onClick={() => setUploadOpen(true)}>⬆ Enviar Documento</button>
+              </div>
+            </div>
+          )}
+
+          <div className="surface p-5">
+            <div className="font-semibold mb-3">Documentos do processo ({documentos.length})</div>
+            <DocumentosLista documentos={documentos} canValidate={false} onChanged={load} />
+          </div>
+
+          {relatorioModal && (
+            <PreencherFormulario
+              processo={processo}
+              tipoRelatorio={relatorioModal}
+              onClose={() => setRelatorioModal(null)}
+              onDone={() => { setRelatorioModal(null); load(); }}
+            />
+          )}
+          {uploadOpen && (
+            <UploadDocumentoModal
+              processo={processo}
+              onClose={() => setUploadOpen(false)}
+              onDone={() => { setUploadOpen(false); load(); }}
+            />
+          )}
+        </div>
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  DocumentosLista — usada por aluno, coord e visão global
+    // ═══════════════════════════════════════════════════════
+    function DocumentosLista({ documentos, canValidate, onChanged }) {
+      const toast = useToast();
+      const [confirmacao, setConfirmacao] = useState(null); // { doc, novoStatus }
+      async function visualizar(d) {
+        if (!d.arquivo) { toast.error('Arquivo indisponível.'); return; }
+        // Usa anchor para evitar popup blocker.
+        abrirBlobUrl(d.arquivo);
+      }
+      async function executarValidacao(coment) {
+        const { doc, novoStatus } = confirmacao;
+        try {
+          await Api.validarDocumento(doc.id, novoStatus, coment);
+          toast.success(`Documento ${novoStatus === 'APROVADO' ? 'aprovado' : 'reprovado'}.`);
+          setConfirmacao(null);
+          onChanged && onChanged();
+        } catch (e) { toast.error(e.message); }
+      }
+      if (!documentos || documentos.length === 0) {
+        return <div className="text-sm" style={{ color: 'var(--muted)' }}>Nenhum documento enviado ainda.</div>;
+      }
+      return (
+        <div className="space-y-2">
+          {documentos.map(d => {
+            const nomeArquivo = (d.arquivo || '').split('/').pop() || '—';
+            return (
+              <div key={d.id} className="surface2 p-3 flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium">{TIPO_DOC[d.tipo] || d.tipo}</div>
+                  <div className="text-xs truncate" style={{ color: 'var(--muted)' }}>{nomeArquivo}</div>
+                  <div className="text-xs" style={{ color: 'var(--muted)' }}>
+                    v{d.versao} · {new Date(d.data_upload).toLocaleDateString('pt-BR')}
+                    {d.enviado_por_nome ? ` · por ${d.enviado_por_nome}` : ''}
+                  </div>
+                  {d.observacoes && d.status === 'REJEITADO' && (
+                    <div className="text-xs mt-1 p-2 rounded" style={{ background: 'rgba(255,107,107,.1)', color: 'var(--accent3)' }}>
+                      <b>Observação:</b> {d.observacoes}
+                    </div>
+                  )}
+                  {d.observacoes && d.status !== 'REJEITADO' && (
+                    <div className="text-xs mt-1 italic" style={{ color: 'var(--accent4)' }}>"{d.observacoes}"</div>
+                  )}
+                </div>
+                <DocStatusBadge status={d.status} />
+                <div className="flex gap-1">
+                  {d.arquivo && <button className="btn btn-secondary" style={{ fontSize: 11 }} onClick={() => visualizar(d)}>👁 Visualizar</button>}
+                  {d.arquivo && <a className="btn btn-secondary" style={{ fontSize: 11 }} href={d.arquivo} download>⬇ Download</a>}
+                  {canValidate && d.status === 'PENDENTE' && (
+                    <>
+                      <button className="btn btn-success" style={{ fontSize: 11 }} onClick={() => setConfirmacao({ doc: d, novoStatus: 'APROVADO' })}>Aprovar</button>
+                      <button className="btn btn-danger" style={{ fontSize: 11 }} onClick={() => setConfirmacao({ doc: d, novoStatus: 'REJEITADO' })}>Reprovar</button>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+          <ConfirmModal
+            open={!!confirmacao}
+            onClose={() => setConfirmacao(null)}
+            title={confirmacao?.novoStatus === 'APROVADO' ? 'Aprovar documento' : 'Reprovar documento'}
+            message={`Confirma ${confirmacao?.novoStatus === 'APROVADO' ? 'a aprovação' : 'a reprovação'} de "${TIPO_DOC[confirmacao?.doc?.tipo] || confirmacao?.doc?.tipo}"?`}
+            justificativaLabel={confirmacao?.novoStatus === 'REJEITADO' ? 'Motivo da reprovação' : 'Observação (opcional)'}
+            justificativaObrigatoria={confirmacao?.novoStatus === 'REJEITADO'}
+            confirmLabel={confirmacao?.novoStatus === 'APROVADO' ? 'Aprovar' : 'Reprovar'}
+            confirmVariant={confirmacao?.novoStatus === 'APROVADO' ? 'success' : 'danger'}
+            onConfirm={executarValidacao}
+          />
+        </div>
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  UploadDocumentoModal — aluno envia documento ao processo
+    // ═══════════════════════════════════════════════════════
+    function UploadDocumentoModal({ processo, onClose, onDone }) {
+      const toast = useToast();
+      const [tipo, setTipo] = useState('APOLICE');
+      const [arquivo, setArquivo] = useState(null);
+      const [enviando, setEnviando] = useState(false);
+      // Tipos que o aluno pode enviar (TCE, relatórios e termo são gerados pelo sistema).
+      const TIPOS_UPLOAD = [
+        ['APOLICE', 'Apólice de Seguro'],
+        ['OUTRO', 'Outro Documento'],
+      ];
+      async function submit() {
+        if (!arquivo) { toast.error('Selecione um arquivo.'); return; }
+        setEnviando(true);
+        try {
+          await Api.uploadDocumento(processo.id, tipo, arquivo);
+          toast.success('Documento enviado.');
+          onDone && onDone();
+        } catch (e) {
+          const d = e.data || {};
+          const ms = Object.entries(d).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(' ') : v}`);
+          toast.error(ms.join(' | ') || e.message);
+        } finally { setEnviando(false); }
+      }
+      return (
+        <Modal open title="Enviar Documento" onClose={onClose} size="sm">
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>Tipo</label>
+              <select className="input" value={tipo} onChange={e => setTipo(e.target.value)}>
+                {TIPOS_UPLOAD.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>Arquivo (PDF, máx 10 MB)</label>
+              <input type="file" accept=".pdf" className="input" style={{ padding: '6px 10px' }} onChange={e => setArquivo(e.target.files?.[0] || null)} />
+              {arquivo && <div className="text-xs mt-1" style={{ color: 'var(--muted)' }}>{arquivo.name} · {(arquivo.size / 1024).toFixed(1)} KB</div>}
+            </div>
+            <div className="text-xs" style={{ color: 'var(--muted)' }}>Apenas PDFs são aceitos. Documentos passam por validação automática e revisão do coordenador.</div>
+            <div className="flex justify-end gap-2 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
+              <button className="btn btn-secondary" onClick={onClose} disabled={enviando}>Cancelar</button>
+              <button className="btn btn-primary" onClick={submit} disabled={enviando || !arquivo}>
+                {enviando ? <Spinner size={14} /> : 'Enviar'}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      );
+    }
+
+    function ProcessoDetailModal({ processo, onClose, onChanged, role }) {
+      const toast = useToast();
+      const { user } = useAuth();
+      const readOnly = isVisaoGlobal(user);
+      const ehAluno = role === 'aluno';
+      const [docs, setDocs] = useState([]);
+      const [full, setFull] = useState(null);
+      const [load, setLoad] = useState(true);
+      const [confirmTransicao, setConfirmTransicao] = useState(null);
+      useEffect(() => {
+        Promise.all([Api.processo(processo.id), Api.documentosProcesso(processo.id)])
+          .then(([f, d]) => { setFull(f); setDocs(d); })
+          .catch(e => toast.error(e.message))
+          .finally(() => setLoad(false));
+      }, [processo, toast]);
+      async function executarTransicao(novoStatus, justif) {
+        try {
+          await Api.alterarStatus(processo.id, novoStatus, justif);
+          toast.success('Status atualizado.');
+          onChanged && onChanged();
+          onClose();
+        } catch (e) { toast.error(e.message); }
+      }
+      // Aluno só vê CANCELADO. Coordenador vê todas as transições válidas.
+      const transAll = full ? TRANSICOES[full.status] || [] : [];
+      const trans = ehAluno
+        ? (STATUS_ALUNO_PODE_CANCELAR.includes(full?.status) ? ['CANCELADO'] : [])
+        : transAll;
+      const tConf = confirmTransicao;
+      const tConfInfo = tConf ? STATUS_PROC[tConf] : null;
+      // Justificativa obrigatória para REJEITADO; recomendada para CANCELADO.
+      const justifLabel = tConf === 'REJEITADO' ? 'Justificativa da rejeição'
+                        : tConf === 'CANCELADO' ? 'Motivo do cancelamento'
+                        : tConf === 'CORRECAO_SOLICITADA' ? 'O que precisa ser corrigido' : null;
+      const justifObrig = tConf === 'REJEITADO' || tConf === 'CANCELADO' || tConf === 'CORRECAO_SOLICITADA';
+      const variant = tConf === 'CANCELADO' || tConf === 'REJEITADO' ? 'danger'
+                    : tConf === 'APROVADO' || tConf === 'ATIVO' || tConf === 'ENCERRADO' ? 'success'
+                    : 'primary';
+      return (
+        <Modal open title={`Processo #${processo.id}`} onClose={onClose} size="lg">
+          {load || !full ? <LoadingBlock /> : (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2"><StatusBadge status={full.status} /></div>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <DataRow label="Horas/sem" value={full.horas_semanais} />
+                <DataRow label="Bolsa" value={full.valor_bolsa != null ? `R$${parseFloat(full.valor_bolsa).toFixed(2)}` : '—'} />
+                <DataRow label="Início previsto" value={full.data_inicio_prevista} />
+                <DataRow label="Fim previsto" value={full.data_fim_prevista} />
+                <div className="col-span-2"><div className="text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>Plano</div><div className="surface2 p-3">{full.plano_atividades || '—'}</div></div>
+                {full.justificativa_rejeicao && <div className="col-span-2"><div className="text-xs uppercase mb-1" style={{ color: 'var(--accent3)' }}>Justificativa rejeição</div><div className="p-3 rounded" style={{ background: 'rgba(255,107,107,.1)' }}>{full.justificativa_rejeicao}</div></div>}
+              </div>
+              <div>
+                <div className="font-semibold mb-2">Documentos ({docs.length})</div>
+                <div className="space-y-2">
+                  {docs.map(d => (
+                    <div key={d.id} className="surface2 p-3 flex justify-between items-center gap-3">
+                      <div><div className="text-sm font-medium">{TIPO_DOC[d.tipo] || d.tipo}</div><div className="text-xs" style={{ color: 'var(--muted)' }}>v{d.versao}</div></div>
+                      <DocStatusBadge status={d.status} />
+                      {d.arquivo && <a href={d.arquivo} target="_blank" rel="noreferrer" className="btn btn-secondary" style={{ fontSize: 11 }}>Abrir</a>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {trans.length > 0 && !readOnly && (
+                <div>
+                  <div className="font-semibold mb-2">{ehAluno ? 'Ações' : 'Transições'}</div>
+                  <div className="flex flex-wrap gap-2">
+                    {trans.map(t => {
+                      const isCancel = t === 'CANCELADO' || t === 'REJEITADO';
+                      const isOk = t === 'APROVADO' || t === 'ATIVO' || t === 'ENCERRADO';
+                      const cls = isCancel ? 'btn-danger' : isOk ? 'btn-success' : 'btn-secondary';
+                      return (
+                        <button key={t} className={`btn ${cls}`} onClick={() => setConfirmTransicao(t)}>
+                          {ehAluno && t === 'CANCELADO' ? 'Cancelar Processo' : `→ ${STATUS_PROC[t]?.label || t}`}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              {readOnly && (
+                <div className="text-xs italic" style={{ color: 'var(--muted)' }}>Visualização — sem ações disponíveis para o perfil {CARGO_LABEL[user?.tipo] || user?.tipo}.</div>
+              )}
+            </div>
+          )}
+          <ConfirmModal
+            open={!!tConf}
+            onClose={() => setConfirmTransicao(null)}
+            title={ehAluno && tConf === 'CANCELADO' ? 'Cancelar processo de estágio' : `Confirmar: ${tConfInfo?.label || tConf}`}
+            message={ehAluno && tConf === 'CANCELADO'
+              ? 'Tem certeza que deseja cancelar seu processo de estágio? Esta ação não pode ser desfeita.'
+              : `Confirma a transição para "${tConfInfo?.label || tConf}"?`}
+            justificativaLabel={justifLabel}
+            justificativaObrigatoria={justifObrig}
+            confirmLabel={ehAluno && tConf === 'CANCELADO' ? 'Confirmar Cancelamento' : `Confirmar`}
+            confirmVariant={variant}
+            onConfirm={(j) => executarTransicao(tConf, j)}
+          />
+        </Modal>
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  WIZARD INICIAR PROCESSO
+    // ═══════════════════════════════════════════════════════
+    function IniciarProcessoWizard({ onClose, onCriado }) {
+      const toast = useToast();
+      const { user } = useAuth();
+      const [etapa, setEtapa] = useState(1);
+      const [empresas, setEmpresas] = useState([]);
+      const [supervisores, setSupervisores] = useState([]);
+      const [perfil, setPerfil] = useState(null);
+      const [cursos, setCursos] = useState([]);
+      const [arquivo, setArquivo] = useState(null);
+      const [extraindo, setExtraindo] = useState(false);
+      const [extraidos, setExtraidos] = useState({});
+      const [form, setForm] = useState({ empresa: '', supervisor: '', horas_semanais: '', data_inicio_prevista: '', data_fim_prevista: '', plano_atividades: '', valor_bolsa: '' });
+      const [criando, setCriando] = useState(false);
+      const [novaEmpresa, setNovaEmpresa] = useState(null);
+
+      useEffect(() => {
+        Promise.all([Api.empresas().catch(() => []), Api.supervisores().catch(() => []), Api.alunos().catch(() => []), Api.cursos().catch(() => [])])
+          .then(([e, s, a, c]) => { setEmpresas(e); setSupervisores(s); setPerfil(a[0] || null); setCursos(c); });
+      }, []);
+
+      const upd = (k, v) => setForm(s => ({ ...s, [k]: v }));
+
+      async function onUpload(file) {
+        if (!file) return;
+        setArquivo(file);
+        if (!file.name.toLowerCase().endsWith('.pdf')) {
+          toast.info('Anexado. Extração só funciona com PDF.');
+          return;
+        }
+        setExtraindo(true);
+        try {
+          const t = await extrairTextoPdf(file);
+          const c = extrairCamposDoTexto(t);
+          setExtraidos(c);
+          const patch = {};
+          if (c.data_inicio_prevista) patch.data_inicio_prevista = c.data_inicio_prevista;
+          if (c.data_fim_prevista) patch.data_fim_prevista = c.data_fim_prevista;
+          if (c.horas_semanais) patch.horas_semanais = String(c.horas_semanais);
+          if (c.valor_bolsa) patch.valor_bolsa = String(c.valor_bolsa);
+          if (c.cnpj) {
+            const cl = c.cnpj.replace(/\D/g, '');
+            const m = empresas.find(e => (e.cnpj || '').replace(/\D/g, '') === cl);
+            if (m) patch.empresa = String(m.id);
+          }
+          setForm(s => ({ ...s, ...patch }));
+          const n = Object.keys(c).length;
+          if (n > 0) toast.success(`Extraídos ${n} campo(s) do PDF.`);
+          else toast.info('Nenhum campo detectado.');
+        } catch (e) { toast.error('Falha PDF: ' + e.message); }
+        finally { setExtraindo(false); }
+      }
+
+      function podeAvancar() {
+        if (etapa === 1) return true;
+        if (etapa === 2) return form.empresa && form.horas_semanais && form.data_inicio_prevista && form.data_fim_prevista && form.plano_atividades.trim();
+        return true;
+      }
+
+      async function submit() {
+        setCriando(true);
+        try {
+          const novo = await Api.criarProcesso({
+            empresa: Number(form.empresa), horas_semanais: Number(form.horas_semanais),
+            data_inicio_prevista: form.data_inicio_prevista, data_fim_prevista: form.data_fim_prevista,
+            plano_atividades: form.plano_atividades,
+          });
+          toast.success(`Processo #${novo.id} criado!`);
+          onCriado && onCriado(novo);
+        } catch (e) {
+          const d = e.data || {};
+          const ms = Object.entries(d).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(' ') : v}`);
+          toast.error(ms.join(' | ') || e.message);
+        } finally { setCriando(false); }
+      }
+
+      const empresaSel = empresas.find(e => String(e.id) === String(form.empresa));
+      const supsDaEmp = supervisores.filter(s => String(s.empresa) === String(form.empresa));
+      const cursoNome = perfil?.curso ? (cursos.find(c => c.id === perfil.curso)?.nome || '—') : '—';
+
+      return (
+        <Modal open title="Iniciar Processo de Estágio" onClose={onClose} size="xl">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              {[1, 2, 3].map(n => (
+                <React.Fragment key={n}>
+                  <div style={{ color: etapa >= n ? 'var(--accent)' : 'var(--muted)' }} className="flex items-center gap-2">
+                    <div style={{ width: 26, height: 26, borderRadius: '50%', background: etapa >= n ? 'var(--accent)' : 'var(--surface2)', color: etapa >= n ? 'white' : 'var(--muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 600 }}>{n}</div>
+                    <span className="text-sm hidden md:inline">{n === 1 ? 'Documento' : n === 2 ? 'Formulário' : 'Revisão'}</span>
+                  </div>
+                  {n < 3 && <div style={{ flex: 1, height: 1, background: etapa > n ? 'var(--accent)' : 'var(--border)' }} />}
+                </React.Fragment>
+              ))}
+            </div>
+
+            {etapa === 1 && (
+              <div className="space-y-3">
+                <div className="text-sm" style={{ color: 'var(--muted)' }}>Envie a carta da empresa, contrato ou proposta (PDF) — o sistema tenta pré-preencher os campos. Etapa opcional.</div>
+                <label className="block">
+                  <input type="file" className="hidden" accept=".pdf,image/*" onChange={e => onUpload(e.target.files?.[0])} />
+                  <div className="drop-area">
+                    {arquivo ? <><div style={{ fontSize: 28 }}>📄</div><div className="mt-2">{arquivo.name}</div><div className="text-xs mt-1" style={{ color: 'var(--muted)' }}>{(arquivo.size / 1024).toFixed(1)} KB</div></>
+                            : <><div style={{ fontSize: 28 }}>⬆</div><div className="mt-2">Clique para selecionar</div><div className="text-xs mt-1" style={{ color: 'var(--muted)' }}>PDF ou imagem</div></>}
+                  </div>
+                </label>
+                {extraindo && <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--muted)' }}><Spinner size={16} /> Lendo PDF…</div>}
+                {Object.keys(extraidos).length > 0 && (
+                  <div className="surface p-3" style={{ borderLeft: '3px solid var(--accent2)' }}>
+                    <div className="text-sm font-semibold mb-2" style={{ color: 'var(--accent2)' }}>Campos detectados:</div>
+                    <ul className="text-xs space-y-1">
+                      {Object.entries(extraidos).map(([k, v]) => <li key={k}><span style={{ color: 'var(--muted)' }}>{k}:</span> {String(v)}</li>)}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {etapa === 2 && (
+              <div className="space-y-4">
+                <div className="surface2 p-3">
+                  <div className="text-xs uppercase mb-2" style={{ color: 'var(--muted)' }}>Dados do aluno</div>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <DataRow label="Nome" value={user?.nome || user?.username} />
+                    <DataRow label="Curso" value={cursoNome} />
+                    <DataRow label="CR" value={perfil?.coeficiente_rendimento ?? '—'} />
+                    <DataRow label="Período" value={perfil?.periodo_atual ?? '—'} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <CampoForm label="Empresa *" extraido={extraidos.cnpj || extraidos.empresa_nome_extraido}>
+                    <select className="input" value={form.empresa} onChange={e => upd('empresa', e.target.value)}>
+                      <option value="">— Selecione —</option>
+                      {empresas.map(e => <option key={e.id} value={e.id}>{e.razao_social}{!e.aprovada_ibmec ? ' (não aprovada)' : ''}</option>)}
+                    </select>
+                    <button type="button" className="text-xs mt-1 hover:underline" style={{ color: 'var(--accent)' }} onClick={() => setNovaEmpresa({ cnpj: extraidos.cnpj || '', razao_social: extraidos.empresa_nome_extraido || '' })}>+ Cadastrar nova</button>
+                    {empresaSel && !empresaSel.aprovada_ibmec && <div className="text-xs mt-1" style={{ color: 'var(--accent4)' }}>⚠ Não aprovada — RN09 vai bloquear.</div>}
+                  </CampoForm>
+                  <CampoForm label="Supervisor (opcional)">
+                    <select className="input" value={form.supervisor} onChange={e => upd('supervisor', e.target.value)} disabled={!form.empresa}>
+                      <option value="">— Selecione —</option>
+                      {supsDaEmp.map(s => <option key={s.id} value={s.id}>Supervisor #{s.id} {s.cargo ? `(${s.cargo})` : ''}</option>)}
+                    </select>
+                  </CampoForm>
+                  <CampoForm label="Horas semanais *" extraido={extraidos.horas_semanais}>
+                    <input className="input" type="number" min="1" max="30" value={form.horas_semanais} onChange={e => upd('horas_semanais', e.target.value)} />
+                    <div className="text-xs mt-1" style={{ color: 'var(--muted)' }}>Limite legal: 30h/sem</div>
+                  </CampoForm>
+                  <CampoForm label="Valor bolsa (opcional)" extraido={extraidos.valor_bolsa}>
+                    <input className="input" type="number" step="0.01" value={form.valor_bolsa} onChange={e => upd('valor_bolsa', e.target.value)} placeholder="0.00" />
+                  </CampoForm>
+                  <CampoForm label="Início *" extraido={extraidos.data_inicio_prevista}>
+                    <input className="input" type="date" value={form.data_inicio_prevista} onChange={e => upd('data_inicio_prevista', e.target.value)} />
+                  </CampoForm>
+                  <CampoForm label="Fim *" extraido={extraidos.data_fim_prevista}>
+                    <input className="input" type="date" value={form.data_fim_prevista} onChange={e => upd('data_fim_prevista', e.target.value)} />
+                  </CampoForm>
+                  <div className="md:col-span-2"><CampoForm label="Plano de atividades *">
+                    <textarea className="input" rows="4" value={form.plano_atividades} onChange={e => upd('plano_atividades', e.target.value)} placeholder="Descreva…" />
+                  </CampoForm></div>
+                </div>
+              </div>
+            )}
+
+            {etapa === 3 && (
+              <div className="space-y-3">
+                <div className="text-sm" style={{ color: 'var(--muted)' }}>Confira antes de enviar:</div>
+                <div className="surface2 p-4 grid grid-cols-2 gap-3 text-sm">
+                  <DataRow label="Aluno" value={user?.nome} />
+                  <DataRow label="Curso" value={cursoNome} />
+                  <DataRow label="Empresa" value={empresaSel?.razao_social || '—'} />
+                  <DataRow label="CNPJ" value={empresaSel?.cnpj || '—'} />
+                  <DataRow label="Horas/sem" value={form.horas_semanais} />
+                  <DataRow label="Bolsa" value={form.valor_bolsa ? `R$${form.valor_bolsa}` : '—'} />
+                  <DataRow label="Início" value={form.data_inicio_prevista} />
+                  <DataRow label="Fim" value={form.data_fim_prevista} />
+                  <div className="col-span-2">
+                    <div className="text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>Plano</div>
+                    <div className="surface p-3 whitespace-pre-wrap text-sm">{form.plano_atividades}</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-between gap-2 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
+              <button className="btn btn-secondary" disabled={etapa === 1} onClick={() => setEtapa(e => e - 1)}>← Voltar</button>
+              {etapa < 3
+                ? <button className="btn btn-primary" disabled={!podeAvancar()} onClick={() => setEtapa(e => e + 1)}>Próximo →</button>
+                : <button className="btn btn-success" disabled={criando} onClick={submit}>{criando ? <Spinner size={14} /> : '✓ Criar Processo'}</button>}
+            </div>
+          </div>
+
+          {novaEmpresa && <NovaEmpresaModal initial={novaEmpresa} onClose={() => setNovaEmpresa(null)} onSaved={emp => { setEmpresas(es => [...es, emp]); upd('empresa', String(emp.id)); setNovaEmpresa(null); toast.success('Empresa cadastrada.'); }} />}
+        </Modal>
+      );
+    }
+
+    function CampoForm({ label, extraido, children }) {
+      return (
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <label className="block text-xs uppercase" style={{ color: 'var(--muted)' }}>{label}</label>
+            {extraido != null && extraido !== '' && <span style={{ fontSize: 9, padding: '2px 7px', borderRadius: 9999, background: 'rgba(0,212,170,.15)', color: 'var(--accent2)', fontWeight: 600 }}>📄 PDF</span>}
+          </div>
+          {children}
+        </div>
+      );
+    }
+
+    function NovaEmpresaModal({ initial, onClose, onSaved }) {
+      const toast = useToast();
+      const [form, setForm] = useState({ cnpj: initial?.cnpj || '', razao_social: initial?.razao_social || '', areas_atuacao: '', localizacao: '', email_contato: '' });
+      const [salv, setSalv] = useState(false);
+      const upd = (k, v) => setForm(s => ({ ...s, [k]: v }));
+      async function submit() {
+        setSalv(true);
+        try { onSaved(await Api.criarEmpresa(form)); }
+        catch (e) {
+          if (e.status === 403) toast.error('Apenas administradores podem cadastrar empresas.');
+          else toast.error(e.message);
+        } finally { setSalv(false); }
+      }
+      return (
+        <Modal open title="Cadastrar nova empresa" onClose={onClose} size="md">
+          <div className="space-y-3">
+            {['cnpj', 'razao_social', 'areas_atuacao', 'localizacao', 'email_contato'].map(k => (
+              <div key={k}>
+                <label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>{k.replace('_', ' ')}</label>
+                <input className="input" value={form[k]} onChange={e => upd(k, e.target.value)} type={k === 'email_contato' ? 'email' : 'text'} />
+              </div>
+            ))}
+            <div className="flex justify-end gap-2 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
+              <button className="btn btn-secondary" onClick={onClose}>Cancelar</button>
+              <button className="btn btn-primary" disabled={salv} onClick={submit}>{salv ? <Spinner size={14} /> : 'Salvar'}</button>
+            </div>
+          </div>
+        </Modal>
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  PREENCHER FORMULÁRIO / GERAR RELATÓRIO
+    // ═══════════════════════════════════════════════════════
+    // ── Verifica se uma seção foi suficientemente preenchida ──
+    function secaoCompleta(sec, respostas) {
+      if (sec.tipo === 'auto') return true;
+      const v = respostas[sec.id];
+      const itens = sec.itens || [];
+      if (sec.tipo === 'escala_1_4') {
+        if (!v || typeof v !== 'object') return false;
+        return itens.every(it => typeof v[it] === 'number');
+      }
+      if (sec.tipo === 'escala_3') {
+        if (!v || typeof v !== 'object') return false;
+        return itens.every(it => typeof v[it] === 'string' && v[it]);
+      }
+      if (sec.tipo === 'escala_1_4_multi') {
+        if (!v || typeof v !== 'object') return false;
+        return itens.every(it => v[it] && (sec.colunas || []).some(c => typeof v[it][c] === 'number'));
+      }
+      if (sec.tipo === 'checkbox_duplo') {
+        if (!v || typeof v !== 'object') return false;
+        return Object.values(v).some(arr => Array.isArray(arr) && arr.length > 0);
+      }
+      if (sec.tipo === 'texto_livre') {
+        return typeof v === 'string' && v.trim().length > 0;
+      }
+      return true;
+    }
+
+    function PreencherFormulario({ processo, tipoRelatorio, onClose, onDone }) {
+      const toast = useToast();
+      const { user } = useAuth();
+      const [modelo, setModelo] = useState(null);
+      const [respostas, setRespostas] = useState({});
+      const [aluno, setAluno] = useState(null);
+      const [empresa, setEmpresa] = useState(null);
+      const tipoRel = tipoRelatorio || 'parcial';
+      const [load, setLoad] = useState(true);
+      const [env, setEnv] = useState(false);
+      const [secAtiva, setSecAtiva] = useState(0);
+      useEffect(() => {
+        Promise.all([
+          Api.modelosFormulario(),
+          Api.alunos().catch(() => []),
+          processo.empresa ? Api.empresa(processo.empresa).catch(() => null) : Promise.resolve(null),
+        ]).then(([ms, alunos, emp]) => {
+          const m = ms.find(x => x.ativo) || ms[0];
+          if (!m) { toast.error('Nenhum modelo disponível.'); onClose(); return; }
+          setModelo(m);
+          setAluno(alunos[0] || null);
+          setEmpresa(emp);
+          if (processo.respostas_formulario?.secoes) {
+            setRespostas(processo.respostas_formulario.secoes);
+          }
+        }).catch(e => toast.error(e.message)).finally(() => setLoad(false));
+      }, [processo, toast, onClose]);
+      const setResp = (sid, v) => setRespostas(r => ({ ...r, [sid]: v }));
+      const setExtra = (sid, suffix, v) => setRespostas(r => ({ ...r, [`${sid}_${suffix}`]: v }));
+      async function submit() {
+        setEnv(true);
+        try {
+          const url = await Api.preencherFormulario(processo.id, { tipo_relatorio: tipoRel, respostas, preview: false });
+          abrirBlobUrl(url, `relatorio_${tipoRel}_${processo.id}.pdf`);
+          toast.success(`Relatório ${tipoRel} enviado!`);
+          onDone();
+        } catch (e) {
+          if (e.data?.erros_validacao) toast.error('Erros: ' + e.data.erros_validacao.join('; '));
+          else toast.error(e.message);
+        } finally { setEnv(false); }
+      }
+      if (load) return <Modal open title="Preencher relatório" onClose={onClose} size="xl"><LoadingBlock /></Modal>;
+      if (!modelo) return null;
+      const secs = modelo.secoes || [];
+      const total = secs.length;
+      const respCount = secs.filter(s => secaoCompleta(s, respostas)).length;
+      const pct = total > 0 ? Math.round((respCount / total) * 100) : 0;
+      const sec = secs[secAtiva];
+      const isPrimeira = secAtiva === 0;
+      const isUltima = secAtiva === total - 1;
+      const tudoPreenchido = secs.every(s => secaoCompleta(s, respostas));
+      return (
+        <Modal open title={`Relatório ${tipoRel === 'final' ? 'Final' : 'Parcial'} — ${modelo.titulo}`} onClose={onClose} size="xl">
+          <div className="space-y-4">
+            <div>
+              <div className="flex justify-between mb-1 text-xs">
+                <span style={{ color: 'var(--muted)' }}>Progresso</span>
+                <span>{respCount}/{total} seções ({pct}%)</span>
+              </div>
+              <div style={{ height: 6, background: 'var(--surface2)', borderRadius: 9999, overflow: 'hidden' }}>
+                <div style={{ height: '100%', background: 'var(--accent)', width: `${pct}%`, transition: 'width .3s' }} />
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {secs.map((s, i) => {
+                const ok = secaoCompleta(s, respostas);
+                return (
+                  <button key={s.id}
+                    style={{
+                      padding: '4px 10px', fontSize: 11, borderRadius: 6,
+                      background: i === secAtiva ? 'var(--accent)' : (ok ? 'rgba(0,212,170,.15)' : 'var(--surface2)'),
+                      color: i === secAtiva ? 'white' : (ok ? 'var(--accent2)' : 'var(--text)'),
+                    }}
+                    onClick={() => setSecAtiva(i)}>
+                    {i + 1}{ok ? ' ✓' : ''}
+                  </button>
+                );
+              })}
+            </div>
+            {sec && (
+              <div className="surface2 p-4">
+                <SecaoInput
+                  sec={sec}
+                  processo={processo}
+                  aluno={aluno}
+                  empresa={empresa}
+                  user={user}
+                  valor={respostas[sec.id]}
+                  onChange={v => setResp(sec.id, v)}
+                  textoExtra={respostas[`${sec.id}_texto`]}
+                  textoPositivoExtra={respostas[`${sec.id}_texto_positivo`]}
+                  textoNegativoExtra={respostas[`${sec.id}_texto_negativo`]}
+                  efetivacao={respostas[`${sec.id}_efetivacao`]}
+                  onTextoChange={v => setExtra(sec.id, 'texto', v)}
+                  onTextoPositivoChange={v => setExtra(sec.id, 'texto_positivo', v)}
+                  onTextoNegativoChange={v => setExtra(sec.id, 'texto_negativo', v)}
+                  onEfetivacaoChange={v => setExtra(sec.id, 'efetivacao', v)}
+                />
+              </div>
+            )}
+            {/* Navegação: Anterior (esquerda) | Próxima OU Enviar (direita) */}
+            <div className="flex justify-between gap-2 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
+              <div>
+                {!isPrimeira && (
+                  <button className="btn btn-secondary" onClick={() => setSecAtiva(i => i - 1)}>← Anterior</button>
+                )}
+              </div>
+              <div>
+                {!isUltima && (
+                  <button className="btn btn-primary" onClick={() => setSecAtiva(i => i + 1)}>Próxima →</button>
+                )}
+                {isUltima && (
+                  <button
+                    className="btn btn-primary"
+                    disabled={env || !tudoPreenchido}
+                    title={!tudoPreenchido ? 'Preencha todas as seções' : ''}
+                    onClick={submit}
+                  >
+                    {env ? <Spinner size={14} /> : 'Enviar'}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </Modal>
+      );
+    }
+
+    function SecaoInput({
+      sec, processo, aluno, empresa, user, valor, onChange,
+      textoExtra, textoPositivoExtra, textoNegativoExtra, efetivacao,
+      onTextoChange, onTextoPositivoChange, onTextoNegativoChange, onEfetivacaoChange,
+    }) {
+      // Itens detalhados (descrição abaixo do nome) — usado na seção comportamental.
+      const detalhesMap = {};
+      (sec.itens_detalhados || []).forEach(d => { if (d?.nome) detalhesMap[d.nome] = d.descricao || ''; });
+      const renderItemLabel = (it) => (
+        detalhesMap[it]
+          ? <div><div className="text-sm">{it}</div><div className="text-xs" style={{ color: 'var(--muted)' }}>{detalhesMap[it]}</div></div>
+          : <span className="text-sm">{it}</span>
+      );
+
+      // ── header da seção (título + descrição) ──
+      const header = (
+        <>
+          <div className="font-semibold mb-1" style={{ color: 'var(--accent)' }}>{sec.titulo}</div>
+          {sec.descricao && <div className="text-xs mb-3" style={{ color: 'var(--muted)' }}>{sec.descricao}</div>}
+        </>
+      );
+
+      // ── auto: seções 1 e 2 (dados do processo) ──
+      if (sec.tipo === 'auto') {
+        const fim = processo.data_fim_real || processo.data_fim_prevista;
+        const ini = processo.data_inicio_real || processo.data_inicio_prevista;
+        let semanas = '—', horasTotais = '—';
+        if (ini && fim) {
+          const d = (new Date(fim) - new Date(ini)) / 86400000;
+          semanas = Math.max(1, Math.round(d / 7));
+          horasTotais = semanas * (processo.horas_semanais || 0);
+        }
+        const fmtMoney = (v) => v != null ? `R$ ${parseFloat(v).toFixed(2)}` : '—';
+
+        if (sec.id === 'estagiario') {
+          return (
+            <>
+              {header}
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <DataRow label="Nome" value={user?.nome || '—'} />
+                <DataRow label="Matrícula" value={user?.username || aluno?.usuario?.username || '—'} />
+                <DataRow label="Curso" value={(aluno?.curso_nome || '—').toUpperCase()} />
+                <DataRow label="Semestre atual" value={aluno?.periodo_atual ? `${aluno.periodo_atual}º` : '—'} />
+                <DataRow label="Data de entrada" value={ini || '—'} />
+                <DataRow label="Data de saída" value={fim || '—'} />
+                <DataRow label="Horas/semana" value={processo.horas_semanais || '—'} />
+                <DataRow label="Semanas trabalhadas" value={semanas} />
+                <DataRow label="Horas totais" value={horasTotais} />
+                <DataRow label="Remuneração média" value={fmtMoney(processo.valor_bolsa)} />
+              </div>
+            </>
+          );
+        }
+        if (sec.id === 'empresa') {
+          return (
+            <>
+              {header}
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <DataRow label="Empresa" value={empresa?.razao_social || '—'} />
+                <DataRow label="CNPJ" value={empresa?.cnpj || '—'} />
+                <DataRow label="Localização" value={empresa?.localizacao || '—'} />
+                <DataRow label="Email contato" value={empresa?.email_contato || '—'} />
+                <DataRow label="Responsável legal" value={empresa?.responsavel_legal_nome || '—'} />
+                <DataRow label="Cargo do responsável" value={empresa?.responsavel_legal_cargo || '—'} />
+              </div>
+            </>
+          );
+        }
+        return <>{header}<div className="text-sm" style={{ color: 'var(--muted)' }}>Dados automáticos do processo.</div></>;
+      }
+
+      const v = valor || {};
+
+      // ── texto_livre (legado) ──
+      if (sec.tipo === 'texto_livre') {
+        return (
+          <>
+            {header}
+            <textarea className="input" rows="5" value={valor || ''} onChange={e => onChange(e.target.value)} placeholder="Sua resposta…" />
+          </>
+        );
+      }
+
+      // ── escala_1_4 ──
+      if (sec.tipo === 'escala_1_4') {
+        return (
+          <>
+            {header}
+            <div className="space-y-3">{(sec.itens || []).map(it => (
+              <div key={it} className="flex justify-between items-center gap-3 py-1">
+                <div className="flex-1">{renderItemLabel(it)}</div>
+                <div className="flex gap-1">{[1,2,3,4].map(n => (
+                  <button key={n} style={{ width: 32, height: 32, borderRadius: 6, background: v[it] === n ? 'var(--accent)' : 'transparent', border: `1px solid ${v[it] === n ? 'var(--accent)' : 'var(--border)'}`, color: v[it] === n ? 'white' : 'var(--text)' }} onClick={() => onChange({ ...v, [it]: n })}>{n}</button>
+                ))}</div>
+              </div>
+            ))}</div>
+            {sec.campo_efetivacao && (
+              <div className="mt-4">
+                <label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>Há proposta de efetivação ao final do estágio?</label>
+                <select className="input" style={{ maxWidth: 200 }} value={efetivacao || ''} onChange={e => onEfetivacaoChange(e.target.value)}>
+                  <option value="">— Selecione —</option>
+                  <option value="Sim">Sim</option>
+                  <option value="Não">Não</option>
+                </select>
+              </div>
+            )}
+            {sec.campo_texto_positivo && (
+              <div className="mt-4">
+                <label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>{sec.campo_texto_positivo}</label>
+                <textarea className="input" rows="3" value={textoPositivoExtra || ''} onChange={e => onTextoPositivoChange(e.target.value)} />
+              </div>
+            )}
+            {sec.campo_texto_negativo && (
+              <div className="mt-4">
+                <label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>{sec.campo_texto_negativo}</label>
+                <textarea className="input" rows="3" value={textoNegativoExtra || ''} onChange={e => onTextoNegativoChange(e.target.value)} />
+              </div>
+            )}
+          </>
+        );
+      }
+
+      // ── escala_3 ──
+      if (sec.tipo === 'escala_3') {
+        const ops = sec.opcoes || ['Suficiente', 'Insuficiente', 'Não utilizado'];
+        return (
+          <>
+            {header}
+            <div className="space-y-2">{(sec.itens || []).map(it => (
+              <div key={it} className="flex justify-between items-center gap-3 py-1">
+                <span className="text-sm flex-1">{it}</span>
+                <div className="flex gap-3 text-xs">{ops.map(o => (
+                  <label key={o} className="flex items-center gap-1 cursor-pointer" style={{ color: v[it] === o ? 'var(--accent)' : 'var(--text)' }}>
+                    <input type="radio" checked={v[it] === o} onChange={() => onChange({ ...v, [it]: o })} /> {o}
+                  </label>
+                ))}</div>
+              </div>
+            ))}</div>
+            {sec.campo_texto && (
+              <div className="mt-4">
+                <label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>{sec.campo_texto}</label>
+                <textarea className="input" rows="3" value={textoExtra || ''} onChange={e => onTextoChange(e.target.value)} />
+              </div>
+            )}
+          </>
+        );
+      }
+
+      // ── escala_1_4_multi ──
+      if (sec.tipo === 'escala_1_4_multi') {
+        return (
+          <>
+            {header}
+            <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr style={{ color: 'var(--muted)', fontSize: 11 }}>
+              <th></th>{(sec.colunas || []).map(c => <th key={c} className="text-center pb-2 px-2">{c}</th>)}
+            </tr></thead><tbody>
+              {(sec.itens || []).map(it => {
+                const linha = v[it] || {};
+                return (
+                  <tr key={it} style={{ borderTop: '1px solid var(--border)' }}>
+                    <td className="py-2 pr-3">{it}</td>
+                    {(sec.colunas || []).map(c => (
+                      <td key={c} className="py-2 px-1 text-center">
+                        <div className="inline-flex gap-0.5">{[1,2,3,4].map(n => (
+                          <button key={n} style={{ width: 24, height: 24, fontSize: 11, borderRadius: 4, background: linha[c] === n ? 'var(--accent)' : 'transparent', border: `1px solid ${linha[c] === n ? 'var(--accent)' : 'var(--border)'}`, color: linha[c] === n ? 'white' : 'var(--text)' }} onClick={() => onChange({ ...v, [it]: { ...linha, [c]: n } })}>{n}</button>
+                        ))}</div>
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
+            </tbody></table></div>
+            {sec.campo_texto && (
+              <div className="mt-4">
+                <label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>{sec.campo_texto}</label>
+                <textarea className="input" rows="3" value={textoExtra || ''} onChange={e => onTextoChange(e.target.value)} />
+              </div>
+            )}
+          </>
+        );
+      }
+
+      // ── checkbox_duplo ──
+      if (sec.tipo === 'checkbox_duplo') {
+        return (
+          <>
+            {header}
+            <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr style={{ color: 'var(--muted)', fontSize: 11 }}>
+              <th></th>{(sec.colunas || []).map(c => <th key={c} className="text-center pb-2 px-2">{c}</th>)}
+            </tr></thead><tbody>
+              {(sec.itens || []).map(it => {
+                const linha = v[it] || [];
+                return (
+                  <tr key={it} style={{ borderTop: '1px solid var(--border)' }}>
+                    <td className="py-2 pr-3">{it}</td>
+                    {(sec.colunas || []).map(c => (
+                      <td key={c} className="py-2 text-center">
+                        <input type="checkbox" checked={linha.includes(c)} onChange={e => {
+                          const ns = e.target.checked ? [...linha, c] : linha.filter(x => x !== c);
+                          onChange({ ...v, [it]: ns });
+                        }} />
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
+            </tbody></table></div>
+            {sec.campo_texto && (
+              <div className="mt-4">
+                <label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>{sec.campo_texto}</label>
+                <textarea className="input" rows="3" value={textoExtra || ''} onChange={e => onTextoChange(e.target.value)} />
+              </div>
+            )}
+          </>
+        );
+      }
+
+      return null;
+    }
+
+    // GerarRelatorio removido — unificado em PreencherFormulario (com seção "Observações gerais").
+
+    // ═══════════════════════════════════════════════════════
+    //  SUPERVISOR — APP
+    // ═══════════════════════════════════════════════════════
+    function SupervisorApp() {
+      const [page, setPage] = useState('processos');
+      const items = [
+        { id: 'processos', label: 'Processos', icon: Icon.relatorios },
+        { id: 'documentos', label: 'Documentos', icon: Icon.docs },
+      ];
+      return (
+        <div className="flex" style={{ height: '100vh' }}>
+          <SimpleSidebar active={page} onNav={setPage} items={items} />
+          <main className="flex-1 overflow-y-auto" style={{ padding: 24 }}>
+            {page === 'processos' && <SupervisorProcessos />}
+            {page === 'documentos' && <SupervisorDocumentos />}
+          </main>
+        </div>
+      );
+    }
+
+    function SupervisorProcessos() {
+      const [processos, setProcessos] = useState(null);
+      const [loading, setLoading] = useState(true);
+      const [selected, setSelected] = useState(null);
+      useEffect(() => { Api.processos().then(setProcessos).finally(() => setLoading(false)); }, []);
+      if (loading) return <LoadingBlock />;
+      return (
+        <div className="space-y-4">
+          <h1 className="text-2xl font-bold">Processos da empresa</h1>
+          <div className="space-y-3">
+            {(processos || []).map(p => (
+              <div key={p.id} className="surface p-4 cursor-pointer" onClick={() => setSelected(p)}>
+                <div className="flex justify-between items-center">
+                  <div><div className="font-semibold">Processo #{p.id}</div><div className="text-xs mt-1" style={{ color: 'var(--muted)' }}>{p.horas_semanais}h/sem · {p.data_inicio_prevista} → {p.data_fim_prevista}</div></div>
+                  <StatusBadge status={p.status} />
+                </div>
+              </div>
+            ))}
+            {(!processos || processos.length === 0) && <div className="surface p-8 text-center" style={{ color: 'var(--muted)' }}>Nenhum processo.</div>}
+          </div>
+          {selected && <ProcessoDetailModal processo={selected} onClose={() => setSelected(null)} onChanged={() => Api.processos().then(setProcessos)} role="supervisor" />}
+        </div>
+      );
+    }
+
+    function SupervisorDocumentos() {
+      const toast = useToast();
+      const [docs, setDocs] = useState([]);
+      const [loading, setLoading] = useState(true);
+      useEffect(() => { Api.documentos().then(setDocs).catch(e => toast.error(e.message)).finally(() => setLoading(false)); }, [toast]);
+      if (loading) return <LoadingBlock />;
+      return (
+        <div className="space-y-4">
+          <h1 className="text-2xl font-bold">Documentos</h1>
+          <div className="space-y-2">
+            {docs.map(d => (
+              <div key={d.id} className="surface p-3 flex justify-between items-center gap-3">
+                <div><div className="text-sm font-medium">{TIPO_DOC[d.tipo] || d.tipo}</div><div className="text-xs" style={{ color: 'var(--muted)' }}>Processo #{d.processo} · v{d.versao}</div></div>
+                <DocStatusBadge status={d.status} />
+                {d.arquivo && <a href={d.arquivo} target="_blank" rel="noreferrer" className="btn btn-secondary" style={{ fontSize: 11 }}>Abrir</a>}
+              </div>
+            ))}
+            {docs.length === 0 && <div className="surface p-8 text-center" style={{ color: 'var(--muted)' }}>Nenhum documento.</div>}
+          </div>
+        </div>
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  APP ROUTER
+    // ═══════════════════════════════════════════════════════
+    function App() {
+      const { user } = useAuth();
+      const [auth, setAuth] = useState('login');
+      if (!user) return auth === 'login' ? <LoginPage onGoRegister={() => setAuth('register')} /> : <RegisterPage onGoLogin={() => setAuth('login')} />;
+      if (user.tipo === 'coordenador' || isVisaoGlobal(user)) return <CoordApp />;
+      if (user.tipo === 'aluno') return <AlunoApp />;
+      if (user.tipo === 'supervisor_empresa') return <SupervisorApp />;
+      return <CoordApp />;
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(
+      <ToastProvider>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </ToastProvider>
+    );
+  </script>
+</body>
+</html>

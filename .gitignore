@@ -54,3 +54,4 @@ node_modules/
 .env.local
 
 Analises/
+message.txt

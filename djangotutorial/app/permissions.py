@@ -2,12 +2,14 @@
 Permissões customizadas para o sistema de gestão de estágios.
 
 Hierarquia de acesso (mais permissivo → menos):
-  Admin (is_superuser / is_staff) → tudo
+  Admin (is_superuser / is_staff)                        → tudo
+  Administrativo (reitor, pro_reitor, secretaria, carreiras) → tudo que coordenador faz, para todos os cursos, exceto editar formulários
   Coordenador                     → leitura + alterar-status das solicitações do seu curso
   Aluno                           → leitura + criação das próprias solicitações
   Não autenticado                 → negado
 """
 from rest_framework import permissions
+from .models import Usuario
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────
@@ -32,64 +34,80 @@ def is_admin(user):
     return bool(user and user.is_authenticated and (user.is_superuser or user.is_staff))
 
 
+def is_administrativo(user):
+    """Reitor, Pró-Reitor, Secretaria, Carreiras — visão global, sem edição de formulários."""
+    return bool(
+        user and user.is_authenticated
+        and getattr(user, 'tipo', None) in Usuario.TIPOS_ADMINISTRATIVOS
+    )
+
+
+def has_global_access(user):
+    """Admin ou perfil administrativo — acesso a todos os cursos."""
+    return is_admin(user) or is_administrativo(user)
+
+
+def get_supervisor(user):
+    """Retorna SupervisorEmpresa vinculado ao user, ou None."""
+    try:
+        return user.supervisor_empresa
+    except Exception:
+        return None
+
+
+# Visão global read-only: Secretaria, CASA, Reitor, Pró-Reitor.
+# Veem todos os processos de todos os cursos; não editam formulários nem
+# aprovam documentos.
+TIPOS_VISAO_GLOBAL = frozenset({'secretaria', 'casa', 'reitor', 'pro_reitor'})
+
+
+def is_visao_global(user):
+    """True se o usuário tem visão global read-only do sistema."""
+    return bool(
+        user and user.is_authenticated and getattr(user, 'tipo', None) in TIPOS_VISAO_GLOBAL
+    )
+
+
 # ── permissões ────────────────────────────────────────────────────────────────
 
-class SolicitacaoEstagioPermission(permissions.BasePermission):
-    """
-    Controle de acesso ao ViewSet de SolicitacaoEstagio.
-
-    Aluno
-      - list, retrieve, create  ✔  (queryset já filtra para as próprias)
-      - update, partial_update  ✘
-      - destroy                 ✘
-      - alterar_status          ✘
-
-    Coordenador
-      - list, retrieve          ✔  (queryset já filtra para o seu curso)
-      - alterar_status          ✔  (somente solicitações do seu curso)
-      - create, update, destroy ✘
-
-    Admin
-      - tudo                    ✔
-
-    Default: negado.
-    """
-
-    _ALUNO_ACTIONS = frozenset({'list', 'retrieve', 'create'})
-    _COORD_ACTIONS = frozenset({'list', 'retrieve', 'alterar_status'})
-
+class IsAluno(permissions.BasePermission):
     def has_permission(self, request, view):
-        user = request.user
-        if not user or not user.is_authenticated:
-            return False
-        if is_admin(user):
+        return request.user.is_authenticated and get_aluno(request.user) is not None
+
+
+class IsCoordenador(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and get_coordenador(request.user) is not None
+
+
+class IsSupervisorEmpresa(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and get_supervisor(request.user) is not None
+
+
+class IsAdminOrReadOnly(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
             return True
+        return has_global_access(request.user)
 
-        action = getattr(view, 'action', None)
 
-        if get_aluno(user) is not None:
-            return action in self._ALUNO_ACTIONS
-
-        if get_coordenador(user) is not None:
-            return action in self._COORD_ACTIONS
-
-        # Usuário autenticado sem perfil reconhecido → nega por padrão
-        return False
+class IsDonoDoProcesso(permissions.BasePermission):
+    """Ownership de ProcessoEstagio: aluno do processo, supervisor da empresa, ou coordenador do curso do aluno."""
 
     def has_object_permission(self, request, view, obj):
         user = request.user
-        if is_admin(user):
+        if has_global_access(user):
             return True
-
         aluno = get_aluno(user)
-        if aluno is not None:
-            # Aluno só acessa as próprias solicitações
-            return obj.aluno_id == aluno.pk
-
-        coordenador = get_coordenador(user)
-        if coordenador is not None:
-            # Coordenador só acessa solicitações de alunos do seu curso
+        if aluno is not None and obj.aluno_id == aluno.pk:
+            return True
+        supervisor = get_supervisor(user)
+        if supervisor is not None and obj.empresa_id == supervisor.empresa_id:
+            return True
+        coord = get_coordenador(user)
+        if coord is not None:
             curso = getattr(obj.aluno, 'curso', None)
-            return curso is not None and curso.coordenador_id == coordenador.pk
-
+            if curso is not None and curso.coordenador_id == coord.pk:
+                return True
         return False
