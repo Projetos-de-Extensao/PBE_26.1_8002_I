@@ -170,113 +170,355 @@ def fake_rg(i):
     return f'{(10 + i) % 100:02d}.{(100 + i * 2) % 1000:03d}.{(200 + i * 3) % 1000:03d}-{i % 10}'
 
 
-def ferramentas_por_curso(slug):
-    return {
-        'adm':  ['Excel', 'SAP', 'Power BI', 'Word', 'PowerPoint'],
-        'arq':  ['AutoCAD', 'SketchUp', 'Revit', 'Photoshop', 'Illustrator'],
-        'cdia': ['Python', 'SQL', 'Git', 'Power BI', 'Tableau'],
-        'eco':  ['Excel', 'R', 'Stata', 'Bloomberg', 'Power BI'],
-        'pub':  ['Photoshop', 'Illustrator', 'After Effects', 'Premiere', 'Figma'],
-        'dir':  ['Processo Eletrônico', 'JusBrasil', 'LexML', 'Word', 'Excel'],
-        'engc': ['Python', 'Java', 'Git', 'Linux', 'Docker'],
-        'engp': ['Excel', 'MS Project', 'Lean Six Sigma', 'Power BI', 'SAP'],
-        'engs': ['Python', 'JavaScript', 'Git', 'Docker', 'Kubernetes'],
-        'ri':   ['Excel', 'Bloomberg', 'PowerPoint', 'Word', 'Inglês avançado'],
-    }.get(slug, ['Excel', 'Word', 'PowerPoint', 'Outlook', 'Teams'])
+# ── Definições por curso para as seções 3, 4 e 5 ───────────────────────────
 
+# Seção 3 — Área de Atuação (itens)
+AREAS_POR_CURSO = {
+    'arq': [
+        'Interiores residenciais', 'Interiores comerciais',
+        'Edificações residenciais', 'Edificações comerciais',
+        'Edificações turismo/lazer', 'Edificações de saúde',
+        'Edificações industriais', 'Restauração/patrimônio',
+        'Projeto urbano', 'Planejamento urbano',
+        'Paisagismo', 'Meio ambiente',
+        'Projetos complementares (elétrica/hidro)',
+        'Projetos complementares (gás/incêndio)',
+        'Projetos complementares (estrutural)',
+    ],
+    'cdia': [
+        'Análise exploratória de dados', 'Engenharia de dados / ETL',
+        'Machine Learning supervisionado', 'Machine Learning não supervisionado',
+        'Deep Learning / redes neurais', 'NLP / processamento de linguagem',
+        'Computer Vision', 'Estatística aplicada',
+        'Visualização e BI', 'MLOps / deploy de modelos',
+    ],
+    'engs': [
+        'Backend / APIs', 'Frontend web', 'Mobile',
+        'DevOps / CI/CD', 'Banco de dados',
+        'Cloud / infraestrutura', 'Arquitetura de software',
+        'Qualidade / testes automatizados', 'Segurança de aplicações',
+        'UX / Design de produto',
+    ],
+    'engc': [
+        'Hardware / sistemas embarcados', 'Redes de computadores',
+        'Sistemas operacionais', 'Segurança / criptografia',
+        'Cloud / infraestrutura', 'Backend / APIs',
+        'Banco de dados', 'IoT', 'Inteligência artificial',
+    ],
+    'engp': [
+        'PCP (planejamento e controle)', 'Qualidade',
+        'Lean / melhoria contínua', 'Logística',
+        'Gestão de projetos', 'Gestão da cadeia de suprimentos',
+        'Custos', 'Manutenção', 'Ergonomia / segurança do trabalho',
+        'Sustentabilidade',
+    ],
+    'adm': [
+        'Gestão de pessoas', 'Recrutamento e seleção',
+        'Finanças corporativas', 'Controladoria',
+        'Marketing', 'Vendas', 'Operações', 'Logística',
+        'Estratégia', 'Inteligência de mercado',
+    ],
+    'eco': [
+        'Macroeconomia', 'Microeconomia', 'Econometria',
+        'Mercado financeiro', 'Análise de risco',
+        'Pesquisa econômica', 'Política pública',
+        'Comércio internacional', 'Setor público',
+    ],
+    'pub': [
+        'Planejamento de campanha', 'Criação / direção de arte',
+        'Redação publicitária', 'Mídia paga', 'Mídias sociais',
+        'Branding', 'Conteúdo', 'Atendimento / contas',
+        'Audiovisual', 'Métricas / performance',
+    ],
+    'dir': [
+        'Direito civil', 'Direito empresarial', 'Direito trabalhista',
+        'Direito tributário', 'Direito penal', 'Direito administrativo',
+        'Direito do consumidor', 'Contencioso', 'Consultivo',
+        'Compliance / LGPD',
+    ],
+    'ri': [
+        'Política externa', 'Comércio exterior',
+        'Cooperação internacional', 'Diplomacia',
+        'Organismos internacionais', 'Análise de cenários',
+        'Negociação internacional', 'Geopolítica',
+        'Direito internacional', 'Inteligência de mercado',
+    ],
+}
+
+# Seção 4 — Aplicação do Conhecimento (disciplinas)
+DISCIPLINAS_POR_CURSO = {
+    'arq': [
+        'Disciplinas de Projeto', 'Disciplinas de Teoria e História',
+        'Disciplinas de Estruturas',
+        'Disciplinas de Técnicas (conforto, ecologia, materiais)',
+        'Disciplinas de Instalações (hidrossanitárias, elétricas)',
+        'Disciplinas de Desenho a mão',
+    ],
+    'cdia': [
+        'Estatística e Probabilidade', 'Cálculo / Álgebra Linear',
+        'Programação (Python)', 'Banco de Dados',
+        'Machine Learning', 'Visualização de Dados',
+        'Metodologia de pesquisa',
+    ],
+    'engs': [
+        'Algoritmos e Estrutura de Dados', 'Programação',
+        'Engenharia de Software', 'Banco de Dados',
+        'Redes', 'Sistemas Distribuídos', 'Gestão de Projetos',
+    ],
+    'engc': [
+        'Algoritmos', 'Programação', 'Sistemas Digitais',
+        'Redes', 'Sistemas Operacionais',
+        'Eletrônica', 'Cálculo / Física',
+    ],
+    'engp': [
+        'Pesquisa Operacional', 'Estatística e Qualidade',
+        'PCP', 'Logística', 'Cálculo / Física',
+        'Gestão de Projetos', 'Gestão de Pessoas',
+    ],
+    'adm': [
+        'Gestão de Pessoas', 'Finanças', 'Marketing',
+        'Contabilidade', 'Estratégia', 'Operações',
+        'Direito Empresarial',
+    ],
+    'eco': [
+        'Macroeconomia', 'Microeconomia', 'Econometria',
+        'Estatística', 'Cálculo', 'Finanças',
+        'História Econômica',
+    ],
+    'pub': [
+        'Teoria da Comunicação', 'Redação Publicitária',
+        'Criação / Direção de Arte', 'Mídia',
+        'Pesquisa de Mercado', 'Branding',
+        'Audiovisual',
+    ],
+    'dir': [
+        'Direito Civil', 'Direito Empresarial', 'Direito Trabalhista',
+        'Direito Constitucional', 'Direito Processual',
+        'Teoria Geral do Direito', 'Direito Tributário',
+    ],
+    'ri': [
+        'Teoria das Relações Internacionais', 'Política Externa Brasileira',
+        'Economia Internacional', 'Direito Internacional',
+        'História Contemporânea', 'Negociação',
+        'Análise de Conjuntura',
+    ],
+}
+
+# Seção 5 — Softwares (itens). Cada um é nivelado em básico/avançado quando faz sentido.
+SOFTWARES_POR_CURSO = {
+    'arq': [
+        'Word básico', 'Word avançado',
+        'Excel básico', 'Excel avançado',
+        'AutoCAD básico', 'AutoCAD avançado',
+        'SketchUp básico', 'SketchUp avançado',
+        'VRay básico', 'VRay avançado',
+        'Revit básico', 'Revit avançado',
+        'Google Earth', 'QGIS', 'Promob', 'ArchiCAD',
+    ],
+    'cdia': [
+        'Python básico', 'Python avançado',
+        'SQL básico', 'SQL avançado',
+        'R / Stata', 'Git', 'Power BI', 'Tableau',
+        'Docker', 'AWS / GCP', 'Excel avançado',
+    ],
+    'engs': [
+        'Python', 'JavaScript / TypeScript', 'Java / Kotlin',
+        'SQL', 'Git', 'Docker', 'Kubernetes',
+        'AWS / Azure / GCP', 'Linux',
+    ],
+    'engc': [
+        'C / C++', 'Python', 'Java', 'SQL',
+        'Linux', 'Git', 'Docker', 'Wireshark', 'VHDL / Verilog',
+    ],
+    'engp': [
+        'Excel básico', 'Excel avançado', 'Power BI',
+        'MS Project', 'AutoCAD', 'SAP', 'Minitab',
+        'Python (análise de dados)',
+    ],
+    'adm': [
+        'Excel básico', 'Excel avançado',
+        'Power BI', 'SAP', 'Word', 'PowerPoint',
+        'CRM (Salesforce, HubSpot)',
+    ],
+    'eco': [
+        'Excel básico', 'Excel avançado',
+        'R / Stata', 'Python', 'Bloomberg',
+        'EViews', 'Power BI',
+    ],
+    'pub': [
+        'Photoshop', 'Illustrator', 'InDesign',
+        'After Effects', 'Premiere', 'Figma',
+        'Meta Ads / Google Ads',
+    ],
+    'dir': [
+        'Processo Eletrônico (PJe)', 'JusBrasil',
+        'LexML', 'Word', 'Excel',
+        'CRM jurídico',
+    ],
+    'ri': [
+        'Excel', 'Word', 'PowerPoint',
+        'Bloomberg', 'Inglês avançado', 'Espanhol',
+    ],
+}
+
+ITENS_COMPORTAMENTAIS_DETALHADOS = [
+    {'nome': 'Visão',         'descricao': 'Olhar estratégico, leitura de cenários, compreensão das circunstâncias e interpretação de regras e sistemas.'},
+    {'nome': 'Adaptabilidade','descricao': 'Capacidade de aprendizagem, abertura para inovar, coragem de explorar novos processos.'},
+    {'nome': 'Centralidade',  'descricao': 'Autoconhecimento, controle emocional, resiliência e autoestima.'},
+    {'nome': 'Empatia',       'descricao': 'Interação em grupos, comunicação efetiva, respeito mútuo e honestidade.'},
+]
+ITENS_COMPORTAMENTAIS = [d['nome'] for d in ITENS_COMPORTAMENTAIS_DETALHADOS]
+
+ITENS_EXPERIENCIA = [
+    'Atividades vs formação acadêmica',
+    'Orientação do supervisor',
+    'Feedback do supervisor',
+    'Condições de trabalho',
+    'Remuneração vs mercado',
+    'Relacionamento com equipe',
+    'Sua produtividade',
+    'Indicaria a empresa',
+]
+
+# Compat: ferramentas_por_curso e aplicacao_por_curso continuam exportados
+def ferramentas_por_curso(slug):
+    return SOFTWARES_POR_CURSO.get(slug, ['Excel', 'Word', 'PowerPoint', 'Outlook', 'Teams'])
 
 def aplicacao_por_curso(slug):
-    return {
-        'adm':  ['Gestão de Pessoas', 'Finanças', 'Marketing', 'Estratégia', 'Operações'],
-        'arq':  ['Desenho técnico', 'Modelagem 3D', 'Urbanismo', 'Conforto ambiental', 'Estruturas'],
-        'cdia': ['Estatística', 'Machine Learning', 'Banco de Dados', 'Visualização', 'Metodologia Ágil'],
-        'eco':  ['Macroeconomia', 'Microeconomia', 'Econometria', 'Finanças', 'Pesquisa Operacional'],
-        'pub':  ['Branding', 'Copywriting', 'Mídia paga', 'Conteúdo', 'Métricas digitais'],
-        'dir':  ['Pesquisa jurisprudencial', 'Redação de peças', 'Atendimento ao cliente', 'Análise contratual', 'Negociação'],
-        'engc': ['Algoritmos', 'Redes', 'Sistemas Operacionais', 'Segurança', 'Cloud'],
-        'engp': ['Lean', 'PCP', 'Qualidade', 'Logística', 'Custos'],
-        'engs': ['Programação', 'Arquitetura de Software', 'Testes', 'DevOps', 'UX/UI'],
-        'ri':   ['Negociação internacional', 'Política externa', 'Geopolítica', 'Comércio Exterior', 'Diplomacia'],
-    }.get(slug, ['Item 1', 'Item 2', 'Item 3', 'Item 4', 'Item 5'])
-
-
-ITENS_COMPORTAMENTAIS = ['Visão', 'Adaptabilidade', 'Empatia', 'Liderança', 'Comunicação']
-ITENS_EXPERIENCIA = [
-    'Orientação do supervisor', 'Feedback recebido',
-    'Condições de trabalho', 'Remuneração vs mercado',
-    'Atividades vs formação',
-]
+    return DISCIPLINAS_POR_CURSO.get(slug, ['Disciplina 1', 'Disciplina 2', 'Disciplina 3'])
 
 
 def gerar_modelo_secoes(slug):
+    """Modelo de formulário alinhado ao docx oficial do PO — 7 seções."""
     return [
         {
-            'id': 'comportamental', 'tipo': 'escala_1_4',
-            'titulo': 'Inteligência Comportamental',
+            'id': 'estagiario',
+            'tipo': 'auto',
+            'titulo': '1. Estagiário / Aluno',
+            'itens': [
+                'Nome', 'Matrícula', 'Curso', 'Semestre atual',
+                'Data de entrada', 'Data de saída',
+                'Horas/semana', 'Semanas trabalhadas',
+                'Horas totais', 'Remuneração média mensal',
+            ],
+            'grafico': 'nenhum',
+        },
+        {
+            'id': 'empresa',
+            'tipo': 'auto',
+            'titulo': '2. Concedente / Empresa',
+            'itens': ['Empresa', 'Telefone', 'Website', 'Gestor direto', 'Email do gestor'],
+            'grafico': 'nenhum',
+        },
+        {
+            'id': 'area_atuacao',
+            'tipo': 'checkbox_duplo',
+            'titulo': '3. Área de Atuação',
+            'itens': AREAS_POR_CURSO.get(slug, AREAS_POR_CURSO['adm']),
+            'colunas': [
+                'Atuação da empresa: Obra',
+                'Atuação da empresa: Projeto',
+                'Sua atuação: Obra',
+                'Sua atuação: Projeto',
+            ],
+            'grafico': 'barras_agrupadas',
+            'campo_texto': 'Descreva as principais atividades desenvolvidas no seu estágio',
+        },
+        {
+            'id': 'aplicacao_conhecimento',
+            'tipo': 'escala_3',
+            'titulo': '4. Avaliação da Aplicação do Conhecimento',
+            'descricao': 'Escolha se foi: Suficiente, Insuficiente ou Não utilizado',
+            'itens': DISCIPLINAS_POR_CURSO.get(slug, DISCIPLINAS_POR_CURSO['adm']),
+            'opcoes': ['Suficiente', 'Insuficiente', 'Não utilizado'],
+            'grafico': 'barras',
+            'campo_texto': 'Comentário sobre a aplicabilidade do conhecimento acadêmico',
+        },
+        {
+            'id': 'softwares',
+            'tipo': 'escala_1_4_multi',
+            'titulo': '5. Utilização de Softwares',
+            'descricao': '1-muito; 2-médio; 3-pouco; 4-nada',
+            'itens': SOFTWARES_POR_CURSO.get(slug, SOFTWARES_POR_CURSO['adm']),
+            'colunas': ['Pela empresa', 'Por você', 'Se sentiu apto'],
+            'grafico': 'barras_agrupadas',
+            'campo_texto': 'Descreva sua experiência com o uso de softwares no estágio',
+        },
+        {
+            'id': 'comportamental',
+            'tipo': 'escala_1_4',
+            'titulo': '6. Inteligência Comportamental',
+            'descricao': '1-ruim; 2-regular; 3-bom; 4-ótimo',
+            'itens_detalhados': ITENS_COMPORTAMENTAIS_DETALHADOS,
             'itens': ITENS_COMPORTAMENTAIS,
             'grafico': 'radar',
         },
         {
-            'id': 'ferramentas', 'tipo': 'escala_1_4_multi',
-            'titulo': 'Ferramentas e Softwares',
-            'itens': ferramentas_por_curso(slug),
-            'colunas': ['Empresa usa', 'Você usou'],
-            'grafico': 'barras_agrupadas',
-        },
-        {
-            'id': 'aplicacao', 'tipo': 'escala_1_4',
-            'titulo': 'Aplicação do Conhecimento',
-            'itens': aplicacao_por_curso(slug),
-            'grafico': 'radar',
-        },
-        {
-            'id': 'experiencia', 'tipo': 'escala_3',
-            'titulo': 'Avaliação da Experiência',
+            'id': 'experiencia',
+            'tipo': 'escala_1_4',
+            'titulo': '7. Avaliação da Experiência',
+            'descricao': '1-ruim; 2-regular; 3-bom; 4-ótimo',
             'itens': ITENS_EXPERIENCIA,
-            'opcoes': ['Suficiente', 'Insuficiente', 'Não utilizado'],
             'grafico': 'barras',
-        },
-        {
-            'id': 'comentarios', 'tipo': 'texto_livre',
-            'titulo': 'Comentários Gerais',
-            'grafico': 'nenhum',
+            'campo_efetivacao': True,
+            'campo_texto_positivo': 'Pontos positivos sobre sua experiência',
+            'campo_texto_negativo': 'Pontos negativos sobre sua experiência',
         },
     ]
 
 
 def gerar_respostas(slug, qualidade='alta'):
-    """Gera respostas plausíveis baseadas no curso e qualidade."""
+    """Gera respostas plausíveis no formato das seções acima."""
     base = 3 if qualidade == 'alta' else 2
 
     def nota():
         return max(1, min(4, base + random.randint(-1, 1)))
 
+    areas = AREAS_POR_CURSO.get(slug, [])
+    cols_area = [
+        'Atuação da empresa: Obra', 'Atuação da empresa: Projeto',
+        'Sua atuação: Obra', 'Sua atuação: Projeto',
+    ]
+    sec_areas = {}
+    for it in random.sample(areas, k=min(4, len(areas))):
+        sec_areas[it] = random.sample(cols_area, k=random.randint(1, 3))
+
+    disciplinas = DISCIPLINAS_POR_CURSO.get(slug, [])
+    sec_apl = {
+        it: random.choice(['Suficiente', 'Suficiente', 'Insuficiente', 'Não utilizado'])
+        for it in disciplinas
+    }
+
+    softs = SOFTWARES_POR_CURSO.get(slug, [])
+    sec_sw = {
+        it: {'Pela empresa': nota(), 'Por você': nota(), 'Se sentiu apto': nota()}
+        for it in random.sample(softs, k=min(6, len(softs)))
+    }
+
     sec_comp = {it: nota() for it in ITENS_COMPORTAMENTAIS}
-    sec_ferr = {
-        it: {'Empresa usa': nota(), 'Você usou': nota()}
-        for it in ferramentas_por_curso(slug)
-    }
-    sec_apl = {it: nota() for it in aplicacao_por_curso(slug)}
-    sec_exp = {
-        it: random.choice(['Suficiente', 'Suficiente', 'Suficiente', 'Insuficiente', 'Não utilizado'])
-        for it in ITENS_EXPERIENCIA
-    }
-    sec_com = (
-        'Experiência muito positiva. Pude colocar em prática conhecimentos da graduação '
-        'e tive bons feedbacks do supervisor ao longo do período.'
-        if qualidade == 'alta' else
-        'Estágio razoável. Algumas atividades pouco aderentes à formação, '
-        'mas ambiente de trabalho colaborativo.'
-    )
+    sec_exp = {it: nota() for it in ITENS_EXPERIENCIA}
+
     return {
         'preenchido_em': date.today().isoformat(),
         'tipo_relatorio': 'parcial',
         'secoes': {
+            'area_atuacao': sec_areas,
+            'area_atuacao_texto': 'Atuei em projetos diversificados, com foco em entrega e qualidade.',
+            'aplicacao_conhecimento': sec_apl,
+            'aplicacao_conhecimento_texto': 'O conhecimento acadêmico foi essencial para a execução das atividades.',
+            'softwares': sec_sw,
+            'softwares_texto': 'Aprofundei o uso das ferramentas principais da área.',
             'comportamental': sec_comp,
-            'ferramentas': sec_ferr,
-            'aplicacao': sec_apl,
             'experiencia': sec_exp,
-            'comentarios': sec_com,
+            'experiencia_efetivacao': random.choice(['Sim', 'Não']),
+            'experiencia_texto_positivo': (
+                'Equipe acolhedora e supervisor presente.' if qualidade == 'alta'
+                else 'Ambiente colaborativo.'
+            ),
+            'experiencia_texto_negativo': (
+                'Carga eventualmente intensa.' if qualidade == 'alta'
+                else 'Atividades pouco aderentes à formação em alguns momentos.'
+            ),
         }
     }
 
@@ -307,6 +549,19 @@ admin.nome = 'Administrador IBMEC'
 admin.email_institucional = 'admin@ibmec.edu.br'
 admin.set_password('admin')
 admin.save()
+
+print('🏛  Criando usuários de visão global (Secretaria, CASA, Reitor, Pró-Reitor)…')
+VISAO_GLOBAL_USERS = [
+    ('ana.secretaria',     'Ana Paula Secretaria', 'secretaria'),
+    ('marcos.casa',        'Marcos CASA',          'casa'),
+    ('roberto.reitor',     'Roberto Reitor',       'reitor'),
+    ('claudia.proreitor',  'Cláudia Pró-Reitora',  'pro_reitor'),
+]
+for username, nome, tipo in VISAO_GLOBAL_USERS:
+    Usuario.objects.create_user(
+        username=username, password=PASSWORD, tipo=tipo,
+        nome=nome, email_institucional=f'{username}@ibmec.edu.br',
+    )
 
 print('🎓 Criando cursos…')
 cursos = []

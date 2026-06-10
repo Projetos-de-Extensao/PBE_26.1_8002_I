@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from .models import (
     ProcessoEstagio, EmpresaConcedente, DocumentoProcesso, ModeloFormulario,
 )
-from .permissions import get_coordenador, is_admin, has_global_access
+from .permissions import get_coordenador, is_admin, is_visao_global
 from .dashboard_utils import (
     calcular_semestre,
     agregar_escala_1_4,
@@ -20,16 +20,15 @@ from .dashboard_utils import (
 
 def _base_queryset(user):
     """Retorna queryset de processos filtrado por papel do usuário."""
+    base = ProcessoEstagio.objects.select_related(
+        'aluno__usuario', 'aluno__curso', 'empresa', 'coordenador',
+    )
+    if is_admin(user) or is_visao_global(user):
+        return base.all()
     coord = get_coordenador(user)
-    if has_global_access(user):
-        return ProcessoEstagio.objects.select_related(
-            'aluno__usuario', 'aluno__curso', 'empresa', 'coordenador',
-        ).all()
     if coord is not None:
         cursos = coord.cursos_coordenados.all()
-        return ProcessoEstagio.objects.select_related(
-            'aluno__usuario', 'aluno__curso', 'empresa', 'coordenador',
-        ).filter(aluno__curso__in=cursos)
+        return base.filter(aluno__curso__in=cursos)
     return ProcessoEstagio.objects.none()
 
 
@@ -100,7 +99,7 @@ class DashboardProcessosView(APIView):
     def get(self, request):
         user = request.user
         coord = get_coordenador(user)
-        if not has_global_access(user) and coord is None:
+        if not is_admin(user) and not is_visao_global(user) and coord is None:
             return Response(
                 {'erro': 'Acesso restrito a coordenadores e administradores.'},
                 status=drf_status.HTTP_403_FORBIDDEN,
@@ -119,7 +118,7 @@ class DashboardEstatisticasView(APIView):
     def get(self, request):
         user = request.user
         coord = get_coordenador(user)
-        if not has_global_access(user) and coord is None:
+        if not is_admin(user) and not is_visao_global(user) and coord is None:
             return Response(
                 {'erro': 'Acesso restrito a coordenadores e administradores.'},
                 status=drf_status.HTTP_403_FORBIDDEN,
@@ -218,7 +217,7 @@ class DashboardEmpresasView(APIView):
     def get(self, request):
         user = request.user
         coord = get_coordenador(user)
-        if not has_global_access(user) and coord is None:
+        if not is_admin(user) and not is_visao_global(user) and coord is None:
             return Response(
                 {'erro': 'Acesso restrito a coordenadores e administradores.'},
                 status=drf_status.HTTP_403_FORBIDDEN,

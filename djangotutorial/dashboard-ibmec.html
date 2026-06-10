@@ -163,6 +163,7 @@
       register: (d) => apiRequest('/auth/register/', { method: 'POST', body: d }),
       cursos: () => apiRequest('/cursos/'),
       empresas: () => apiRequest('/empresas/'),
+      empresa: (id) => apiRequest(`/empresas/${id}/`),
       criarEmpresa: (d) => apiRequest('/empresas/', { method: 'POST', body: d }),
       alunos: () => apiRequest('/alunos/'),
       supervisores: () => apiRequest('/supervisores-empresa/'),
@@ -174,6 +175,13 @@
       alterarStatus: (id, status, justif) => apiRequest(`/processos-estagio/${id}/alterar_status/`, { method: 'POST', body: { status, justificativa_rejeicao: justif || '' } }),
       documentosProcesso: (id) => apiRequest(`/processos-estagio/${id}/documentos/`),
       documentos: () => apiRequest('/documentos/'),
+      uploadDocumento: (processoId, tipo, arquivo) => {
+        const fd = new FormData();
+        fd.append('processo', processoId);
+        fd.append('tipo', tipo);
+        fd.append('arquivo', arquivo);
+        return apiRequest('/documentos/', { method: 'POST', body: fd });
+      },
       validarDocumento: (id, status, com) => apiRequest(`/documentos/${id}/validar/`, { method: 'POST', body: { status, comentario: com || '' } }),
       gerarTCE: (id) => apiDownload(`/processos-estagio/${id}/gerar-tce/`),
       gerarTermo: (id) => apiDownload(`/processos-estagio/${id}/gerar-termo-realizacao/`),
@@ -220,6 +228,30 @@
     // Status visíveis na sidebar e Dashboard individual.
     // Rejeitado e Cancelado aparecem APENAS na aba Relatórios.
     const STATUS_DASHBOARD = ['PENDENTE', 'APROVADO', 'CORRECAO_SOLICITADA', 'ATIVO', 'ENCERRADO'];
+    // Tipos de visão global read-only: veem tudo, não editam formulário nem validam docs.
+    const TIPOS_VISAO_GLOBAL = ['secretaria', 'casa', 'reitor', 'pro_reitor'];
+    const isVisaoGlobal = (user) => !!user && TIPOS_VISAO_GLOBAL.includes(user.tipo);
+    const CARGO_LABEL = {
+      coordenador: 'Coordenador', aluno: 'Aluno', supervisor_empresa: 'Supervisor',
+      secretaria: 'Secretaria', casa: 'CASA', reitor: 'Reitor', pro_reitor: 'Pró-Reitor',
+    };
+    // Status do processo em que o aluno pode AGIR (preencher, gerar docs).
+    const STATUS_ALUNO_PODE_AGIR = ['APROVADO', 'ATIVO'];
+    // Status em que o aluno pode cancelar o próprio processo.
+    const STATUS_ALUNO_PODE_CANCELAR = ['PENDENTE', 'APROVADO', 'CORRECAO_SOLICITADA'];
+
+    // Abre uma URL gerada por blob (preferindo nova aba, com fallback de download).
+    // Evita pop-up blocker disparando o click via <a> em vez de window.open síncrono.
+    function abrirBlobUrl(url, filename) {
+      const a = document.createElement('a');
+      a.href = url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      if (filename) a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1000);
+    }
     const CHART_PALETTE = ['#6c63ff', '#00d4aa', '#ffd166', '#ff6b6b', '#7b82a0', '#a78bfa', '#34d399', '#fb923c'];
 
     // ═══════════════════════════════════════════════════════
@@ -440,6 +472,44 @@
       );
     }
 
+    // ConfirmModal: confirmação para ações destrutivas, com justificativa opcional/obrigatória.
+    // `onConfirm` recebe a justificativa como argumento (string). Pode ser async.
+    function ConfirmModal({ open, onClose, title, message, justificativaLabel, justificativaObrigatoria, confirmLabel = 'Confirmar', confirmVariant = 'danger', onConfirm }) {
+      const [justif, setJustif] = useState('');
+      const [working, setWorking] = useState(false);
+      useEffect(() => { if (open) { setJustif(''); setWorking(false); } }, [open]);
+      if (!open) return null;
+      const podeConfirmar = !justificativaObrigatoria || justif.trim().length > 0;
+      async function go() {
+        if (!podeConfirmar) return;
+        setWorking(true);
+        try { await onConfirm(justif.trim()); }
+        finally { setWorking(false); }
+      }
+      const variantClass = { danger: 'btn-danger', success: 'btn-success', primary: 'btn-primary' }[confirmVariant] || 'btn-danger';
+      return (
+        <Modal open onClose={onClose} title={title} size="sm">
+          <div className="space-y-4">
+            <div className="text-sm" style={{ color: 'var(--text)' }}>{message}</div>
+            {justificativaLabel != null && (
+              <div>
+                <label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>
+                  {justificativaLabel}{justificativaObrigatoria && <span style={{ color: 'var(--accent3)' }}> *</span>}
+                </label>
+                <textarea className="input" rows="3" value={justif} onChange={e => setJustif(e.target.value)} placeholder={justificativaObrigatoria ? 'Obrigatório' : 'Opcional'} />
+              </div>
+            )}
+            <div className="flex justify-end gap-2 pt-2" style={{ borderTop: '1px solid var(--border)' }}>
+              <button className="btn btn-secondary" onClick={onClose} disabled={working}>Voltar</button>
+              <button className={`btn ${variantClass}`} onClick={go} disabled={!podeConfirmar || working}>
+                {working ? <Spinner size={14} /> : confirmLabel}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      );
+    }
+
     // ═══════════════════════════════════════════════════════
     //  ICONS (SVG inline)
     // ═══════════════════════════════════════════════════════
@@ -588,11 +658,14 @@
             ))}
           </div>
           <div style={{ padding: 12, borderTop: '1px solid var(--border)' }}>
-            <button className="btn btn-primary w-full" onClick={onConfigForm}>{Icon.cog}<span>Formulário</span></button>
+            {!isVisaoGlobal(user) && (
+              <button className="btn btn-primary w-full" onClick={onConfigForm}>{Icon.cog}<span>Formulário</span></button>
+            )}
             <div className="flex items-center gap-2 mt-3 px-1">
               <Avatar nome={user?.nome || user?.username} id={user?.id} size={28} />
               <div className="flex-1 min-w-0">
                 <div className="text-xs truncate">{user?.nome || user?.username}</div>
+                <div className="text-[10px]" style={{ color: 'var(--muted)' }}>{CARGO_LABEL[user?.tipo] || user?.tipo}</div>
                 <button onClick={logout} className="text-[10px] uppercase" style={{ color: 'var(--muted)' }}>Sair</button>
               </div>
             </div>
@@ -732,6 +805,9 @@
             <KpiCard icon="⭐" label="Score" value={score != null ? score.toFixed(2) : '—'} sub="Avaliação exp." color="var(--accent2)" />
           </div>
 
+          {/* DOCUMENTOS */}
+          {processo && <DocumentosDoProcesso processoId={processo.id} />}
+
           {/* RESPOSTAS */}
           {!processo?.respostas_formulario ? (
             <div className="surface p-10 text-center">
@@ -744,6 +820,27 @@
           ) : (
             <RenderRespostas processo={processo} modelo={modelo} />
           )}
+        </div>
+      );
+    }
+
+    function DocumentosDoProcesso({ processoId }) {
+      const { user } = useAuth();
+      const [docs, setDocs] = useState(null);
+      const [erro, setErro] = useState(null);
+      const load = useCallback(async () => {
+        try { setDocs(await Api.documentosProcesso(processoId)); }
+        catch (e) { setErro(e); }
+      }, [processoId]);
+      useEffect(() => { setDocs(null); setErro(null); load(); }, [load]);
+      // Coordenador pode validar; secretaria/CASA/reitor/pro_reitor não.
+      const canValidate = user?.tipo === 'coordenador';
+      return (
+        <div className="surface p-5">
+          <div className="font-semibold mb-3">Documentos do processo {docs ? `(${docs.length})` : ''}</div>
+          {erro ? <ErrorBlock error={erro} onRetry={load} /> :
+           docs === null ? <LoadingBlock /> :
+           <DocumentosLista documentos={docs} canValidate={canValidate} onChanged={load} />}
         </div>
       );
     }
@@ -1563,8 +1660,8 @@
       const [processo, setProcesso] = useState(null);
       const [documentos, setDocumentos] = useState([]);
       const [loading, setLoading] = useState(true);
-      const [modalForm, setModalForm] = useState(false);
-      const [modalRel, setModalRel] = useState(false);
+      const [relatorioModal, setRelatorioModal] = useState(null); // 'parcial' | 'final' | null
+      const [uploadOpen, setUploadOpen] = useState(false);
       const load = useCallback(async () => {
         setLoading(true);
         try {
@@ -1577,66 +1674,237 @@
       async function gerar(tipo) {
         try {
           let url;
-          if (tipo === 'tce') url = await Api.gerarTCE(processo.id);
-          else if (tipo === 'termo') url = await Api.gerarTermo(processo.id);
-          window.open(url, '_blank');
+          let filename;
+          if (tipo === 'tce') { url = await Api.gerarTCE(processo.id); filename = `tce_${processo.id}.pdf`; }
+          else if (tipo === 'termo') { url = await Api.gerarTermo(processo.id); filename = `termo_${processo.id}.pdf`; }
+          abrirBlobUrl(url, filename);
         } catch (e) { toast.error(e.message); }
       }
       if (loading) return <LoadingBlock />;
       if (!processo) return <div className="surface p-8 text-center" style={{ color: 'var(--muted)' }}>Sem processo.</div>;
+
+      const podeAgir = STATUS_ALUNO_PODE_AGIR.includes(processo.status);
+      const temParcial = documentos.some(d => d.tipo === 'RELATORIO_PARCIAL');
+      const temFinal = documentos.some(d => d.tipo === 'RELATORIO_FINAL');
+
       return (
         <div className="space-y-5">
           <h1 className="text-2xl font-bold">Documentos</h1>
-          <div className="surface p-5">
-            <div className="font-semibold mb-3">Ações disponíveis</div>
-            <div className="flex flex-wrap gap-2">
-              <button className="btn btn-primary" onClick={() => gerar('tce')}>📄 Gerar TCE</button>
-              <button className="btn btn-primary" onClick={() => gerar('termo')}>📄 Termo de Realização</button>
-              <button className="btn btn-success" onClick={() => setModalForm(true)}>📝 Preencher Avaliação</button>
-              <button className="btn btn-secondary" onClick={() => setModalRel(true)}>✏️ Gerar Relatório</button>
+
+          {!podeAgir && (
+            <div className="surface p-4" style={{ borderLeft: `4px solid var(--accent3)`, background: 'rgba(255,107,107,.08)' }}>
+              <div className="font-semibold">Este processo foi {STATUS_PROC[processo.status]?.label?.toLowerCase() || processo.status.toLowerCase()}.</div>
+              <div className="text-sm mt-1" style={{ color: 'var(--muted)' }}>Nenhuma ação adicional está disponível. Você pode visualizar os documentos abaixo.</div>
             </div>
-          </div>
-          <div className="surface p-5">
-            <div className="font-semibold mb-3">Histórico</div>
-            <div className="space-y-2">
-              {documentos.length === 0 && <div className="text-sm" style={{ color: 'var(--muted)' }}>Nenhum documento.</div>}
-              {documentos.map(d => (
-                <div key={d.id} className="surface2 p-3 flex items-center justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium">{TIPO_DOC[d.tipo] || d.tipo}</div>
-                    <div className="text-xs" style={{ color: 'var(--muted)' }}>v{d.versao} · {new Date(d.data_upload).toLocaleDateString('pt-BR')}</div>
-                    {d.observacoes && <div className="text-xs mt-1 italic" style={{ color: 'var(--accent4)' }}>"{d.observacoes}"</div>}
-                  </div>
-                  <DocStatusBadge status={d.status} />
-                  {d.arquivo && <a href={d.arquivo} target="_blank" rel="noreferrer" className="btn btn-secondary" style={{ fontSize: 11 }}>Abrir</a>}
-                </div>
-              ))}
+          )}
+
+          {podeAgir && (
+            <div className="surface p-5">
+              <div className="font-semibold mb-3">Ações disponíveis</div>
+              <div className="flex flex-wrap gap-2">
+                <button className="btn btn-primary" onClick={() => gerar('tce')}>📄 Gerar TCE</button>
+                <button className="btn btn-primary" onClick={() => gerar('termo')}>📄 Termo de Realização</button>
+                <button className="btn btn-success" disabled={temParcial} onClick={() => setRelatorioModal('parcial')}>
+                  📝 Preencher Relatório Parcial{temParcial ? ' (enviado)' : ''}
+                </button>
+                {temParcial && (
+                  <button className="btn btn-success" disabled={temFinal} onClick={() => setRelatorioModal('final')}>
+                    📝 Preencher Relatório Final{temFinal ? ' (enviado)' : ''}
+                  </button>
+                )}
+                <button className="btn btn-secondary" onClick={() => setUploadOpen(true)}>⬆ Enviar Documento</button>
+              </div>
             </div>
+          )}
+
+          <div className="surface p-5">
+            <div className="font-semibold mb-3">Documentos do processo ({documentos.length})</div>
+            <DocumentosLista documentos={documentos} canValidate={false} onChanged={load} />
           </div>
-          {modalForm && <PreencherFormulario processo={processo} onClose={() => setModalForm(false)} onDone={() => { setModalForm(false); load(); }} />}
-          {modalRel && <GerarRelatorio processo={processo} onClose={() => setModalRel(false)} onDone={() => { setModalRel(false); load(); }} />}
+
+          {relatorioModal && (
+            <PreencherFormulario
+              processo={processo}
+              tipoRelatorio={relatorioModal}
+              onClose={() => setRelatorioModal(null)}
+              onDone={() => { setRelatorioModal(null); load(); }}
+            />
+          )}
+          {uploadOpen && (
+            <UploadDocumentoModal
+              processo={processo}
+              onClose={() => setUploadOpen(false)}
+              onDone={() => { setUploadOpen(false); load(); }}
+            />
+          )}
         </div>
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  DocumentosLista — usada por aluno, coord e visão global
+    // ═══════════════════════════════════════════════════════
+    function DocumentosLista({ documentos, canValidate, onChanged }) {
+      const toast = useToast();
+      const [confirmacao, setConfirmacao] = useState(null); // { doc, novoStatus }
+      async function visualizar(d) {
+        if (!d.arquivo) { toast.error('Arquivo indisponível.'); return; }
+        // Usa anchor para evitar popup blocker.
+        abrirBlobUrl(d.arquivo);
+      }
+      async function executarValidacao(coment) {
+        const { doc, novoStatus } = confirmacao;
+        try {
+          await Api.validarDocumento(doc.id, novoStatus, coment);
+          toast.success(`Documento ${novoStatus === 'APROVADO' ? 'aprovado' : 'reprovado'}.`);
+          setConfirmacao(null);
+          onChanged && onChanged();
+        } catch (e) { toast.error(e.message); }
+      }
+      if (!documentos || documentos.length === 0) {
+        return <div className="text-sm" style={{ color: 'var(--muted)' }}>Nenhum documento enviado ainda.</div>;
+      }
+      return (
+        <div className="space-y-2">
+          {documentos.map(d => {
+            const nomeArquivo = (d.arquivo || '').split('/').pop() || '—';
+            return (
+              <div key={d.id} className="surface2 p-3 flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium">{TIPO_DOC[d.tipo] || d.tipo}</div>
+                  <div className="text-xs truncate" style={{ color: 'var(--muted)' }}>{nomeArquivo}</div>
+                  <div className="text-xs" style={{ color: 'var(--muted)' }}>
+                    v{d.versao} · {new Date(d.data_upload).toLocaleDateString('pt-BR')}
+                    {d.enviado_por_nome ? ` · por ${d.enviado_por_nome}` : ''}
+                  </div>
+                  {d.observacoes && d.status === 'REJEITADO' && (
+                    <div className="text-xs mt-1 p-2 rounded" style={{ background: 'rgba(255,107,107,.1)', color: 'var(--accent3)' }}>
+                      <b>Observação:</b> {d.observacoes}
+                    </div>
+                  )}
+                  {d.observacoes && d.status !== 'REJEITADO' && (
+                    <div className="text-xs mt-1 italic" style={{ color: 'var(--accent4)' }}>"{d.observacoes}"</div>
+                  )}
+                </div>
+                <DocStatusBadge status={d.status} />
+                <div className="flex gap-1">
+                  {d.arquivo && <button className="btn btn-secondary" style={{ fontSize: 11 }} onClick={() => visualizar(d)}>👁 Visualizar</button>}
+                  {d.arquivo && <a className="btn btn-secondary" style={{ fontSize: 11 }} href={d.arquivo} download>⬇ Download</a>}
+                  {canValidate && d.status === 'PENDENTE' && (
+                    <>
+                      <button className="btn btn-success" style={{ fontSize: 11 }} onClick={() => setConfirmacao({ doc: d, novoStatus: 'APROVADO' })}>Aprovar</button>
+                      <button className="btn btn-danger" style={{ fontSize: 11 }} onClick={() => setConfirmacao({ doc: d, novoStatus: 'REJEITADO' })}>Reprovar</button>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+          <ConfirmModal
+            open={!!confirmacao}
+            onClose={() => setConfirmacao(null)}
+            title={confirmacao?.novoStatus === 'APROVADO' ? 'Aprovar documento' : 'Reprovar documento'}
+            message={`Confirma ${confirmacao?.novoStatus === 'APROVADO' ? 'a aprovação' : 'a reprovação'} de "${TIPO_DOC[confirmacao?.doc?.tipo] || confirmacao?.doc?.tipo}"?`}
+            justificativaLabel={confirmacao?.novoStatus === 'REJEITADO' ? 'Motivo da reprovação' : 'Observação (opcional)'}
+            justificativaObrigatoria={confirmacao?.novoStatus === 'REJEITADO'}
+            confirmLabel={confirmacao?.novoStatus === 'APROVADO' ? 'Aprovar' : 'Reprovar'}
+            confirmVariant={confirmacao?.novoStatus === 'APROVADO' ? 'success' : 'danger'}
+            onConfirm={executarValidacao}
+          />
+        </div>
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  UploadDocumentoModal — aluno envia documento ao processo
+    // ═══════════════════════════════════════════════════════
+    function UploadDocumentoModal({ processo, onClose, onDone }) {
+      const toast = useToast();
+      const [tipo, setTipo] = useState('APOLICE');
+      const [arquivo, setArquivo] = useState(null);
+      const [enviando, setEnviando] = useState(false);
+      // Tipos que o aluno pode enviar (TCE, relatórios e termo são gerados pelo sistema).
+      const TIPOS_UPLOAD = [
+        ['APOLICE', 'Apólice de Seguro'],
+        ['OUTRO', 'Outro Documento'],
+      ];
+      async function submit() {
+        if (!arquivo) { toast.error('Selecione um arquivo.'); return; }
+        setEnviando(true);
+        try {
+          await Api.uploadDocumento(processo.id, tipo, arquivo);
+          toast.success('Documento enviado.');
+          onDone && onDone();
+        } catch (e) {
+          const d = e.data || {};
+          const ms = Object.entries(d).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(' ') : v}`);
+          toast.error(ms.join(' | ') || e.message);
+        } finally { setEnviando(false); }
+      }
+      return (
+        <Modal open title="Enviar Documento" onClose={onClose} size="sm">
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>Tipo</label>
+              <select className="input" value={tipo} onChange={e => setTipo(e.target.value)}>
+                {TIPOS_UPLOAD.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>Arquivo (PDF, máx 10 MB)</label>
+              <input type="file" accept=".pdf" className="input" style={{ padding: '6px 10px' }} onChange={e => setArquivo(e.target.files?.[0] || null)} />
+              {arquivo && <div className="text-xs mt-1" style={{ color: 'var(--muted)' }}>{arquivo.name} · {(arquivo.size / 1024).toFixed(1)} KB</div>}
+            </div>
+            <div className="text-xs" style={{ color: 'var(--muted)' }}>Apenas PDFs são aceitos. Documentos passam por validação automática e revisão do coordenador.</div>
+            <div className="flex justify-end gap-2 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
+              <button className="btn btn-secondary" onClick={onClose} disabled={enviando}>Cancelar</button>
+              <button className="btn btn-primary" onClick={submit} disabled={enviando || !arquivo}>
+                {enviando ? <Spinner size={14} /> : 'Enviar'}
+              </button>
+            </div>
+          </div>
+        </Modal>
       );
     }
 
     function ProcessoDetailModal({ processo, onClose, onChanged, role }) {
       const toast = useToast();
+      const { user } = useAuth();
+      const readOnly = isVisaoGlobal(user);
+      const ehAluno = role === 'aluno';
       const [docs, setDocs] = useState([]);
       const [full, setFull] = useState(null);
       const [load, setLoad] = useState(true);
+      const [confirmTransicao, setConfirmTransicao] = useState(null);
       useEffect(() => {
         Promise.all([Api.processo(processo.id), Api.documentosProcesso(processo.id)])
           .then(([f, d]) => { setFull(f); setDocs(d); })
           .catch(e => toast.error(e.message))
           .finally(() => setLoad(false));
       }, [processo, toast]);
-      async function mudarStatus(s) {
-        let j = '';
-        if (s === 'REJEITADO') { j = window.prompt('Justificativa:') || ''; if (!j.trim()) { toast.error('Justificativa obrigatória.'); return; } }
-        try { await Api.alterarStatus(processo.id, s, j); toast.success('Status atualizado.'); onChanged && onChanged(); onClose(); }
-        catch (e) { toast.error(e.message); }
+      async function executarTransicao(novoStatus, justif) {
+        try {
+          await Api.alterarStatus(processo.id, novoStatus, justif);
+          toast.success('Status atualizado.');
+          onChanged && onChanged();
+          onClose();
+        } catch (e) { toast.error(e.message); }
       }
-      const trans = full ? TRANSICOES[full.status] || [] : [];
+      // Aluno só vê CANCELADO. Coordenador vê todas as transições válidas.
+      const transAll = full ? TRANSICOES[full.status] || [] : [];
+      const trans = ehAluno
+        ? (STATUS_ALUNO_PODE_CANCELAR.includes(full?.status) ? ['CANCELADO'] : [])
+        : transAll;
+      const tConf = confirmTransicao;
+      const tConfInfo = tConf ? STATUS_PROC[tConf] : null;
+      // Justificativa obrigatória para REJEITADO; recomendada para CANCELADO.
+      const justifLabel = tConf === 'REJEITADO' ? 'Justificativa da rejeição'
+                        : tConf === 'CANCELADO' ? 'Motivo do cancelamento'
+                        : tConf === 'CORRECAO_SOLICITADA' ? 'O que precisa ser corrigido' : null;
+      const justifObrig = tConf === 'REJEITADO' || tConf === 'CANCELADO' || tConf === 'CORRECAO_SOLICITADA';
+      const variant = tConf === 'CANCELADO' || tConf === 'REJEITADO' ? 'danger'
+                    : tConf === 'APROVADO' || tConf === 'ATIVO' || tConf === 'ENCERRADO' ? 'success'
+                    : 'primary';
       return (
         <Modal open title={`Processo #${processo.id}`} onClose={onClose} size="lg">
           {load || !full ? <LoadingBlock /> : (
@@ -1662,16 +1930,41 @@
                   ))}
                 </div>
               </div>
-              {trans.length > 0 && (
+              {trans.length > 0 && !readOnly && (
                 <div>
-                  <div className="font-semibold mb-2">Transições</div>
+                  <div className="font-semibold mb-2">{ehAluno ? 'Ações' : 'Transições'}</div>
                   <div className="flex flex-wrap gap-2">
-                    {trans.map(t => <button key={t} className="btn btn-secondary" onClick={() => mudarStatus(t)}>→ {STATUS_PROC[t]?.label || t}</button>)}
+                    {trans.map(t => {
+                      const isCancel = t === 'CANCELADO' || t === 'REJEITADO';
+                      const isOk = t === 'APROVADO' || t === 'ATIVO' || t === 'ENCERRADO';
+                      const cls = isCancel ? 'btn-danger' : isOk ? 'btn-success' : 'btn-secondary';
+                      return (
+                        <button key={t} className={`btn ${cls}`} onClick={() => setConfirmTransicao(t)}>
+                          {ehAluno && t === 'CANCELADO' ? 'Cancelar Processo' : `→ ${STATUS_PROC[t]?.label || t}`}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
+              {readOnly && (
+                <div className="text-xs italic" style={{ color: 'var(--muted)' }}>Visualização — sem ações disponíveis para o perfil {CARGO_LABEL[user?.tipo] || user?.tipo}.</div>
+              )}
             </div>
           )}
+          <ConfirmModal
+            open={!!tConf}
+            onClose={() => setConfirmTransicao(null)}
+            title={ehAluno && tConf === 'CANCELADO' ? 'Cancelar processo de estágio' : `Confirmar: ${tConfInfo?.label || tConf}`}
+            message={ehAluno && tConf === 'CANCELADO'
+              ? 'Tem certeza que deseja cancelar seu processo de estágio? Esta ação não pode ser desfeita.'
+              : `Confirma a transição para "${tConfInfo?.label || tConf}"?`}
+            justificativaLabel={justifLabel}
+            justificativaObrigatoria={justifObrig}
+            confirmLabel={ehAluno && tConf === 'CANCELADO' ? 'Confirmar Cancelamento' : `Confirmar`}
+            confirmVariant={variant}
+            onConfirm={(j) => executarTransicao(tConf, j)}
+          />
         </Modal>
       );
     }
@@ -1920,79 +2213,154 @@
     // ═══════════════════════════════════════════════════════
     //  PREENCHER FORMULÁRIO / GERAR RELATÓRIO
     // ═══════════════════════════════════════════════════════
-    function PreencherFormulario({ processo, onClose, onDone }) {
+    // ── Verifica se uma seção foi suficientemente preenchida ──
+    function secaoCompleta(sec, respostas) {
+      if (sec.tipo === 'auto') return true;
+      const v = respostas[sec.id];
+      const itens = sec.itens || [];
+      if (sec.tipo === 'escala_1_4') {
+        if (!v || typeof v !== 'object') return false;
+        return itens.every(it => typeof v[it] === 'number');
+      }
+      if (sec.tipo === 'escala_3') {
+        if (!v || typeof v !== 'object') return false;
+        return itens.every(it => typeof v[it] === 'string' && v[it]);
+      }
+      if (sec.tipo === 'escala_1_4_multi') {
+        if (!v || typeof v !== 'object') return false;
+        return itens.every(it => v[it] && (sec.colunas || []).some(c => typeof v[it][c] === 'number'));
+      }
+      if (sec.tipo === 'checkbox_duplo') {
+        if (!v || typeof v !== 'object') return false;
+        return Object.values(v).some(arr => Array.isArray(arr) && arr.length > 0);
+      }
+      if (sec.tipo === 'texto_livre') {
+        return typeof v === 'string' && v.trim().length > 0;
+      }
+      return true;
+    }
+
+    function PreencherFormulario({ processo, tipoRelatorio, onClose, onDone }) {
       const toast = useToast();
+      const { user } = useAuth();
       const [modelo, setModelo] = useState(null);
       const [respostas, setRespostas] = useState({});
-      const [tipoRel, setTipoRel] = useState('parcial');
+      const [aluno, setAluno] = useState(null);
+      const [empresa, setEmpresa] = useState(null);
+      const tipoRel = tipoRelatorio || 'parcial';
       const [load, setLoad] = useState(true);
       const [env, setEnv] = useState(false);
       const [secAtiva, setSecAtiva] = useState(0);
       useEffect(() => {
-        Api.modelosFormulario().then(ms => {
+        Promise.all([
+          Api.modelosFormulario(),
+          Api.alunos().catch(() => []),
+          processo.empresa ? Api.empresa(processo.empresa).catch(() => null) : Promise.resolve(null),
+        ]).then(([ms, alunos, emp]) => {
           const m = ms.find(x => x.ativo) || ms[0];
           if (!m) { toast.error('Nenhum modelo disponível.'); onClose(); return; }
           setModelo(m);
-          if (processo.respostas_formulario?.secoes) setRespostas(processo.respostas_formulario.secoes);
-          if (processo.respostas_formulario?.tipo_relatorio) setTipoRel(processo.respostas_formulario.tipo_relatorio);
+          setAluno(alunos[0] || null);
+          setEmpresa(emp);
+          if (processo.respostas_formulario?.secoes) {
+            setRespostas(processo.respostas_formulario.secoes);
+          }
         }).catch(e => toast.error(e.message)).finally(() => setLoad(false));
       }, [processo, toast, onClose]);
       const setResp = (sid, v) => setRespostas(r => ({ ...r, [sid]: v }));
-      async function submit(prev) {
+      const setExtra = (sid, suffix, v) => setRespostas(r => ({ ...r, [`${sid}_${suffix}`]: v }));
+      async function submit() {
         setEnv(true);
         try {
-          const url = await Api.preencherFormulario(processo.id, { tipo_relatorio: tipoRel, respostas, preview: prev });
-          window.open(url, '_blank');
-          if (!prev) { toast.success('Enviado!'); onDone(); }
+          const url = await Api.preencherFormulario(processo.id, { tipo_relatorio: tipoRel, respostas, preview: false });
+          abrirBlobUrl(url, `relatorio_${tipoRel}_${processo.id}.pdf`);
+          toast.success(`Relatório ${tipoRel} enviado!`);
+          onDone();
         } catch (e) {
           if (e.data?.erros_validacao) toast.error('Erros: ' + e.data.erros_validacao.join('; '));
           else toast.error(e.message);
         } finally { setEnv(false); }
       }
-      if (load) return <Modal open title="Preencher avaliação" onClose={onClose} size="xl"><LoadingBlock /></Modal>;
+      if (load) return <Modal open title="Preencher relatório" onClose={onClose} size="xl"><LoadingBlock /></Modal>;
       if (!modelo) return null;
       const secs = modelo.secoes || [];
       const total = secs.length;
-      const resp = secs.filter(s => s.tipo === 'auto' || (respostas[s.id] != null && (typeof respostas[s.id] === 'string' || Object.keys(respostas[s.id] || {}).length > 0))).length;
-      const pct = total > 0 ? Math.round((resp / total) * 100) : 0;
+      const respCount = secs.filter(s => secaoCompleta(s, respostas)).length;
+      const pct = total > 0 ? Math.round((respCount / total) * 100) : 0;
       const sec = secs[secAtiva];
+      const isPrimeira = secAtiva === 0;
+      const isUltima = secAtiva === total - 1;
+      const tudoPreenchido = secs.every(s => secaoCompleta(s, respostas));
       return (
-        <Modal open title={modelo.titulo} onClose={onClose} size="xl">
+        <Modal open title={`Relatório ${tipoRel === 'final' ? 'Final' : 'Parcial'} — ${modelo.titulo}`} onClose={onClose} size="xl">
           <div className="space-y-4">
             <div>
               <div className="flex justify-between mb-1 text-xs">
                 <span style={{ color: 'var(--muted)' }}>Progresso</span>
-                <span>{resp}/{total} ({pct}%)</span>
+                <span>{respCount}/{total} seções ({pct}%)</span>
               </div>
               <div style={{ height: 6, background: 'var(--surface2)', borderRadius: 9999, overflow: 'hidden' }}>
                 <div style={{ height: '100%', background: 'var(--accent)', width: `${pct}%`, transition: 'width .3s' }} />
               </div>
             </div>
-            <div className="flex items-center gap-2 text-xs">
-              <span style={{ color: 'var(--muted)' }}>Tipo:</span>
-              <select className="input" style={{ width: 'auto' }} value={tipoRel} onChange={e => setTipoRel(e.target.value)}>
-                <option value="parcial">Parcial</option><option value="final">Final</option>
-              </select>
-            </div>
             <div className="flex flex-wrap gap-1">
-              {secs.map((s, i) => (
-                <button key={s.id} style={{ padding: '4px 10px', fontSize: 11, borderRadius: 6, background: i === secAtiva ? 'var(--accent)' : 'var(--surface2)', color: i === secAtiva ? 'white' : 'var(--text)' }} onClick={() => setSecAtiva(i)}>{i + 1}</button>
-              ))}
+              {secs.map((s, i) => {
+                const ok = secaoCompleta(s, respostas);
+                return (
+                  <button key={s.id}
+                    style={{
+                      padding: '4px 10px', fontSize: 11, borderRadius: 6,
+                      background: i === secAtiva ? 'var(--accent)' : (ok ? 'rgba(0,212,170,.15)' : 'var(--surface2)'),
+                      color: i === secAtiva ? 'white' : (ok ? 'var(--accent2)' : 'var(--text)'),
+                    }}
+                    onClick={() => setSecAtiva(i)}>
+                    {i + 1}{ok ? ' ✓' : ''}
+                  </button>
+                );
+              })}
             </div>
             {sec && (
               <div className="surface2 p-4">
-                <div className="font-semibold mb-3" style={{ color: 'var(--accent)' }}>{sec.titulo}</div>
-                <SecaoInput sec={sec} processo={processo} valor={respostas[sec.id]} onChange={v => setResp(sec.id, v)} />
+                <SecaoInput
+                  sec={sec}
+                  processo={processo}
+                  aluno={aluno}
+                  empresa={empresa}
+                  user={user}
+                  valor={respostas[sec.id]}
+                  onChange={v => setResp(sec.id, v)}
+                  textoExtra={respostas[`${sec.id}_texto`]}
+                  textoPositivoExtra={respostas[`${sec.id}_texto_positivo`]}
+                  textoNegativoExtra={respostas[`${sec.id}_texto_negativo`]}
+                  efetivacao={respostas[`${sec.id}_efetivacao`]}
+                  onTextoChange={v => setExtra(sec.id, 'texto', v)}
+                  onTextoPositivoChange={v => setExtra(sec.id, 'texto_positivo', v)}
+                  onTextoNegativoChange={v => setExtra(sec.id, 'texto_negativo', v)}
+                  onEfetivacaoChange={v => setExtra(sec.id, 'efetivacao', v)}
+                />
               </div>
             )}
+            {/* Navegação: Anterior (esquerda) | Próxima OU Enviar (direita) */}
             <div className="flex justify-between gap-2 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
-              <div className="flex gap-2">
-                <button className="btn btn-secondary" disabled={secAtiva === 0} onClick={() => setSecAtiva(i => i - 1)}>← Anterior</button>
-                <button className="btn btn-secondary" disabled={secAtiva === total - 1} onClick={() => setSecAtiva(i => i + 1)}>Próxima →</button>
+              <div>
+                {!isPrimeira && (
+                  <button className="btn btn-secondary" onClick={() => setSecAtiva(i => i - 1)}>← Anterior</button>
+                )}
               </div>
-              <div className="flex gap-2">
-                <button className="btn btn-secondary" disabled={env} onClick={() => submit(true)}>👁 Preview</button>
-                <button className="btn btn-primary" disabled={env} onClick={() => submit(false)}>{env ? <Spinner size={14} /> : 'Enviar'}</button>
+              <div>
+                {!isUltima && (
+                  <button className="btn btn-primary" onClick={() => setSecAtiva(i => i + 1)}>Próxima →</button>
+                )}
+                {isUltima && (
+                  <button
+                    className="btn btn-primary"
+                    disabled={env || !tudoPreenchido}
+                    title={!tudoPreenchido ? 'Preencha todas as seções' : ''}
+                    onClick={submit}
+                  >
+                    {env ? <Spinner size={14} /> : 'Enviar'}
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -2000,128 +2368,227 @@
       );
     }
 
-    function SecaoInput({ sec, processo, valor, onChange }) {
-      if (sec.tipo === 'auto') return (
-        <div className="grid grid-cols-2 gap-3 text-sm">
-          <DataRow label="Horas/sem" value={processo.horas_semanais} />
-          <DataRow label="Início" value={processo.data_inicio_prevista} />
-          <DataRow label="Fim" value={processo.data_fim_prevista} />
-        </div>
+    function SecaoInput({
+      sec, processo, aluno, empresa, user, valor, onChange,
+      textoExtra, textoPositivoExtra, textoNegativoExtra, efetivacao,
+      onTextoChange, onTextoPositivoChange, onTextoNegativoChange, onEfetivacaoChange,
+    }) {
+      // Itens detalhados (descrição abaixo do nome) — usado na seção comportamental.
+      const detalhesMap = {};
+      (sec.itens_detalhados || []).forEach(d => { if (d?.nome) detalhesMap[d.nome] = d.descricao || ''; });
+      const renderItemLabel = (it) => (
+        detalhesMap[it]
+          ? <div><div className="text-sm">{it}</div><div className="text-xs" style={{ color: 'var(--muted)' }}>{detalhesMap[it]}</div></div>
+          : <span className="text-sm">{it}</span>
       );
-      if (sec.tipo === 'texto_livre') return <textarea className="input" rows="5" value={valor || ''} onChange={e => onChange(e.target.value)} />;
+
+      // ── header da seção (título + descrição) ──
+      const header = (
+        <>
+          <div className="font-semibold mb-1" style={{ color: 'var(--accent)' }}>{sec.titulo}</div>
+          {sec.descricao && <div className="text-xs mb-3" style={{ color: 'var(--muted)' }}>{sec.descricao}</div>}
+        </>
+      );
+
+      // ── auto: seções 1 e 2 (dados do processo) ──
+      if (sec.tipo === 'auto') {
+        const fim = processo.data_fim_real || processo.data_fim_prevista;
+        const ini = processo.data_inicio_real || processo.data_inicio_prevista;
+        let semanas = '—', horasTotais = '—';
+        if (ini && fim) {
+          const d = (new Date(fim) - new Date(ini)) / 86400000;
+          semanas = Math.max(1, Math.round(d / 7));
+          horasTotais = semanas * (processo.horas_semanais || 0);
+        }
+        const fmtMoney = (v) => v != null ? `R$ ${parseFloat(v).toFixed(2)}` : '—';
+
+        if (sec.id === 'estagiario') {
+          return (
+            <>
+              {header}
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <DataRow label="Nome" value={user?.nome || '—'} />
+                <DataRow label="Matrícula" value={user?.username || aluno?.usuario?.username || '—'} />
+                <DataRow label="Curso" value={(aluno?.curso_nome || '—').toUpperCase()} />
+                <DataRow label="Semestre atual" value={aluno?.periodo_atual ? `${aluno.periodo_atual}º` : '—'} />
+                <DataRow label="Data de entrada" value={ini || '—'} />
+                <DataRow label="Data de saída" value={fim || '—'} />
+                <DataRow label="Horas/semana" value={processo.horas_semanais || '—'} />
+                <DataRow label="Semanas trabalhadas" value={semanas} />
+                <DataRow label="Horas totais" value={horasTotais} />
+                <DataRow label="Remuneração média" value={fmtMoney(processo.valor_bolsa)} />
+              </div>
+            </>
+          );
+        }
+        if (sec.id === 'empresa') {
+          return (
+            <>
+              {header}
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <DataRow label="Empresa" value={empresa?.razao_social || '—'} />
+                <DataRow label="CNPJ" value={empresa?.cnpj || '—'} />
+                <DataRow label="Localização" value={empresa?.localizacao || '—'} />
+                <DataRow label="Email contato" value={empresa?.email_contato || '—'} />
+                <DataRow label="Responsável legal" value={empresa?.responsavel_legal_nome || '—'} />
+                <DataRow label="Cargo do responsável" value={empresa?.responsavel_legal_cargo || '—'} />
+              </div>
+            </>
+          );
+        }
+        return <>{header}<div className="text-sm" style={{ color: 'var(--muted)' }}>Dados automáticos do processo.</div></>;
+      }
+
       const v = valor || {};
-      if (sec.tipo === 'escala_1_4') return (
-        <div className="space-y-2">{(sec.itens || []).map(it => (
-          <div key={it} className="flex justify-between items-center gap-3 py-1">
-            <span className="text-sm flex-1">{it}</span>
-            <div className="flex gap-1">{[1,2,3,4].map(n => (
-              <button key={n} style={{ width: 32, height: 32, borderRadius: 6, background: v[it] === n ? 'var(--accent)' : 'transparent', border: `1px solid ${v[it] === n ? 'var(--accent)' : 'var(--border)'}`, color: v[it] === n ? 'white' : 'var(--text)' }} onClick={() => onChange({ ...v, [it]: n })}>{n}</button>
+
+      // ── texto_livre (legado) ──
+      if (sec.tipo === 'texto_livre') {
+        return (
+          <>
+            {header}
+            <textarea className="input" rows="5" value={valor || ''} onChange={e => onChange(e.target.value)} placeholder="Sua resposta…" />
+          </>
+        );
+      }
+
+      // ── escala_1_4 ──
+      if (sec.tipo === 'escala_1_4') {
+        return (
+          <>
+            {header}
+            <div className="space-y-3">{(sec.itens || []).map(it => (
+              <div key={it} className="flex justify-between items-center gap-3 py-1">
+                <div className="flex-1">{renderItemLabel(it)}</div>
+                <div className="flex gap-1">{[1,2,3,4].map(n => (
+                  <button key={n} style={{ width: 32, height: 32, borderRadius: 6, background: v[it] === n ? 'var(--accent)' : 'transparent', border: `1px solid ${v[it] === n ? 'var(--accent)' : 'var(--border)'}`, color: v[it] === n ? 'white' : 'var(--text)' }} onClick={() => onChange({ ...v, [it]: n })}>{n}</button>
+                ))}</div>
+              </div>
             ))}</div>
-          </div>
-        ))}</div>
-      );
+            {sec.campo_efetivacao && (
+              <div className="mt-4">
+                <label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>Há proposta de efetivação ao final do estágio?</label>
+                <select className="input" style={{ maxWidth: 200 }} value={efetivacao || ''} onChange={e => onEfetivacaoChange(e.target.value)}>
+                  <option value="">— Selecione —</option>
+                  <option value="Sim">Sim</option>
+                  <option value="Não">Não</option>
+                </select>
+              </div>
+            )}
+            {sec.campo_texto_positivo && (
+              <div className="mt-4">
+                <label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>{sec.campo_texto_positivo}</label>
+                <textarea className="input" rows="3" value={textoPositivoExtra || ''} onChange={e => onTextoPositivoChange(e.target.value)} />
+              </div>
+            )}
+            {sec.campo_texto_negativo && (
+              <div className="mt-4">
+                <label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>{sec.campo_texto_negativo}</label>
+                <textarea className="input" rows="3" value={textoNegativoExtra || ''} onChange={e => onTextoNegativoChange(e.target.value)} />
+              </div>
+            )}
+          </>
+        );
+      }
+
+      // ── escala_3 ──
       if (sec.tipo === 'escala_3') {
         const ops = sec.opcoes || ['Suficiente', 'Insuficiente', 'Não utilizado'];
-        return <div className="space-y-2">{(sec.itens || []).map(it => (
-          <div key={it} className="flex justify-between items-center gap-3 py-1">
-            <span className="text-sm flex-1">{it}</span>
-            <div className="flex gap-3 text-xs">{ops.map(o => (
-              <label key={o} className="flex items-center gap-1 cursor-pointer" style={{ color: v[it] === o ? 'var(--accent)' : 'var(--text)' }}>
-                <input type="radio" checked={v[it] === o} onChange={() => onChange({ ...v, [it]: o })} /> {o}
-              </label>
+        return (
+          <>
+            {header}
+            <div className="space-y-2">{(sec.itens || []).map(it => (
+              <div key={it} className="flex justify-between items-center gap-3 py-1">
+                <span className="text-sm flex-1">{it}</span>
+                <div className="flex gap-3 text-xs">{ops.map(o => (
+                  <label key={o} className="flex items-center gap-1 cursor-pointer" style={{ color: v[it] === o ? 'var(--accent)' : 'var(--text)' }}>
+                    <input type="radio" checked={v[it] === o} onChange={() => onChange({ ...v, [it]: o })} /> {o}
+                  </label>
+                ))}</div>
+              </div>
             ))}</div>
-          </div>
-        ))}</div>;
+            {sec.campo_texto && (
+              <div className="mt-4">
+                <label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>{sec.campo_texto}</label>
+                <textarea className="input" rows="3" value={textoExtra || ''} onChange={e => onTextoChange(e.target.value)} />
+              </div>
+            )}
+          </>
+        );
       }
-      if (sec.tipo === 'escala_1_4_multi') return (
-        <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr style={{ color: 'var(--muted)', fontSize: 11 }}>
-          <th></th>{(sec.colunas || []).map(c => <th key={c} className="text-center pb-2 px-2">{c}</th>)}
-        </tr></thead><tbody>
-          {(sec.itens || []).map(it => {
-            const linha = v[it] || {};
-            return (
-              <tr key={it} style={{ borderTop: '1px solid var(--border)' }}>
-                <td className="py-2 pr-3">{it}</td>
-                {(sec.colunas || []).map(c => (
-                  <td key={c} className="py-2 px-1 text-center">
-                    <div className="inline-flex gap-0.5">{[1,2,3,4].map(n => (
-                      <button key={n} style={{ width: 24, height: 24, fontSize: 11, borderRadius: 4, background: linha[c] === n ? 'var(--accent)' : 'transparent', border: `1px solid ${linha[c] === n ? 'var(--accent)' : 'var(--border)'}`, color: linha[c] === n ? 'white' : 'var(--text)' }} onClick={() => onChange({ ...v, [it]: { ...linha, [c]: n } })}>{n}</button>
-                    ))}</div>
-                  </td>
-                ))}
-              </tr>
-            );
-          })}
-        </tbody></table></div>
-      );
-      if (sec.tipo === 'checkbox_duplo') return (
-        <table className="w-full text-sm"><thead><tr style={{ color: 'var(--muted)', fontSize: 11 }}>
-          <th></th>{(sec.colunas || []).map(c => <th key={c} className="text-center pb-2 px-2">{c}</th>)}
-        </tr></thead><tbody>
-          {(sec.itens || []).map(it => {
-            const linha = v[it] || [];
-            return (
-              <tr key={it} style={{ borderTop: '1px solid var(--border)' }}>
-                <td className="py-2 pr-3">{it}</td>
-                {(sec.colunas || []).map(c => (
-                  <td key={c} className="py-2 text-center">
-                    <input type="checkbox" checked={linha.includes(c)} onChange={e => {
-                      const ns = e.target.checked ? [...linha, c] : linha.filter(x => x !== c);
-                      onChange({ ...v, [it]: ns });
-                    }} />
-                  </td>
-                ))}
-              </tr>
-            );
-          })}
-        </tbody></table>
-      );
+
+      // ── escala_1_4_multi ──
+      if (sec.tipo === 'escala_1_4_multi') {
+        return (
+          <>
+            {header}
+            <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr style={{ color: 'var(--muted)', fontSize: 11 }}>
+              <th></th>{(sec.colunas || []).map(c => <th key={c} className="text-center pb-2 px-2">{c}</th>)}
+            </tr></thead><tbody>
+              {(sec.itens || []).map(it => {
+                const linha = v[it] || {};
+                return (
+                  <tr key={it} style={{ borderTop: '1px solid var(--border)' }}>
+                    <td className="py-2 pr-3">{it}</td>
+                    {(sec.colunas || []).map(c => (
+                      <td key={c} className="py-2 px-1 text-center">
+                        <div className="inline-flex gap-0.5">{[1,2,3,4].map(n => (
+                          <button key={n} style={{ width: 24, height: 24, fontSize: 11, borderRadius: 4, background: linha[c] === n ? 'var(--accent)' : 'transparent', border: `1px solid ${linha[c] === n ? 'var(--accent)' : 'var(--border)'}`, color: linha[c] === n ? 'white' : 'var(--text)' }} onClick={() => onChange({ ...v, [it]: { ...linha, [c]: n } })}>{n}</button>
+                        ))}</div>
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
+            </tbody></table></div>
+            {sec.campo_texto && (
+              <div className="mt-4">
+                <label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>{sec.campo_texto}</label>
+                <textarea className="input" rows="3" value={textoExtra || ''} onChange={e => onTextoChange(e.target.value)} />
+              </div>
+            )}
+          </>
+        );
+      }
+
+      // ── checkbox_duplo ──
+      if (sec.tipo === 'checkbox_duplo') {
+        return (
+          <>
+            {header}
+            <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr style={{ color: 'var(--muted)', fontSize: 11 }}>
+              <th></th>{(sec.colunas || []).map(c => <th key={c} className="text-center pb-2 px-2">{c}</th>)}
+            </tr></thead><tbody>
+              {(sec.itens || []).map(it => {
+                const linha = v[it] || [];
+                return (
+                  <tr key={it} style={{ borderTop: '1px solid var(--border)' }}>
+                    <td className="py-2 pr-3">{it}</td>
+                    {(sec.colunas || []).map(c => (
+                      <td key={c} className="py-2 text-center">
+                        <input type="checkbox" checked={linha.includes(c)} onChange={e => {
+                          const ns = e.target.checked ? [...linha, c] : linha.filter(x => x !== c);
+                          onChange({ ...v, [it]: ns });
+                        }} />
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
+            </tbody></table></div>
+            {sec.campo_texto && (
+              <div className="mt-4">
+                <label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>{sec.campo_texto}</label>
+                <textarea className="input" rows="3" value={textoExtra || ''} onChange={e => onTextoChange(e.target.value)} />
+              </div>
+            )}
+          </>
+        );
+      }
+
       return null;
     }
 
-    function GerarRelatorio({ processo, onClose, onDone }) {
-      const toast = useToast();
-      const [form, setForm] = useState({ tipo_relatorio: 'parcial', resumo: '', introducao: '', apresentacao_empresa: '', atividades_desenvolvidas: '', analise_critica: '', conclusao: '' });
-      const [env, setEnv] = useState(false);
-      const upd = (k, v) => setForm(s => ({ ...s, [k]: v }));
-      async function submit(prev) {
-        setEnv(true);
-        try {
-          const url = await Api.gerarRelatorio(processo.id, { ...form, preview: prev });
-          window.open(url, '_blank');
-          if (!prev) { toast.success('Gerado!'); onDone(); }
-        } catch (e) { toast.error(e.message); }
-        finally { setEnv(false); }
-      }
-      const campos = [
-        ['resumo', 'Resumo'], ['introducao', 'Introdução'],
-        ['apresentacao_empresa', 'Apresentação da empresa (opcional)'],
-        ['atividades_desenvolvidas', 'Atividades desenvolvidas'],
-        ['analise_critica', 'Análise crítica'], ['conclusao', 'Conclusão'],
-      ];
-      return (
-        <Modal open title="Gerar relatório" onClose={onClose} size="xl">
-          <div className="space-y-3">
-            <div>
-              <label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>Tipo</label>
-              <select className="input" style={{ maxWidth: 200 }} value={form.tipo_relatorio} onChange={e => upd('tipo_relatorio', e.target.value)}>
-                <option value="parcial">Parcial</option><option value="final">Final</option>
-              </select>
-            </div>
-            {campos.map(([k, l]) => (
-              <div key={k}>
-                <label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>{l}</label>
-                <textarea className="input" rows="4" value={form[k]} onChange={e => upd(k, e.target.value)} />
-              </div>
-            ))}
-            <div className="flex justify-end gap-2 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
-              <button className="btn btn-secondary" disabled={env} onClick={() => submit(true)}>👁 Preview</button>
-              <button className="btn btn-primary" disabled={env} onClick={() => submit(false)}>{env ? <Spinner size={14} /> : 'Enviar'}</button>
-            </div>
-          </div>
-        </Modal>
-      );
-    }
+    // GerarRelatorio removido — unificado em PreencherFormulario (com seção "Observações gerais").
 
     // ═══════════════════════════════════════════════════════
     //  SUPERVISOR — APP
@@ -2198,7 +2665,7 @@
       const { user } = useAuth();
       const [auth, setAuth] = useState('login');
       if (!user) return auth === 'login' ? <LoginPage onGoRegister={() => setAuth('register')} /> : <RegisterPage onGoLogin={() => setAuth('login')} />;
-      if (user.tipo === 'coordenador') return <CoordApp />;
+      if (user.tipo === 'coordenador' || isVisaoGlobal(user)) return <CoordApp />;
       if (user.tipo === 'aluno') return <AlunoApp />;
       if (user.tipo === 'supervisor_empresa') return <SupervisorApp />;
       return <CoordApp />;

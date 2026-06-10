@@ -23,7 +23,7 @@ from .serializers import (
 )
 from .score_utils import calcular_score_conformidade
 from .permissions import (
-    get_aluno, get_coordenador, get_supervisor, is_admin, is_administrativo, has_global_access,
+    get_aluno, get_coordenador, get_supervisor, is_admin, is_administrativo, has_global_access, is_visao_global,
     IsAluno, IsCoordenador, IsSupervisorEmpresa, IsAdminOrReadOnly, IsDonoDoProcesso,
 )
 from .state_machine import (

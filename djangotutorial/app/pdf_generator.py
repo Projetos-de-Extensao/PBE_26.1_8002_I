@@ -544,37 +544,153 @@ _MESES_EXTENSO = [
 ]
 
 
-def _tabela_avaliacao(dados_tabela, col_widths):
-    """Cria Table com estilo padrão: header cinza, grid, 1ª coluna left."""
-    t = Table(dados_tabela, colWidths=col_widths)
+def _tabela_avaliacao(dados_tabela, col_widths, row_heights=None):
+    """Cria Table com estilo padrão. Aceita Paragraph nas células para word-wrap."""
+    t = Table(dados_tabela, colWidths=col_widths, rowHeights=row_heights, splitByRow=True)
     t.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTNAME', (0, 1), (0, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('FONTSIZE', (0, 0), (-1, -1), 8),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('ALIGN', (0, 0), (0, -1), 'LEFT'),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-        ('TOPPADDING', (0, 0), (-1, -1), 4),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ('TOPPADDING', (0, 0), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+        ('LEFTPADDING', (0, 0), (-1, -1), 4),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 4),
     ]))
     return t
 
 
+# Estilos compartilhados para células de tabela com word-wrap
+_TD_LEFT = ParagraphStyle(
+    'td_left', fontName='Helvetica', fontSize=8, leading=10, alignment=0,
+)
+_TD_LEFT_BOLD = ParagraphStyle(
+    'td_left_bold', fontName='Helvetica-Bold', fontSize=8, leading=10, alignment=0,
+)
+_TD_CENTER = ParagraphStyle(
+    'td_center', fontName='Helvetica', fontSize=8, leading=10, alignment=1,
+)
+_TH = ParagraphStyle(
+    'th', fontName='Helvetica-Bold', fontSize=8, leading=10, alignment=1,
+)
+_TD_DESC = ParagraphStyle(
+    'td_desc', fontName='Helvetica-Oblique', fontSize=7, leading=9,
+    alignment=0, textColor=colors.grey,
+)
+
+
+def _p(text, style=_TD_LEFT):
+    """Envolve string em Paragraph (para word-wrap em células de tabela)."""
+    if text is None:
+        return ''
+    return Paragraph(str(text), style)
+
+
+def _kv_table(rows, usable_w):
+    """Tabela 2x2 (label/valor) lado a lado, compatível com formato do PO."""
+    col_label = 3.5 * cm
+    col_val = (usable_w - 2 * col_label) / 2
+    grid_rows = []
+    for i in range(0, len(rows), 2):
+        a = rows[i]
+        b = rows[i + 1] if i + 1 < len(rows) else ('', '')
+        grid_rows.append([
+            _p(a[0], _TD_LEFT_BOLD), _p(a[1], _TD_LEFT),
+            _p(b[0], _TD_LEFT_BOLD), _p(b[1], _TD_LEFT),
+        ])
+    t = Table(grid_rows, colWidths=[col_label, col_val, col_label, col_val])
+    t.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('GRID', (0, 0), (-1, -1), 0.4, colors.grey),
+        ('TOPPADDING', (0, 0), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+        ('LEFTPADDING', (0, 0), (-1, -1), 5),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 5),
+    ]))
+    return t
+
+
+def _kv_table_full(rows, usable_w):
+    """Tabela 2 colunas (label / valor) ocupando largura total — usada para empresa."""
+    col_label = 4.5 * cm
+    col_val = usable_w - col_label
+    body = [[_p(r[0], _TD_LEFT_BOLD), _p(r[1], _TD_LEFT)] for r in rows]
+    t = Table(body, colWidths=[col_label, col_val])
+    t.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('GRID', (0, 0), (-1, -1), 0.4, colors.grey),
+        ('TOPPADDING', (0, 0), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+        ('LEFTPADDING', (0, 0), (-1, -1), 5),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 5),
+    ]))
+    return t
+
+
+def _texto_livre(label, valor, corpo_st):
+    """Renderiza um campo de texto livre como label + parágrafo."""
+    elems = []
+    if label:
+        elems.append(Paragraph(f'<b>{label}:</b>', corpo_st))
+    if valor and str(valor).strip():
+        elems.append(Paragraph(str(valor), corpo_st))
+    else:
+        elems.append(Paragraph('—', corpo_st))
+    return elems
+
+
+def _rodape_paginacao(canvas, doc):
+    canvas.saveState()
+    canvas.setFont('Helvetica', 8)
+    canvas.setFillColor(colors.grey)
+    txt = f'Relatório de Estágio Supervisionado – Alunos    Página {doc.page} de {{nb}}'
+    # ReportLab não tem total de páginas direto sem 2-pass; usamos placeholder visual
+    # simplificado (somente página atual + total desconhecido seria feio). Por
+    # simplicidade, mostramos só o número da página atual.
+    txt_simples = f'Relatório de Estágio Supervisionado – Alunos    Página {doc.page}'
+    canvas.drawRightString(A4[0] - 2.5 * cm, 1.2 * cm, txt_simples)
+    canvas.restoreState()
+
+
 def gerar_relatorio_avaliacao(processo, modelo, respostas):
-    """Gera PDF de avaliação de estágio a partir do ModeloFormulario e das respostas do aluno."""
+    """Gera o PDF de Avaliação do Estágio no formato do docx oficial do PO."""
     buffer = io.BytesIO()
     doc = _make_doc(buffer)
     titulo_st, subtitulo_st, corpo_st, clausula_st = _styles()
 
+    cabec_st = ParagraphStyle(
+        'cabec_po', parent=corpo_st, fontName='Helvetica-Bold',
+        fontSize=12, alignment=1, leading=15, spaceAfter=2,
+    )
+    cabec_sub_st = ParagraphStyle(
+        'cabec_sub_po', parent=corpo_st, fontName='Helvetica',
+        fontSize=8, alignment=1, leading=11, spaceAfter=4,
+    )
+    titulo_relatorio_st = ParagraphStyle(
+        'titulo_relatorio_po', parent=corpo_st, fontName='Helvetica-Bold',
+        fontSize=12, alignment=1, leading=15, spaceBefore=8, spaceAfter=8,
+    )
+    intro_st = ParagraphStyle(
+        'intro_po', parent=corpo_st, fontSize=9, alignment=4, leading=12, spaceAfter=10,
+    )
+    secao_st = ParagraphStyle(
+        'secao_po', parent=corpo_st, fontName='Helvetica-Bold',
+        fontSize=11, leading=14, spaceBefore=14, spaceAfter=6,
+    )
+    secao_sub_st = ParagraphStyle(
+        'secao_sub_po', parent=corpo_st, fontName='Helvetica-Oblique',
+        fontSize=8, leading=11, textColor=colors.grey, spaceAfter=6,
+    )
+
     aluno = processo.aluno
     empresa = processo.empresa
-    curso_nome = aluno.curso.nome if aluno.curso else '—'
+    curso_nome = aluno.curso.nome.upper() if aluno.curso else '—'
     data_inicio = processo.data_inicio_real or processo.data_inicio_prevista
     data_fim = processo.data_fim_real or processo.data_fim_prevista
     hoje = date.today()
-    mes_ano = f'{_MESES_EXTENSO[hoje.month]} de {hoje.year}'
 
     orientador_nome = (
         processo.professor_orientador.nome
@@ -585,119 +701,202 @@ def gerar_relatorio_avaliacao(processo, modelo, respostas):
             else 'Coordenação de Estágios'
         )
     )
-    sup_nome = (
-        processo.supervisor.usuario.nome
-        if processo.supervisor
-        else None
-    )
+    sup_nome = processo.supervisor.usuario.nome if processo.supervisor else None
 
-    # ── Capa ──────────────────────────────────────────────────────────────
-    elems = [
-        Paragraph('IBMEC RJ', titulo_st),
-        Paragraph('RELATÓRIO DE AVALIAÇÃO DE ESTÁGIO', subtitulo_st),
-        Spacer(1, 0.5 * cm),
-        Paragraph(f'Aluno(a): {aluno.usuario.nome}', corpo_st),
-        Paragraph(f'Curso: {curso_nome}', corpo_st),
-        Paragraph(f'Formulário: {modelo.titulo}', corpo_st),
-        Paragraph(f'Empresa: {empresa.razao_social}', corpo_st),
-        Paragraph(f'Período: {data_inicio} a {data_fim}', corpo_st),
-        Paragraph(f'Rio de Janeiro, {mes_ano}.', corpo_st),
-        Spacer(1, 0.5 * cm),
-    ]
-
-    # ── Dados automáticos ─────────────────────────────────────────────────
-    elems.append(Paragraph('DADOS DO ESTÁGIO', clausula_st))
-
-    semanas = 1
-    if data_inicio and data_fim:
-        semanas = max(1, (data_fim - data_inicio).days // 7)
+    semanas = max(1, (data_fim - data_inicio).days // 7) if data_inicio and data_fim else 0
     horas_totais = semanas * processo.horas_semanais
 
-    elems += [
-        Paragraph(f'Horas semanais: {processo.horas_semanais}h', corpo_st),
-        Paragraph(f'Horas totais estimadas: {horas_totais}h', corpo_st),
+    usable_w = 16 * cm
+
+    # ── Cabeçalho institucional ──────────────────────────────────────────
+    elems = [
+        Paragraph('CENTRO UNIVERSITÁRIO IBMEC', cabec_st),
+        Paragraph(
+            'Credenciada pela Portaria nº 223 de 14/03/2018 DOU 15/03/2018',
+            cabec_sub_st,
+        ),
+        Spacer(1, 0.3 * cm),
+        Paragraph('RELATÓRIO DE AVALIAÇÃO DO ESTÁGIO PELO ESTAGIÁRIO', titulo_relatorio_st),
+        Paragraph(
+            'O relatório de avaliação é um instrumento que tem por objetivo acompanhar o estágio. '
+            'O preenchimento completo e correto auxiliará no acompanhamento realizado pelo '
+            'Centro Universitário Ibmec.',
+            intro_st,
+        ),
     ]
-    if processo.valor_bolsa is not None:
-        elems.append(Paragraph(f'Remuneração mensal: R$ {processo.valor_bolsa:.2f}', corpo_st))
-    else:
-        elems.append(Paragraph('Remuneração mensal: Não informado', corpo_st))
-    if processo.valor_auxilio_transporte is not None:
-        elems.append(Paragraph(
-            f'Auxílio transporte mensal: R$ {processo.valor_auxilio_transporte:.2f}', corpo_st,
-        ))
-    if sup_nome:
-        elems.append(Paragraph(f'Gestor direto: {sup_nome}', corpo_st))
-    elems.append(Spacer(1, 0.4 * cm))
 
-    # ── Seções do modelo ──────────────────────────────────────────────────
-    usable_w = 16 * cm  # A4 - 2 × 2.5 cm margem
+    def render_data(d):
+        return d.strftime('%d/%m/%Y') if d else '—'
 
+    def render_money(v):
+        return f'R$ {float(v):,.2f}'.replace(',', 'X').replace('.', ',').replace('X', '.') if v is not None else '—'
+
+    # ── Itera as seções do modelo ────────────────────────────────────────
     for secao in modelo.secoes:
         tipo = secao.get('tipo')
         titulo_secao = secao.get('titulo', '')
         sid = secao.get('id')
         itens = secao.get('itens', [])
+        itens_detalhados = secao.get('itens_detalhados', [])
         colunas = secao.get('colunas', [])
-
-        if tipo == 'auto':
-            continue
-
-        elems.append(Paragraph(titulo_secao, clausula_st))
+        descricao = secao.get('descricao')
         valor = respostas.get(sid)
+        texto_geral = respostas.get(f'{sid}_texto') if sid else None
+        texto_pos = respostas.get(f'{sid}_texto_positivo') if sid else None
+        texto_neg = respostas.get(f'{sid}_texto_negativo') if sid else None
+        efetivacao = respostas.get(f'{sid}_efetivacao') if sid else None
 
-        if tipo == 'escala_1_4':
-            rows = [['Item', 'Nota']]
-            for item in itens:
-                nota_raw = (valor or {}).get(item, '—')
-                nota_str = _NOTA_LABEL.get(nota_raw, str(nota_raw)) if nota_raw != '—' else '—'
-                rows.append([item, nota_str])
-            elems.append(_tabela_avaliacao(rows, [12 * cm, 4 * cm]))
+        elems.append(Paragraph(titulo_secao, secao_st))
+        if descricao:
+            elems.append(Paragraph(descricao, secao_sub_st))
 
-        elif tipo == 'escala_1_4_multi':
-            n_cols = max(1, len(colunas))
-            col_w = (usable_w - 6 * cm) / n_cols
-            rows = [['Item'] + colunas]
-            for item in itens:
-                notas_item = (valor or {}).get(item, {}) if isinstance(valor, dict) else {}
-                linha = [item]
-                for col in colunas:
-                    nota_raw = notas_item.get(col, '—') if isinstance(notas_item, dict) else '—'
-                    linha.append(_NOTA_LABEL.get(nota_raw, str(nota_raw)) if nota_raw != '—' else '—')
-                rows.append(linha)
-            elems.append(_tabela_avaliacao(rows, [6 * cm] + [col_w] * n_cols))
+        # ── auto — seções 1 e 2 (dados do processo) ─────────────────────
+        if tipo == 'auto' and sid == 'estagiario':
+            rows = [
+                ('Nome', aluno.usuario.nome),
+                ('Matrícula', aluno.usuario.username),
+                ('Curso', curso_nome),
+                ('Semestre atual', f'{aluno.periodo_atual}º' if aluno.periodo_atual else '—'),
+                ('Data de entrada', render_data(data_inicio)),
+                ('Data de saída', render_data(data_fim)),
+                ('Horas/semana', f'{processo.horas_semanais}'),
+                ('Semanas trabalhadas', f'{semanas}'),
+                ('Horas totais', f'{horas_totais}'),
+                ('Remuneração média', render_money(processo.valor_bolsa)),
+            ]
+            elems.append(_kv_table(rows, usable_w))
+        elif tipo == 'auto' and sid == 'empresa':
+            telefone = '—'
+            website = '—'
+            email_gestor = empresa.email_contato or '—'
+            gestor_nome = sup_nome or empresa.responsavel_legal_nome or '—'
+            rows = [
+                ['Empresa', empresa.razao_social],
+                ['CNPJ', empresa.cnpj],
+                ['Localização', empresa.localizacao or '—'],
+                ['Telefone', telefone],
+                ['Website', website],
+                ['Gestor direto', gestor_nome],
+                ['Email do gestor', email_gestor],
+            ]
+            elems.append(_kv_table_full(rows, usable_w))
 
-        elif tipo == 'escala_3':
-            opcoes = secao.get('opcoes', ['Suficiente', 'Insuficiente', 'Não utilizado'])
-            rows = [['Item', 'Resposta']]
-            for item in itens:
-                resp = (valor or {}).get(item, '—') if isinstance(valor, dict) else '—'
-                rows.append([item, resp])
-            elems.append(_tabela_avaliacao(rows, [12 * cm, 4 * cm]))
-
+        # ── checkbox_duplo (seção 3) ────────────────────────────────────
         elif tipo == 'checkbox_duplo':
             n_cols = max(1, len(colunas))
-            col_w = (usable_w - 10 * cm) / n_cols
-            rows = [['Área'] + colunas]
+            col_w_first = 5.5 * cm
+            col_w = (usable_w - col_w_first) / n_cols
+            header = [_p('Item', _TH)] + [_p(c, _TH) for c in colunas]
+            rows = [header]
             for item in itens:
                 marcados = (valor or {}).get(item, []) if isinstance(valor, dict) else []
-                linha = [item] + ['✓' if col in marcados else '—' for col in colunas]
+                rows.append(
+                    [_p(item, _TD_LEFT)]
+                    + [_p('✓' if c in marcados else '', _TD_CENTER) for c in colunas]
+                )
+            elems.append(_tabela_avaliacao(rows, [col_w_first] + [col_w] * n_cols))
+            if secao.get('campo_texto'):
+                elems.append(Spacer(1, 0.2 * cm))
+                elems += _texto_livre(secao['campo_texto'], texto_geral, corpo_st)
+
+        # ── escala_3 (seção 4) ──────────────────────────────────────────
+        elif tipo == 'escala_3':
+            opcoes = secao.get('opcoes', ['Suficiente', 'Insuficiente', 'Não utilizado'])
+            n_op = max(1, len(opcoes))
+            col_w_first = 8 * cm
+            col_w = (usable_w - col_w_first) / n_op
+            header = [_p('Disciplina', _TH)] + [_p(o, _TH) for o in opcoes]
+            rows = [header]
+            for item in itens:
+                resp = (valor or {}).get(item) if isinstance(valor, dict) else None
+                rows.append(
+                    [_p(item, _TD_LEFT)]
+                    + [_p('✓' if resp == o else '', _TD_CENTER) for o in opcoes]
+                )
+            elems.append(_tabela_avaliacao(rows, [col_w_first] + [col_w] * n_op))
+            if secao.get('campo_texto'):
+                elems.append(Spacer(1, 0.2 * cm))
+                elems += _texto_livre(secao['campo_texto'], texto_geral, corpo_st)
+
+        # ── escala_1_4_multi (seção 5) ──────────────────────────────────
+        elif tipo == 'escala_1_4_multi':
+            n_cols = max(1, len(colunas))
+            col_w_first = 5 * cm
+            col_w = (usable_w - col_w_first) / n_cols
+            header = [_p('Software', _TH)] + [_p(c, _TH) for c in colunas]
+            rows = [header]
+            for item in itens:
+                notas_item = (valor or {}).get(item, {}) if isinstance(valor, dict) else {}
+                linha = [_p(item, _TD_LEFT)]
+                for col in colunas:
+                    n = notas_item.get(col) if isinstance(notas_item, dict) else None
+                    linha.append(_p(str(n) if n is not None else '—', _TD_CENTER))
                 rows.append(linha)
-            elems.append(_tabela_avaliacao(rows, [10 * cm] + [col_w] * n_cols))
+            elems.append(_tabela_avaliacao(rows, [col_w_first] + [col_w] * n_cols))
+            if secao.get('campo_texto'):
+                elems.append(Spacer(1, 0.2 * cm))
+                elems += _texto_livre(secao['campo_texto'], texto_geral, corpo_st)
 
+        # ── escala_1_4 (seções 6 e 7) ───────────────────────────────────
+        elif tipo == 'escala_1_4':
+            # Detalha descrição do item se houver itens_detalhados
+            detalhes_map = {d.get('nome'): d.get('descricao', '') for d in itens_detalhados}
+            rows = [[_p('Item', _TH), _p('Nota', _TH)]]
+            for item in itens:
+                nota_raw = (valor or {}).get(item) if isinstance(valor, dict) else None
+                nota_str = _NOTA_LABEL.get(nota_raw, '—')
+                if detalhes_map.get(item):
+                    # Combina nome em bold + descrição em parágrafo único (Paragraph
+                    # respeita <br/> e <font>).
+                    cell_html = (
+                        f'<font name="Helvetica-Bold" size="9">{item}</font><br/>'
+                        f'<font size="7" color="grey">{detalhes_map[item]}</font>'
+                    )
+                    rows.append([Paragraph(cell_html, _TD_LEFT), _p(nota_str, _TD_CENTER)])
+                else:
+                    rows.append([_p(item, _TD_LEFT), _p(nota_str, _TD_CENTER)])
+            elems.append(_tabela_avaliacao(rows, [11.5 * cm, 4.5 * cm]))
+            # Campos extras de texto / efetivação (seção 7)
+            extras = []
+            if secao.get('campo_efetivacao'):
+                extras.append(Spacer(1, 0.2 * cm))
+                extras += _texto_livre('Há proposta de efetivação ao final do estágio?', efetivacao, corpo_st)
+            if secao.get('campo_texto_positivo'):
+                extras.append(Spacer(1, 0.2 * cm))
+                extras += _texto_livre(secao['campo_texto_positivo'], texto_pos, corpo_st)
+            if secao.get('campo_texto_negativo'):
+                extras.append(Spacer(1, 0.2 * cm))
+                extras += _texto_livre(secao['campo_texto_negativo'], texto_neg, corpo_st)
+            elems += extras
+
+        # ── texto_livre (legado) ────────────────────────────────────────
         elif tipo == 'texto_livre':
-            texto = valor if isinstance(valor, str) and valor.strip() else '(sem resposta)'
-            elems.append(Paragraph(texto, corpo_st))
+            elems += _texto_livre(None, valor, corpo_st)
 
-        elems.append(Spacer(1, 0.3 * cm))
-
-    # ── Assinaturas ───────────────────────────────────────────────────────
+    # ── Rodapé: data + assinaturas lado a lado ───────────────────────────
     elems += [
         Spacer(1, 1 * cm),
-        _linha_assinatura('ALUNO(A)', aluno.usuario.nome),
-        Spacer(1, 0.8 * cm),
-        _linha_assinatura('PROFESSOR(A) ORIENTADOR(A) / COORDENADOR(A)', orientador_nome),
+        Paragraph(f'Rio de Janeiro, {_data_extenso(hoje)}.', corpo_st),
+        Spacer(1, 1.2 * cm),
     ]
+    assinaturas = Table(
+        [
+            ['_' * 30, '_' * 30],
+            [aluno.usuario.nome, orientador_nome],
+            ['Aluno(a)', 'Professor responsável\npela supervisão do estágio'],
+        ],
+        colWidths=[usable_w / 2, usable_w / 2],
+    )
+    assinaturas.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('FONTNAME', (0, 1), (-1, 1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('TOPPADDING', (0, 0), (-1, -1), 2),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+    ]))
+    elems.append(assinaturas)
 
-    doc.build(elems)
+    doc.build(elems, onFirstPage=_rodape_paginacao, onLaterPages=_rodape_paginacao)
     buffer.seek(0)
     return buffer

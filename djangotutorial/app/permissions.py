@@ -55,6 +55,19 @@ def get_supervisor(user):
         return None
 
 
+# Visão global read-only: Secretaria, CASA, Reitor, Pró-Reitor.
+# Veem todos os processos de todos os cursos; não editam formulários nem
+# aprovam documentos.
+TIPOS_VISAO_GLOBAL = frozenset({'secretaria', 'casa', 'reitor', 'pro_reitor'})
+
+
+def is_visao_global(user):
+    """True se o usuário tem visão global read-only do sistema."""
+    return bool(
+        user and user.is_authenticated and getattr(user, 'tipo', None) in TIPOS_VISAO_GLOBAL
+    )
+
+
 # ── permissões ────────────────────────────────────────────────────────────────
 
 class IsAluno(permissions.BasePermission):

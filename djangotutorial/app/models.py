@@ -8,9 +8,10 @@ class Usuario(AbstractUser):
         ('aluno', 'Aluno'),
         ('coordenador', 'Coordenador'),
         ('supervisor_empresa', 'Supervisor de Empresa'),
+        ('secretaria', 'Secretaria'),
+        ('casa', 'CASA'),
         ('reitor', 'Reitor'),
         ('pro_reitor', 'Pró-Reitor'),
-        ('secretaria', 'Secretaria'),
         ('carreiras', 'Carreiras'),
     ]
 
