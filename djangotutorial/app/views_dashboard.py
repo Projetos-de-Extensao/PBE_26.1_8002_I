@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from .models import (
     ProcessoEstagio, EmpresaConcedente, DocumentoProcesso, ModeloFormulario,
 )
-from .permissions import get_coordenador, is_admin, is_visao_global
+from .permissions import get_coordenador, get_supervisor, is_admin, is_visao_global
 from .dashboard_utils import (
     calcular_semestre,
     agregar_escala_1_4,
@@ -29,6 +29,9 @@ def _base_queryset(user):
     if coord is not None:
         cursos = coord.cursos.all()
         return base.filter(aluno__curso__in=cursos)
+    supervisor = get_supervisor(user)
+    if supervisor is not None:
+        return base.filter(empresa=supervisor.empresa)
     return ProcessoEstagio.objects.none()
 
 
@@ -99,7 +102,7 @@ class DashboardProcessosView(APIView):
     def get(self, request):
         user = request.user
         coord = get_coordenador(user)
-        if not is_admin(user) and not is_visao_global(user) and coord is None:
+        if not is_admin(user) and not is_visao_global(user) and coord is None and get_supervisor(user) is None:
             return Response(
                 {'erro': 'Acesso restrito a coordenadores e administradores.'},
                 status=drf_status.HTTP_403_FORBIDDEN,
@@ -118,7 +121,7 @@ class DashboardEstatisticasView(APIView):
     def get(self, request):
         user = request.user
         coord = get_coordenador(user)
-        if not is_admin(user) and not is_visao_global(user) and coord is None:
+        if not is_admin(user) and not is_visao_global(user) and coord is None and get_supervisor(user) is None:
             return Response(
                 {'erro': 'Acesso restrito a coordenadores e administradores.'},
                 status=drf_status.HTTP_403_FORBIDDEN,
@@ -217,7 +220,7 @@ class DashboardEmpresasView(APIView):
     def get(self, request):
         user = request.user
         coord = get_coordenador(user)
-        if not is_admin(user) and not is_visao_global(user) and coord is None:
+        if not is_admin(user) and not is_visao_global(user) and coord is None and get_supervisor(user) is None:
             return Response(
                 {'erro': 'Acesso restrito a coordenadores e administradores.'},
                 status=drf_status.HTTP_403_FORBIDDEN,

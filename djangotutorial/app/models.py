@@ -31,14 +31,14 @@ class Usuario(AbstractUser):
     REQUIRED_FIELDS = ['username']
 
     def save(self, *args, **kwargs):
-        # Sincroniza username ↔ email_institucional. Email é a identidade
-        # primária (USERNAME_FIELD), mas username continua no schema (AbstractUser).
-        if self.email_institucional and self.username != self.email_institucional:
-            self.username = self.email_institucional
-        elif not self.email_institucional and self.username:
-            # Compat: chamadores que só passam username (ex: testes legados)
-            # têm o email derivado automaticamente.
+        # Email é a identidade primária (USERNAME_FIELD); username continua no
+        # schema do AbstractUser. Se um dos dois estiver vazio, herda do outro.
+        # Se ambos estiverem preenchidos, mantém os valores como passados — isso
+        # permite username livre (ex: 'pedro.reis') + email completo.
+        if not self.email_institucional and self.username:
             self.email_institucional = self.username
+        elif not self.username and self.email_institucional:
+            self.username = self.email_institucional
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -296,7 +296,13 @@ class DocumentoProcesso(models.Model):
     processo = models.ForeignKey(
         ProcessoEstagio, on_delete=models.CASCADE, related_name='documentos'
     )
-    tipo = models.CharField(max_length=30, choices=Tipo.choices)
+    tipo = models.CharField(max_length=30, choices=Tipo.choices, default=Tipo.OUTRO)
+    titulo = models.CharField(
+        max_length=200,
+        blank=True,
+        null=True,
+        help_text='Título livre do documento (ex: "Carta de apresentação", "Apólice 2026").',
+    )
     arquivo = models.FileField(upload_to='documentos/')
     enviado_por = models.ForeignKey(
         Usuario,
@@ -322,7 +328,8 @@ class DocumentoProcesso(models.Model):
     )
 
     def __str__(self):
-        return f'{self.get_tipo_display()} v{self.versao} — Processo #{self.processo_id}'
+        label = self.titulo or self.get_tipo_display()
+        return f'{label} v{self.versao} — Processo #{self.processo_id}'
 
     class Meta:
         verbose_name = 'Documento de Processo'

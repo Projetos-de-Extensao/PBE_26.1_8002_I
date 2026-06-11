@@ -167,7 +167,11 @@ class DocumentoProcessoViewSet(viewsets.ModelViewSet):
         return base.none()
 
     def perform_create(self, serializer):
-        doc = serializer.save(enviado_por=self.request.user)
+        # Tipo é opcional no upload — default 'OUTRO' quando o frontend só envia título livre.
+        save_kwargs = {'enviado_por': self.request.user}
+        if not serializer.validated_data.get('tipo'):
+            save_kwargs['tipo'] = DocumentoProcesso.Tipo.OUTRO
+        doc = serializer.save(**save_kwargs)
         score = calcular_score_conformidade(doc.arquivo, doc.tipo)
         doc.score_conformidade = score
         auto_aprovado = score >= 0.8

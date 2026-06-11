@@ -175,11 +175,12 @@
       alterarStatus: (id, status, justif) => apiRequest(`/processos-estagio/${id}/alterar_status/`, { method: 'POST', body: { status, justificativa_rejeicao: justif || '' } }),
       documentosProcesso: (id) => apiRequest(`/processos-estagio/${id}/documentos/`),
       documentos: () => apiRequest('/documentos/'),
-      uploadDocumento: (processoId, tipo, arquivo) => {
+      uploadDocumento: (processoId, titulo, arquivo) => {
         const fd = new FormData();
         fd.append('processo', processoId);
-        fd.append('tipo', tipo);
+        if (titulo) fd.append('titulo', titulo);
         fd.append('arquivo', arquivo);
+        // tipo é opcional; backend usa 'OUTRO' como default quando omitido
         return apiRequest('/documentos/', { method: 'POST', body: fd });
       },
       validarDocumento: (id, status, com) => apiRequest(`/documentos/${id}/validar/`, { method: 'POST', body: { status, comentario: com || '' } }),
@@ -631,8 +632,89 @@
     // ═══════════════════════════════════════════════════════
     //  COORDENADOR — SIDEBAR + APP
     // ═══════════════════════════════════════════════════════
-    function CoordSidebar({ active, onNav, alunos, selectedId, onSelectAluno, onConfigForm }) {
+    // Painel de filtros para a sidebar de alunos. Os filtros são aplicados
+    // localmente sobre a lista que já chega no componente.
+    function SidebarFiltrosPanel({ open, alunos, filtros, setFiltros, onClear }) {
+      if (!open) return null;
+      // Derivar cursos e empresas únicas a partir dos próprios alunos.
+      const cursos = useMemo(() => {
+        const m = new Map();
+        alunos.forEach(a => { if (a.curso_id) m.set(a.curso_id, a.curso_nome); });
+        return Array.from(m.entries()).map(([id, nome]) => ({ id, nome }));
+      }, [alunos]);
+      const empresasOpts = useMemo(() => {
+        const m = new Map();
+        alunos.forEach(a => { if (a.empresa_id) m.set(a.empresa_id, a.empresa_nome); });
+        return Array.from(m.entries()).map(([id, nome]) => ({ id, nome }));
+      }, [alunos]);
+      const set = (k, v) => setFiltros(f => ({ ...f, [k]: v }));
+      return (
+        <div className="px-3 pb-3 space-y-2" style={{ background: 'var(--surface2)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
+          <div>
+            <label className="block text-[10px] uppercase mb-1" style={{ color: 'var(--muted)' }}>Curso</label>
+            <select className="input" style={{ fontSize: 11 }} value={filtros.curso} onChange={e => set('curso', e.target.value)}>
+              <option value="">Todos</option>
+              {cursos.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-[10px] uppercase mb-1" style={{ color: 'var(--muted)' }}>Semestre</label>
+            <input className="input" style={{ fontSize: 11 }} value={filtros.semestre} onChange={e => set('semestre', e.target.value)} placeholder="2026.1" />
+          </div>
+          <div>
+            <label className="block text-[10px] uppercase mb-1" style={{ color: 'var(--muted)' }}>Status</label>
+            <select className="input" style={{ fontSize: 11 }} value={filtros.status} onChange={e => set('status', e.target.value)}>
+              <option value="">Todos</option>
+              {Object.keys(STATUS_PROC).map(s => <option key={s} value={s}>{STATUS_PROC[s].label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-[10px] uppercase mb-1" style={{ color: 'var(--muted)' }}>Empresa</label>
+            <select className="input" style={{ fontSize: 11 }} value={filtros.empresa} onChange={e => set('empresa', e.target.value)}>
+              <option value="">Todas</option>
+              {empresasOpts.map(e => <option key={e.id} value={e.id}>{e.nome}</option>)}
+            </select>
+          </div>
+          <label className="flex items-center gap-2 text-xs" style={{ color: 'var(--text)' }}>
+            <input type="checkbox" checked={filtros.com_respostas} onChange={e => set('com_respostas', e.target.checked)} />
+            Com respostas preenchidas
+          </label>
+          <button className="btn btn-secondary w-full" style={{ fontSize: 11 }} onClick={onClear}>Limpar filtros</button>
+        </div>
+      );
+    }
+
+    function aplicarFiltrosSidebar(alunos, filtros) {
+      return alunos.filter(a => {
+        if (filtros.curso && String(a.curso_id) !== String(filtros.curso)) return false;
+        if (filtros.semestre && a.semestre !== filtros.semestre) return false;
+        if (filtros.status && a.status !== filtros.status) return false;
+        if (filtros.empresa && String(a.empresa_id) !== String(filtros.empresa)) return false;
+        if (filtros.com_respostas && !a.tem_respostas) return false;
+        return true;
+      });
+    }
+
+    const SIDEBAR_FILTROS_INICIAIS = { curso: '', semestre: '', status: '', empresa: '', com_respostas: false };
+
+    const MENU_COORD = [
+      { id: 'dashboard',  label: 'Dashboard',  icon: 'dashboard'  },
+      { id: 'relatorios', label: 'Relatórios', icon: 'relatorios' },
+      { id: 'empresas',   label: 'Empresas',   icon: 'empresas'   },
+    ];
+    const MENU_SUPERVISOR = [
+      { id: 'dashboard',  label: 'Dashboard',  icon: 'dashboard' },
+      { id: 'documentos', label: 'Documentos', icon: 'docs'      },
+    ];
+
+    function CoordSidebar({ active, onNav, alunos, selectedId, onSelectAluno, onConfigForm, menuItems }) {
       const { user, logout } = useAuth();
+      const [filtrosOpen, setFiltrosOpen] = useState(false);
+      const [filtros, setFiltros] = useState(SIDEBAR_FILTROS_INICIAIS);
+      const alunosFiltrados = useMemo(() => aplicarFiltrosSidebar(alunos, filtros), [alunos, filtros]);
+      const algumFiltro = filtros.curso || filtros.semestre || filtros.status || filtros.empresa || filtros.com_respostas;
+      const items = menuItems || MENU_COORD;
+      const showFormularioBtn = !isVisaoGlobal(user) && user?.tipo === 'coordenador';
       return (
         <aside className="surface" style={{ width: 240, height: '100vh', borderRadius: 0, borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
           <div className="flex items-center gap-2 p-4" style={{ color: 'var(--accent)', borderBottom: '1px solid var(--border)' }}>
@@ -640,13 +722,28 @@
           </div>
           <div className="flex-1 overflow-y-auto" style={{ minHeight: 0 }}>
             <div className="section-label">Menu</div>
-            <div className={`nav-item ${active === 'dashboard' ? 'active' : ''}`} onClick={() => onNav('dashboard')}>{Icon.dashboard}<span>Dashboard</span></div>
-            <div className={`nav-item ${active === 'relatorios' ? 'active' : ''}`} onClick={() => onNav('relatorios')}>{Icon.relatorios}<span>Relatórios</span></div>
-            <div className={`nav-item ${active === 'empresas' ? 'active' : ''}`} onClick={() => onNav('empresas')}>{Icon.empresas}<span>Empresas</span></div>
+            {items.map(it => (
+              <div key={it.id} className={`nav-item ${active === it.id ? 'active' : ''}`} onClick={() => onNav(it.id)}>
+                {Icon[it.icon]}<span>{it.label}</span>
+              </div>
+            ))}
 
-            <div className="section-label">Alunos</div>
-            {alunos.length === 0 && <div className="px-4 py-2 text-xs" style={{ color: 'var(--muted)' }}>Nenhum aluno</div>}
-            {alunos.map(a => (
+            <div className="flex items-center justify-between pr-3">
+              <div className="section-label">Alunos {algumFiltro && <span style={{ color: 'var(--accent)' }}>({alunosFiltrados.length}/{alunos.length})</span>}</div>
+              <button onClick={() => setFiltrosOpen(o => !o)}
+                style={{ fontSize: 10, padding: '3px 8px', borderRadius: 4, background: filtrosOpen || algumFiltro ? 'var(--accent)' : 'var(--surface2)', color: filtrosOpen || algumFiltro ? 'white' : 'var(--text)', border: '1px solid var(--border)' }}>
+                🔍 Filtrar
+              </button>
+            </div>
+            <SidebarFiltrosPanel
+              open={filtrosOpen}
+              alunos={alunos}
+              filtros={filtros}
+              setFiltros={setFiltros}
+              onClear={() => setFiltros(SIDEBAR_FILTROS_INICIAIS)}
+            />
+            {alunosFiltrados.length === 0 && <div className="px-4 py-2 text-xs" style={{ color: 'var(--muted)' }}>Nenhum aluno</div>}
+            {alunosFiltrados.map(a => (
               <div key={a.id} className={`aluno-card ${selectedId === a.id ? 'active' : ''}`} onClick={() => { onSelectAluno(a.id); onNav('dashboard'); }}>
                 <Avatar nome={a.aluno_nome} id={a.id} size={32} />
                 <div className="info">
@@ -657,7 +754,7 @@
             ))}
           </div>
           <div style={{ padding: 12, borderTop: '1px solid var(--border)' }}>
-            {!isVisaoGlobal(user) && (
+            {showFormularioBtn && (
               <button className="btn btn-primary w-full" onClick={onConfigForm}>{Icon.cog}<span>Formulário</span></button>
             )}
             <div className="flex items-center gap-2 mt-3 px-1">
@@ -719,7 +816,12 @@
       async function salvarModelo(patch) {
         if (!modeloCurso) return;
         try {
-          await Api.atualizarModelo(modeloCurso.id, { ...modeloCurso, titulo: patch.titulo, secoes: patch.secoes });
+          await Api.atualizarModelo(modeloCurso.id, {
+            ...modeloCurso,
+            titulo: patch.titulo,
+            secoes: patch.secoes,
+            curso: patch.curso || modeloCurso.curso,
+          });
           toast.success('Formulário atualizado.');
           setConfigFormOpen(false);
           const ms = await Api.modelosFormulario();
@@ -1067,7 +1169,6 @@
       const limpar = () => setFiltros({ semestre: '', status: '', curso: '', score: '', busca: '' });
 
       const chartHoras = sorted.map(r => ({ name: (r.aluno_nome || '?').split(' ')[0], v: r.horasTotais || 0 }));
-      const chartScore = sorted.map(r => ({ name: (r.aluno_nome || '?').split(' ')[0], v: r.score || 0 }));
       const chartRem = sorted.map(r => ({ name: (r.aluno_nome || '?').split(' ')[0], v: r.remuneracao || 0 }));
       const semestreCount = {};
       sorted.forEach(r => { if (r.semestre) semestreCount[r.semestre] = (semestreCount[r.semestre] || 0) + 1; });
@@ -1170,18 +1271,6 @@
               </ResponsiveContainer>
             </div>
             <div className="surface p-4">
-              <h3 className="font-semibold mb-3">Comparativo: Score</h3>
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={chartScore} layout="vertical">
-                  <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
-                  <XAxis type="number" domain={[0, 4]} stroke="var(--muted)" />
-                  <YAxis dataKey="name" type="category" stroke="var(--muted)" width={80} />
-                  <Tooltip contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }} />
-                  <Bar dataKey="v" fill="var(--accent2)" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="surface p-4">
               <h3 className="font-semibold mb-3">Comparativo: Remuneração</h3>
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={chartRem}>
@@ -1208,8 +1297,200 @@
               )}
             </div>
           </div>
+
+          {/* GRÁFICOS POR SEÇÃO DO FORMULÁRIO — calculados sobre processos filtrados */}
+          <GraficosPorSecao processosResumo={sorted} processosFull={processosFull} modeloCurso={modeloCurso} />
         </div>
       );
+    }
+
+    // Renderiza dinamicamente um gráfico por seção do ModeloFormulario, agregando
+    // respostas dos processos filtrados. Mapeamento:
+    //   escala_1_4         → Radar (média por item)
+    //   escala_1_4_multi   → Barras agrupadas (uma série por coluna)
+    //   escala_3           → Barras horizontais (contagem por opção)
+    //   checkbox_duplo     → Barras agrupadas (contagem por coluna)
+    //   texto_livre        → contagem de respostas
+    //   auto               → omitido
+    function GraficosPorSecao({ processosResumo, processosFull, modeloCurso }) {
+      if (!modeloCurso || !modeloCurso.secoes?.length) return null;
+      const respostasArr = useMemo(() => {
+        return processosResumo
+          .map(r => processosFull[r.id]?.respostas_formulario?.secoes)
+          .filter(Boolean);
+      }, [processosResumo, processosFull]);
+
+      const renderavel = (modeloCurso.secoes || []).filter(s => !['auto'].includes(s.tipo));
+      if (renderavel.length === 0) return null;
+      return (
+        <div className="space-y-3">
+          <h3 className="font-semibold">Gráficos por seção do formulário</h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {renderavel.map(sec => (
+              <SecaoAgregadaChart key={sec.id} sec={sec} respostasArr={respostasArr} />
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    function SecaoAgregadaChart({ sec, respostasArr }) {
+      const data = useMemo(() => agregarSecao(sec, respostasArr), [sec, respostasArr]);
+      const tooltip = { contentStyle: { background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' } };
+
+      if (sec.tipo === 'texto_livre') {
+        const contagem = respostasArr.filter(r => {
+          const v = r[sec.id];
+          return typeof v === 'string' && v.trim().length > 0;
+        }).length;
+        return (
+          <div className="surface p-4">
+            <h4 className="font-semibold mb-1">{sec.titulo}</h4>
+            <div className="text-xs mb-3" style={{ color: 'var(--muted)' }}>Texto livre</div>
+            <div className="text-2xl font-bold" style={{ color: 'var(--accent)' }}>{contagem}</div>
+            <div className="text-xs" style={{ color: 'var(--muted)' }}>resposta(s) recebida(s)</div>
+          </div>
+        );
+      }
+      if (!data || data.length === 0) {
+        return (
+          <div className="surface p-4">
+            <h4 className="font-semibold mb-1">{sec.titulo}</h4>
+            <div className="text-sm" style={{ color: 'var(--muted)' }}>Sem dados</div>
+          </div>
+        );
+      }
+      if (sec.tipo === 'escala_1_4') {
+        return (
+          <div className="surface p-4">
+            <h4 className="font-semibold mb-3">{sec.titulo}</h4>
+            <ResponsiveContainer width="100%" height={240}>
+              <RadarChart data={data}>
+                <PolarGrid stroke="var(--border)" />
+                <PolarAngleAxis dataKey="name" tick={{ fontSize: 10, fill: 'var(--muted)' }} />
+                <PolarRadiusAxis angle={90} domain={[0, 4]} stroke="var(--muted)" />
+                <Radar name="Média" dataKey="media" stroke="var(--accent)" fill="var(--accent)" fillOpacity={0.4} />
+                <Tooltip {...tooltip} />
+              </RadarChart>
+            </ResponsiveContainer>
+          </div>
+        );
+      }
+      if (sec.tipo === 'escala_1_4_multi') {
+        const colunas = sec.colunas || [];
+        return (
+          <div className="surface p-4">
+            <h4 className="font-semibold mb-3">{sec.titulo}</h4>
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={data}>
+                <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
+                <XAxis dataKey="name" tick={{ fontSize: 10 }} stroke="var(--muted)" />
+                <YAxis domain={[0, 4]} stroke="var(--muted)" />
+                <Tooltip {...tooltip} />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
+                {colunas.map((c, i) => (
+                  <Bar key={c} dataKey={c} fill={CHART_PALETTE[i % CHART_PALETTE.length]} radius={[4, 4, 0, 0]} />
+                ))}
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        );
+      }
+      if (sec.tipo === 'escala_3') {
+        const opcoes = sec.opcoes || ['Suficiente', 'Insuficiente', 'Não utilizado'];
+        return (
+          <div className="surface p-4">
+            <h4 className="font-semibold mb-3">{sec.titulo}</h4>
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={data} layout="vertical">
+                <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
+                <XAxis type="number" stroke="var(--muted)" allowDecimals={false} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} stroke="var(--muted)" width={130} />
+                <Tooltip {...tooltip} />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
+                {opcoes.map((o, i) => (
+                  <Bar key={o} dataKey={o} stackId="a" fill={CHART_PALETTE[i % CHART_PALETTE.length]} />
+                ))}
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        );
+      }
+      if (sec.tipo === 'checkbox_duplo') {
+        const colunas = sec.colunas || [];
+        return (
+          <div className="surface p-4">
+            <h4 className="font-semibold mb-3">{sec.titulo}</h4>
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={data}>
+                <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
+                <XAxis dataKey="name" tick={{ fontSize: 10 }} stroke="var(--muted)" />
+                <YAxis stroke="var(--muted)" allowDecimals={false} />
+                <Tooltip {...tooltip} />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
+                {colunas.map((c, i) => (
+                  <Bar key={c} dataKey={c} fill={CHART_PALETTE[i % CHART_PALETTE.length]} radius={[4, 4, 0, 0]} />
+                ))}
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        );
+      }
+      return null;
+    }
+
+    // Agrega respostas dos processos para uma seção do modelo, retornando o
+    // formato consumido pelo Recharts.
+    function agregarSecao(sec, respostasArr) {
+      const itens = sec.itens || [];
+      const colunas = sec.colunas || [];
+      if (sec.tipo === 'escala_1_4') {
+        return itens.map(item => {
+          const valores = respostasArr
+            .map(r => r[sec.id]?.[item])
+            .filter(v => typeof v === 'number');
+          const media = valores.length ? +(valores.reduce((s, v) => s + v, 0) / valores.length).toFixed(2) : 0;
+          return { name: item, media };
+        });
+      }
+      if (sec.tipo === 'escala_1_4_multi') {
+        return itens.map(item => {
+          const row = { name: item };
+          colunas.forEach(c => {
+            const vals = respostasArr
+              .map(r => r[sec.id]?.[item]?.[c])
+              .filter(v => typeof v === 'number');
+            row[c] = vals.length ? +(vals.reduce((s, v) => s + v, 0) / vals.length).toFixed(2) : 0;
+          });
+          return row;
+        });
+      }
+      if (sec.tipo === 'escala_3') {
+        const opcoes = sec.opcoes || ['Suficiente', 'Insuficiente', 'Não utilizado'];
+        return itens.map(item => {
+          const row = { name: item };
+          opcoes.forEach(o => { row[o] = 0; });
+          respostasArr.forEach(r => {
+            const v = r[sec.id]?.[item];
+            if (typeof v === 'string' && opcoes.includes(v)) row[v] += 1;
+          });
+          return row;
+        });
+      }
+      if (sec.tipo === 'checkbox_duplo') {
+        return itens.map(item => {
+          const row = { name: item };
+          colunas.forEach(c => { row[c] = 0; });
+          respostasArr.forEach(r => {
+            const marcados = r[sec.id]?.[item];
+            if (Array.isArray(marcados)) {
+              marcados.forEach(c => { if (c in row) row[c] += 1; });
+            }
+          });
+          return row;
+        });
+      }
+      return [];
     }
 
     // ═══════════════════════════════════════════════════════
@@ -1418,9 +1699,14 @@
     //  FORMULÁRIO EDITOR (acessível pela sidebar do coord)
     // ═══════════════════════════════════════════════════════
     function FormularioEditor({ model, onClose, onSave }) {
-      const [titulo, setTitulo] = useState(model.titulo || '');
+      const [cursoId, setCursoId] = useState(model.curso || '');
       const [secoes, setSecoes] = useState(model.secoes || []);
       const [salv, setSalv] = useState(false);
+      const [cursos, setCursos] = useState([]);
+      useEffect(() => { Api.cursos().then(setCursos).catch(() => setCursos([])); }, []);
+      const cursoAtual = cursos.find(c => String(c.id) === String(cursoId));
+      // Título derivado automaticamente do curso selecionado.
+      const titulo = cursoAtual ? `Relatório de estágio - ${cursoAtual.nome}` : (model.titulo || '');
       function addSecao(tipo) {
         const base = { id: `secao_${Date.now()}`, tipo, titulo: 'Nova seção', grafico: 'nenhum' };
         if (['escala_1_4', 'escala_3'].includes(tipo)) base.itens = ['Item 1'];
@@ -1435,17 +1721,24 @@
       }
       function rem(i) { setSecoes(s => s.filter((_, j) => j !== i)); }
       async function submit() {
-        if (!titulo.trim()) { alert('Título obrigatório.'); return; }
+        if (!cursoId) { alert('Selecione um curso.'); return; }
         setSalv(true);
-        try { await onSave({ titulo, secoes }); } finally { setSalv(false); }
+        try { await onSave({ titulo, secoes, curso: cursoId }); } finally { setSalv(false); }
       }
       return (
         <Modal open title="Editar Formulário de Avaliação" onClose={onClose} size="xl">
           <div className="space-y-4">
             <div>
-              <label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>Título</label>
-              <input className="input" value={titulo} onChange={e => setTitulo(e.target.value)} />
-              <div className="text-xs mt-1" style={{ color: 'var(--muted)' }}>Curso: {model.curso_nome || '—'}</div>
+              <label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>Curso</label>
+              <select className="input" value={cursoId} onChange={e => setCursoId(e.target.value)}>
+                <option value="">— Selecione um curso —</option>
+                {cursos.map(c => (
+                  <option key={c.id} value={c.id}>Relatório de estágio - {c.nome}</option>
+                ))}
+              </select>
+              <div className="text-xs mt-1" style={{ color: 'var(--muted)' }}>
+                Título do formulário: <span style={{ color: 'var(--text)' }}>{titulo || '—'}</span>
+              </div>
             </div>
             <div className="surface2 p-3">
               <div className="font-semibold mb-2">Adicionar seção</div>
@@ -1770,7 +2063,7 @@
             return (
               <div key={d.id} className="surface2 p-3 flex items-center justify-between gap-3 flex-wrap">
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium">{TIPO_DOC[d.tipo] || d.tipo}</div>
+                  <div className="text-sm font-medium">{d.titulo || TIPO_DOC[d.tipo] || d.tipo}</div>
                   <div className="text-xs truncate" style={{ color: 'var(--muted)' }}>{nomeArquivo}</div>
                   <div className="text-xs" style={{ color: 'var(--muted)' }}>
                     v{d.versao} · {new Date(d.data_upload).toLocaleDateString('pt-BR')}
@@ -1803,7 +2096,7 @@
             open={!!confirmacao}
             onClose={() => setConfirmacao(null)}
             title={confirmacao?.novoStatus === 'APROVADO' ? 'Aprovar documento' : 'Reprovar documento'}
-            message={`Confirma ${confirmacao?.novoStatus === 'APROVADO' ? 'a aprovação' : 'a reprovação'} de "${TIPO_DOC[confirmacao?.doc?.tipo] || confirmacao?.doc?.tipo}"?`}
+            message={`Confirma ${confirmacao?.novoStatus === 'APROVADO' ? 'a aprovação' : 'a reprovação'} de "${confirmacao?.doc?.titulo || TIPO_DOC[confirmacao?.doc?.tipo] || confirmacao?.doc?.tipo}"?`}
             justificativaLabel={confirmacao?.novoStatus === 'REJEITADO' ? 'Motivo da reprovação' : 'Observação (opcional)'}
             justificativaObrigatoria={confirmacao?.novoStatus === 'REJEITADO'}
             confirmLabel={confirmacao?.novoStatus === 'APROVADO' ? 'Aprovar' : 'Reprovar'}
@@ -1819,19 +2112,15 @@
     // ═══════════════════════════════════════════════════════
     function UploadDocumentoModal({ processo, onClose, onDone }) {
       const toast = useToast();
-      const [tipo, setTipo] = useState('APOLICE');
+      const [titulo, setTitulo] = useState('');
       const [arquivo, setArquivo] = useState(null);
       const [enviando, setEnviando] = useState(false);
-      // Tipos que o aluno pode enviar (TCE, relatórios e termo são gerados pelo sistema).
-      const TIPOS_UPLOAD = [
-        ['APOLICE', 'Apólice de Seguro'],
-        ['OUTRO', 'Outro Documento'],
-      ];
       async function submit() {
         if (!arquivo) { toast.error('Selecione um arquivo.'); return; }
+        if (!titulo.trim()) { toast.error('Informe o título do documento.'); return; }
         setEnviando(true);
         try {
-          await Api.uploadDocumento(processo.id, tipo, arquivo);
+          await Api.uploadDocumento(processo.id, titulo.trim(), arquivo);
           toast.success('Documento enviado.');
           onDone && onDone();
         } catch (e) {
@@ -1844,10 +2133,9 @@
         <Modal open title="Enviar Documento" onClose={onClose} size="sm">
           <div className="space-y-3">
             <div>
-              <label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>Tipo</label>
-              <select className="input" value={tipo} onChange={e => setTipo(e.target.value)}>
-                {TIPOS_UPLOAD.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-              </select>
+              <label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>Título do documento</label>
+              <input className="input" value={titulo} onChange={e => setTitulo(e.target.value)}
+                placeholder='ex: Carta de apresentação, Apólice 2026' autoFocus />
             </div>
             <div>
               <label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>Arquivo (PDF, máx 10 MB)</label>
@@ -1857,7 +2145,7 @@
             <div className="text-xs" style={{ color: 'var(--muted)' }}>Apenas PDFs são aceitos. Documentos passam por validação automática e revisão do coordenador.</div>
             <div className="flex justify-end gap-2 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
               <button className="btn btn-secondary" onClick={onClose} disabled={enviando}>Cancelar</button>
-              <button className="btn btn-primary" onClick={submit} disabled={enviando || !arquivo}>
+              <button className="btn btn-primary" onClick={submit} disabled={enviando || !arquivo || !titulo.trim()}>
                 {enviando ? <Spinner size={14} /> : 'Enviar'}
               </button>
             </div>
@@ -1922,7 +2210,7 @@
                 <div className="space-y-2">
                   {docs.map(d => (
                     <div key={d.id} className="surface2 p-3 flex justify-between items-center gap-3">
-                      <div><div className="text-sm font-medium">{TIPO_DOC[d.tipo] || d.tipo}</div><div className="text-xs" style={{ color: 'var(--muted)' }}>v{d.versao}</div></div>
+                      <div><div className="text-sm font-medium">{d.titulo || TIPO_DOC[d.tipo] || d.tipo}</div><div className="text-xs" style={{ color: 'var(--muted)' }}>v{d.versao}</div></div>
                       <DocStatusBadge status={d.status} />
                       {d.arquivo && <a href={d.arquivo} target="_blank" rel="noreferrer" className="btn btn-secondary" style={{ fontSize: 11 }}>Abrir</a>}
                     </div>
@@ -2593,17 +2881,60 @@
     //  SUPERVISOR — APP
     // ═══════════════════════════════════════════════════════
     function SupervisorApp() {
-      const [page, setPage] = useState('processos');
-      const items = [
-        { id: 'processos', label: 'Processos', icon: Icon.relatorios },
-        { id: 'documentos', label: 'Documentos', icon: Icon.docs },
-      ];
+      // Mesma estrutura de CoordApp mas sem Relatórios/Empresas/Formulário:
+      // supervisor vê os alunos da própria empresa na sidebar e o detalhe per-aluno
+      // como visualização. Documentos é uma página separada.
+      const toast = useToast();
+      const [page, setPage] = useState('dashboard');
+      const [processosResumo, setProcessosResumo] = useState([]);
+      const [processosFull, setProcessosFull] = useState({});
+      const [modelos, setModelos] = useState([]);
+      const [selectedId, setSelectedId] = useState(null);
+      const [loading, setLoading] = useState(true);
+      const [error, setError] = useState(null);
+
+      const load = useCallback(async () => {
+        setLoading(true); setError(null);
+        try {
+          const [resumo, ms] = await Promise.all([
+            Api.dashProcessos(), Api.modelosFormulario().catch(() => []),
+          ]);
+          setProcessosResumo(resumo);
+          setModelos(ms);
+          const full = await Promise.all(resumo.map(p => Api.processo(p.id).catch(() => null)));
+          const fullMap = {};
+          resumo.forEach((p, i) => { if (full[i]) fullMap[p.id] = full[i]; });
+          setProcessosFull(fullMap);
+          const visiveis = resumo.filter(p => STATUS_DASHBOARD.includes(p.status));
+          if (visiveis.length > 0 && !selectedId) setSelectedId(visiveis[0].id);
+        } catch (e) { setError(e); }
+        finally { setLoading(false); }
+      }, [selectedId]);
+      useEffect(() => { load(); }, []);
+
+      const processosDashboard = useMemo(
+        () => processosResumo.filter(p => STATUS_DASHBOARD.includes(p.status)),
+        [processosResumo]
+      );
+      const modeloIndex = useMemo(() => {
+        const m = {}; modelos.forEach(x => { m[x.id] = x; }); return m;
+      }, [modelos]);
+
+      const selectedResumo = processosResumo.find(p => p.id === selectedId);
+      const selectedFull = selectedId ? processosFull[selectedId] : null;
+      const selectedModelo = selectedFull?.modelo_formulario ? modeloIndex[selectedFull.modelo_formulario] : (modelos[0] || null);
+
       return (
         <div className="flex" style={{ height: '100vh' }}>
-          <SimpleSidebar active={page} onNav={setPage} items={items} />
+          <CoordSidebar active={page} onNav={setPage} alunos={processosDashboard}
+            selectedId={selectedId} onSelectAluno={setSelectedId}
+            onConfigForm={() => {/* supervisor não edita formulário */}}
+            menuItems={MENU_SUPERVISOR} />
           <main className="flex-1 overflow-y-auto" style={{ padding: 24 }}>
-            {page === 'processos' && <SupervisorProcessos />}
-            {page === 'documentos' && <SupervisorDocumentos />}
+            {loading ? <LoadingBlock label="Carregando processos…" /> :
+             error ? <ErrorBlock error={error} onRetry={load} /> :
+             page === 'documentos' ? <SupervisorDocumentos /> :
+             <AlunoDetailDashboard resumo={selectedResumo} processo={selectedFull} modelo={selectedModelo} />}
           </main>
         </div>
       );
@@ -2646,7 +2977,7 @@
           <div className="space-y-2">
             {docs.map(d => (
               <div key={d.id} className="surface p-3 flex justify-between items-center gap-3">
-                <div><div className="text-sm font-medium">{TIPO_DOC[d.tipo] || d.tipo}</div><div className="text-xs" style={{ color: 'var(--muted)' }}>Processo #{d.processo} · v{d.versao}</div></div>
+                <div><div className="text-sm font-medium">{d.titulo || TIPO_DOC[d.tipo] || d.tipo}</div><div className="text-xs" style={{ color: 'var(--muted)' }}>Processo #{d.processo} · v{d.versao}</div></div>
                 <DocStatusBadge status={d.status} />
                 {d.arquivo && <a href={d.arquivo} target="_blank" rel="noreferrer" className="btn btn-secondary" style={{ fontSize: 11 }}>Abrir</a>}
               </div>
