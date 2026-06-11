@@ -42,7 +42,8 @@ nav:
           - Códigos de Erro: Construcao/api/erros.md
   - Transição:
       - Index: Transicao/index.md
-      - Manual do Usuário: Transicao/manual-do-usuario.md
+      - Manual do Usuário (com front-end): Transicao/manual-do-usuario.md
+      - Manual do Usuário (sem front-end): Transicao/manual_usuario.md
 
 
 extra_css:
@@ -110,7 +111,7 @@ theme:
   name: material
   logo: assets/ibmec_logo.png
   language: pt-BR
-  favicon: images/ibmec_logo.png
+  favicon: assets/ibmec_logo.png
 
   palette:
     - media: "(prefers-color-scheme)"

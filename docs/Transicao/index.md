@@ -13,4 +13,5 @@
 
 ## Conteúdo desta seção
 
-- [Manual do Usuário](manual_usuario.md) — tutorial completo de uso do sistema por perfil (Aluno, Coordenador, Supervisor de Empresa, Administrativo).
+- [Manual do Usuário (com front-end)](manual-do-usuario.md) — tutorial de uso via interface gráfica (SPA `dashboard-ibmec.html`).
+- [Manual do Usuário (sem front-end)](manual_usuario.md) — tutorial de uso via API REST / Swagger UI, sem interface gráfica.
