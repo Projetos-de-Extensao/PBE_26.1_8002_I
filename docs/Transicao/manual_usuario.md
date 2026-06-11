@@ -2,6 +2,8 @@
 
 > Tutorial de uso do sistema de gestão de estágios do IBMEC.
 
+> **Nota:** Este manual descreve o uso do sistema **sem front-end**, por meio da API REST e do Swagger UI. Não há interface gráfica disponível nesta versão — todas as interações são realizadas diretamente via requisições HTTP.
+
 ---
 
 ## 1. Visão Geral
