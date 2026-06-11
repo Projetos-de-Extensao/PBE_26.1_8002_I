@@ -42,6 +42,7 @@ nav:
           - Códigos de Erro: Construcao/api/erros.md
   - Transição:
       - Index: Transicao/index.md
+      - Manual do Usuário: Transicao/manual-do-usuario.md
 
 
 extra_css:
