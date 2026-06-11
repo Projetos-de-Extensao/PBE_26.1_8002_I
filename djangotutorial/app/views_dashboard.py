@@ -273,7 +273,7 @@ class DashboardEmpresasView(APIView):
             avaliacao_estrelas = round(sum(notas) / len(notas), 2) if notas else None
             comentarios = [
                 {'nota': a.nota, 'comentario': a.comentario, 'data': a.data_criacao.isoformat()}
-                for a in avaliacoes_qs.order_by('-data_criacao')[:10]
+                for a in avaliacoes_qs.order_by('-data_criacao')[:5]
                 if a.comentario
             ]
             resultado.append({
@@ -286,6 +286,7 @@ class DashboardEmpresasView(APIView):
                 'avaliacao_media': avaliacao_media,
                 'avaliacao_estrelas': avaliacao_estrelas,
                 'total_avaliacoes': len(notas),
+                'comentarios_recentes': comentarios,
                 'comentarios_anonimos': comentarios,
                 'estagiarios': estagiarios,
             })

@@ -185,6 +185,7 @@
       },
       validarDocumento: (id, status, com) => apiRequest(`/documentos/${id}/validar/`, { method: 'POST', body: { status, comentario: com || '' } }),
       avaliarEmpresa: (empresaId, nota, comentario) => apiRequest('/avaliar-empresa/', { method: 'POST', body: { empresa: empresaId, nota, comentario } }),
+      jaAvalieiEmpresa: (empresaId) => apiRequest(`/avaliar-empresa/ja-avaliei/?empresa=${empresaId}`),
       esqueciSenha: (email) => apiRequest('/auth/esqueci-senha/', { method: 'POST', body: { email } }),
       redefinirSenha: (uid, token, nova) => apiRequest('/auth/redefinir-senha/', { method: 'POST', body: { uid, token, nova_senha: nova } }),
       gerarTCE: (id) => apiDownload(`/processos-estagio/${id}/gerar-tce/`),
@@ -660,15 +661,13 @@
     }
 
     // Modal de avaliação anônima da empresa (estrelas + comentário opcional)
-    function AvaliarEmpresaModal({ empresas, onClose, onDone }) {
+    function AvaliarEmpresaModal({ empresaId, empresaNome, onClose, onDone }) {
       const toast = useToast();
-      const [empresaId, setEmpresaId] = useState(empresas[0]?.id || '');
       const [nota, setNota] = useState(0);
       const [hover, setHover] = useState(0);
       const [comentario, setComentario] = useState('');
       const [enviando, setEnviando] = useState(false);
       async function submit() {
-        if (!empresaId) { toast.error('Selecione a empresa.'); return; }
         if (!nota) { toast.error('Escolha uma nota (1 a 5 estrelas).'); return; }
         setEnviando(true);
         try {
@@ -686,10 +685,7 @@
             </div>
             <div>
               <label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>Empresa</label>
-              <select className="input" value={empresaId} onChange={e => setEmpresaId(e.target.value)}>
-                <option value="">— Selecione —</option>
-                {empresas.map(e => <option key={e.id} value={e.id}>{e.razao_social}</option>)}
-              </select>
+              <div className="input" style={{ background: 'var(--surface2)', cursor: 'default' }}>{empresaNome}</div>
             </div>
             <div>
               <label className="block text-xs uppercase mb-1" style={{ color: 'var(--muted)' }}>Sua nota</label>
@@ -1751,10 +1747,11 @@
                 </div>
                 <div className="flex items-center justify-between" style={{ borderTop: '1px solid var(--border)', paddingTop: 12 }}>
                   <div>
-                    <div className="text-xs" style={{ color: 'var(--muted)' }}>Avaliação</div>
+                    <div className="text-xs" style={{ color: 'var(--muted)' }}>Avaliação alunos</div>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <StarRating value={(emp.avaliacao_media || 0) * 5 / 4} />
-                      <span className="text-sm font-semibold">{emp.avaliacao_media != null ? emp.avaliacao_media.toFixed(1) : '—'}</span>
+                      <StarRating value={emp.avaliacao_estrelas || 0} />
+                      <span className="text-sm font-semibold">{emp.avaliacao_estrelas != null ? emp.avaliacao_estrelas.toFixed(1) : '—'}</span>
+                      {emp.total_avaliacoes > 0 && <span className="text-xs" style={{ color: 'var(--muted)' }}>({emp.total_avaliacoes})</span>}
                     </div>
                   </div>
                   <span className="tag">{emp.total_estagios} estagiário{emp.total_estagios !== 1 ? 's' : ''}</span>
@@ -1819,6 +1816,23 @@
 
                 {/* ESTAGIÁRIOS + ÁREAS */}
                 <div>
+                  {/* Comentários recentes dos alunos */}
+                  {sel.comentarios_recentes && sel.comentarios_recentes.length > 0 && (
+                    <div className="mb-4">
+                      <div className="section-label" style={{ padding: 0, marginBottom: 8 }}>Comentários recentes</div>
+                      <div className="space-y-2">
+                        {sel.comentarios_recentes.map((c, i) => (
+                          <div key={i} className="surface2 p-2 rounded text-sm">
+                            <div className="flex items-center gap-2 mb-1">
+                              <StarRating value={c.nota} />
+                              <span className="text-xs" style={{ color: 'var(--muted)' }}>{new Date(c.data).toLocaleDateString('pt-BR')}</span>
+                            </div>
+                            <div style={{ color: 'var(--text)' }}>{c.comentario}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   <div className="section-label" style={{ padding: 0, marginBottom: 8 }}>Áreas</div>
                   <div className="flex flex-wrap gap-1 mb-4">
                     {(empDet?.areas_atuacao || '').split(/[,;·\n]/).map((a, i) => a.trim() && <span key={i} className="tag">{a.trim()}</span>)}
@@ -2136,17 +2150,26 @@
       const [relatorioModal, setRelatorioModal] = useState(null); // 'parcial' | 'final' | null
       const [uploadOpen, setUploadOpen] = useState(false);
       const [avaliarOpen, setAvaliarOpen] = useState(false);
-      const [empresas, setEmpresas] = useState([]);
+      const [jaAvaliou, setJaAvaliou] = useState(false);
+      const [empresaNome, setEmpresaNome] = useState('');
       const load = useCallback(async () => {
         setLoading(true);
         try {
           const ps = await Api.processos();
           const p = ps[0]; if (!p) { setProcesso(null); setDocumentos([]); return; }
           setProcesso(p); setDocumentos(await Api.documentosProcesso(p.id));
+          if (p.empresa) {
+            try { const emp = await Api.empresa(p.empresa); setEmpresaNome(emp.razao_social || ''); } catch (_) {}
+          }
+          if (['APROVADO', 'ATIVO', 'ENCERRADO'].includes(p.status) && p.empresa) {
+            try {
+              const r = await Api.jaAvalieiEmpresa(p.empresa);
+              setJaAvaliou(r.ja_avaliou);
+            } catch (_) { setJaAvaliou(false); }
+          }
         } finally { setLoading(false); }
       }, []);
       useEffect(() => { load(); }, [load]);
-      useEffect(() => { Api.empresas().then(setEmpresas).catch(() => setEmpresas([])); }, []);
       async function gerar(tipo) {
         try {
           let url;
@@ -2168,15 +2191,20 @@
           <h1 className="text-2xl font-bold">Documentos</h1>
 
           {/* Card de avaliação anônima da empresa */}
-          <div className="surface p-4 flex items-center justify-between gap-3 flex-wrap" style={{ borderLeft: '4px solid var(--accent4)' }}>
-            <div>
-              <div className="font-semibold">⭐ Avaliar a empresa do meu estágio</div>
-              <div className="text-xs mt-1" style={{ color: 'var(--muted)' }}>
-                Sua avaliação é totalmente anônima. Ajuda os próximos estagiários a escolherem com mais segurança.
+          {['APROVADO', 'ATIVO', 'ENCERRADO'].includes(processo.status) && (
+            <div className="surface p-4 flex items-center justify-between gap-3 flex-wrap" style={{ borderLeft: '4px solid var(--accent4)' }}>
+              <div>
+                <div className="font-semibold">⭐ Avaliar a empresa do meu estágio</div>
+                <div className="text-xs mt-1" style={{ color: 'var(--muted)' }}>
+                  Sua avaliação é totalmente anônima. Ajuda os próximos estagiários a escolherem com mais segurança.
+                </div>
               </div>
+              {jaAvaliou
+                ? <span className="text-sm font-medium" style={{ color: 'var(--accent2)' }}>✓ Você já avaliou esta empresa.</span>
+                : <button className="btn btn-primary" onClick={() => setAvaliarOpen(true)}>Avaliar empresa</button>
+              }
             </div>
-            <button className="btn btn-primary" onClick={() => setAvaliarOpen(true)}>Avaliar empresa</button>
-          </div>
+          )}
 
           {!podeAgir && (
             <div className="surface p-4" style={{ borderLeft: `4px solid var(--accent3)`, background: 'rgba(255,107,107,.08)' }}>
@@ -2226,9 +2254,10 @@
           )}
           {avaliarOpen && (
             <AvaliarEmpresaModal
-              empresas={empresas}
+              empresaId={processo.empresa}
+              empresaNome={empresaNome}
               onClose={() => setAvaliarOpen(false)}
-              onDone={() => setAvaliarOpen(false)}
+              onDone={() => { setAvaliarOpen(false); setJaAvaliou(true); }}
             />
           )}
         </div>

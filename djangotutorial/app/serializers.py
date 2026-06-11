@@ -286,6 +286,7 @@ class AvaliacaoEmpresaSerializer(serializers.ModelSerializer):
             'anonimo', 'aluno_nome', 'empresa_nome', 'data_criacao', 'data_atualizacao',
         ]
         read_only_fields = ['empresa', 'data_criacao', 'data_atualizacao']
+        # aluno_hash NUNCA exposto — controle interno de unicidade
 
     def get_aluno_nome(self, obj):
         if obj.anonimo:

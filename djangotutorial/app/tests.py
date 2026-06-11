@@ -1998,3 +1998,81 @@ class TemplateDocumentoTest(APITestCase):
         r = self.client.get(self.URL)
         self.assertEqual(r.status_code, status.HTTP_200_OK)
         self.assertEqual(len(r.data), 2)
+
+
+class AvaliarEmpresaAnonimoTest(APITestCase):
+    """Testes do endpoint POST /api/avaliar-empresa/ com validações de hash."""
+    URL = '/api/avaliar-empresa/'
+    JA_URL = '/api/avaliar-empresa/ja-avaliei/'
+
+    def setUp(self):
+        self.coord_user = Usuario.objects.create_user(
+            username='coord_aval', password='s', tipo='coordenador', nome='C',
+        )
+        self.coord = Coordenador.objects.create(usuario=self.coord_user)
+        self.curso = Curso.objects.create(nome='Eng', coordenador=self.coord)
+        self.empresa = EmpresaConcedente.objects.create(
+            cnpj='99.999.999/0001-99', razao_social='E1',
+            areas_atuacao='TI', localizacao='RJ', email_contato='e@e.com',
+            aprovada_ibmec=True,
+        )
+        self.empresa2 = EmpresaConcedente.objects.create(
+            cnpj='77.777.777/0001-77', razao_social='E2',
+            areas_atuacao='Fin', localizacao='SP', email_contato='e2@e.com',
+            aprovada_ibmec=True,
+        )
+        self.aluno_user = Usuario.objects.create_user(
+            username='aluno_aval', password='s', tipo='aluno', nome='A',
+        )
+        self.aluno = Aluno.objects.create(
+            usuario=self.aluno_user, cpf='111.111.111-11',
+            curso=self.curso, matriculado_estagio=True,
+        )
+        self.processo = ProcessoEstagio.objects.create(
+            aluno=self.aluno, empresa=self.empresa, coordenador=self.coord,
+            status='ATIVO', horas_semanais=20,
+            data_inicio_prevista=date(2026, 1, 1), data_fim_prevista=date(2026, 6, 30),
+            plano_atividades='Test',
+        )
+        self.aluno_sem_user = Usuario.objects.create_user(
+            username='aluno_sem', password='s', tipo='aluno', nome='Sem',
+        )
+        self.aluno_sem = Aluno.objects.create(
+            usuario=self.aluno_sem_user, cpf='222.222.222-22',
+            curso=self.curso, matriculado_estagio=True,
+        )
+
+    def test_aluno_avalia_empresa_do_processo(self):
+        self.client.force_authenticate(user=self.aluno_user)
+        r = self.client.post(self.URL, {'empresa': self.empresa.pk, 'nota': 4, 'comentario': 'Boa'})
+        self.assertEqual(r.status_code, status.HTTP_201_CREATED)
+
+    def test_aluno_nao_avalia_empresa_alheia(self):
+        self.client.force_authenticate(user=self.aluno_user)
+        r = self.client.post(self.URL, {'empresa': self.empresa2.pk, 'nota': 3})
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('vinculada', r.data['erro'])
+
+    def test_aluno_nao_avalia_duas_vezes(self):
+        self.client.force_authenticate(user=self.aluno_user)
+        self.client.post(self.URL, {'empresa': self.empresa.pk, 'nota': 5})
+        r = self.client.post(self.URL, {'empresa': self.empresa.pk, 'nota': 3})
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('já avaliou', r.data['erro'])
+
+    def test_aluno_sem_processo_nao_avalia(self):
+        self.client.force_authenticate(user=self.aluno_sem_user)
+        r = self.client.post(self.URL, {'empresa': self.empresa.pk, 'nota': 4})
+        self.assertEqual(r.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('vinculada', r.data['erro'])
+
+    def test_dashboard_empresas_inclui_avaliacao(self):
+        AvaliacaoEmpresa.objects.create(empresa=self.empresa, nota=4, comentario='Boa')
+        AvaliacaoEmpresa.objects.create(empresa=self.empresa, nota=2, comentario='')
+        self.client.force_authenticate(user=self.coord_user)
+        r = self.client.get('/api/dashboard/empresas/')
+        self.assertEqual(r.status_code, status.HTTP_200_OK)
+        emp = next(e for e in r.data if e['empresa_id'] == self.empresa.pk)
+        self.assertEqual(emp['avaliacao_estrelas'], 3.0)
+        self.assertEqual(emp['total_avaliacoes'], 2)
+        self.assertEqual(len(emp['comentarios_recentes']), 1)

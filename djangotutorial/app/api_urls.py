@@ -9,7 +9,7 @@ from .views import (
     TemplateDocumentoViewSet,
     GerarPDFView, GerarRelatorioView, PreencherFormularioView,
     RegisterView, LoginView, LogoutView,
-    AvaliarEmpresaView, EsqueciSenhaView, RedefinirSenhaView,
+    AvaliarEmpresaView, JaAvalieiView, EsqueciSenhaView, RedefinirSenhaView,
 )
 from .views_dashboard import (
     DashboardProcessosView, DashboardEstatisticasView, DashboardEmpresasView,
@@ -34,7 +34,8 @@ urlpatterns = [
     path('auth/logout/',           LogoutView.as_view(),         name='auth-logout'),
     path('auth/esqueci-senha/',    EsqueciSenhaView.as_view(),   name='auth-esqueci-senha'),
     path('auth/redefinir-senha/',  RedefinirSenhaView.as_view(), name='auth-redefinir-senha'),
-    path('avaliar-empresa/',       AvaliarEmpresaView.as_view(), name='avaliar-empresa'),
+    path('avaliar-empresa/',             AvaliarEmpresaView.as_view(),  name='avaliar-empresa'),
+    path('avaliar-empresa/ja-avaliei/', JaAvalieiView.as_view(),       name='ja-avaliei'),
     path(
         'processos-estagio/<int:processo_id>/gerar-tce/',
         GerarPDFView.as_view(),

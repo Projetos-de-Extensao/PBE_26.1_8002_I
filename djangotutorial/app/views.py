@@ -1136,24 +1136,58 @@ class RedefinirSenhaView(APIView):
 
 # ── Avaliação anônima de empresa pelo aluno ─────────────────────────────────
 
+def _gerar_aluno_hash(aluno_pk, empresa_pk):
+    import hashlib
+    from django.conf import settings
+    raw = f'{aluno_pk}:{empresa_pk}:{settings.SECRET_KEY}'
+    return hashlib.sha256(raw.encode()).hexdigest()
+
+
 class AvaliarEmpresaView(APIView):
     """
     POST /api/avaliar-empresa/
-    Body: { "empresa": int, "nota": 1-5, "comentario": str opcional }
+    Body: { "empresa": int (opcional — deduz do processo), "nota": 1-5, "comentario": str opcional }
 
-    A avaliação é ANÔNIMA — não vinculamos ao aluno nem ao processo no
-    banco. Só verificamos que o requester é um aluno autenticado para
-    impedir spam de não-alunos.
+    Validações:
+    - Apenas alunos com processo APROVADO/ATIVO/ENCERRADO
+    - Empresa deve ser a do processo do aluno
+    - Apenas 1 avaliação por aluno por empresa (via aluno_hash)
     """
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        if get_aluno(request.user) is None:
+        aluno = get_aluno(request.user)
+        if aluno is None:
             return Response(
                 {'erro': 'Apenas alunos podem avaliar empresas.'},
                 status=drf_status.HTTP_403_FORBIDDEN,
             )
+
+        processo = ProcessoEstagio.objects.filter(
+            aluno=aluno,
+            status__in=['APROVADO', 'ATIVO', 'ENCERRADO'],
+        ).select_related('empresa').first()
+        if processo is None:
+            return Response(
+                {'erro': 'Você só pode avaliar a empresa vinculada ao seu processo de estágio.'},
+                status=drf_status.HTTP_400_BAD_REQUEST,
+            )
+
         empresa_id = request.data.get('empresa')
+        if empresa_id is not None and int(empresa_id) != processo.empresa_id:
+            return Response(
+                {'erro': 'Você só pode avaliar a empresa vinculada ao seu processo de estágio.'},
+                status=drf_status.HTTP_400_BAD_REQUEST,
+            )
+        empresa = processo.empresa
+
+        h = _gerar_aluno_hash(aluno.pk, empresa.pk)
+        if AvaliacaoEmpresa.objects.filter(aluno_hash=h).exists():
+            return Response(
+                {'erro': 'Você já avaliou esta empresa.'},
+                status=drf_status.HTTP_400_BAD_REQUEST,
+            )
+
         nota = request.data.get('nota')
         comentario = (request.data.get('comentario') or '').strip()
         try:
@@ -1165,24 +1199,38 @@ class AvaliarEmpresaView(APIView):
                 {'erro': 'Nota deve ser inteiro entre 1 e 5.'},
                 status=drf_status.HTTP_400_BAD_REQUEST,
             )
-        try:
-            empresa = EmpresaConcedente.objects.get(pk=empresa_id)
-        except EmpresaConcedente.DoesNotExist:
-            return Response(
-                {'erro': 'Empresa não encontrada.'},
-                status=drf_status.HTTP_400_BAD_REQUEST,
-            )
 
-        # Importa aqui para evitar dependência circular no topo
-        from .models import AvaliacaoEmpresa as _Av
-        _Av.objects.create(
+        AvaliacaoEmpresa.objects.create(
             empresa=empresa,
-            aluno=None,          # anônimo
-            processo=None,       # anônimo
+            aluno=None,
+            processo=None,
             nota=nota_int,
             comentario=comentario,
+            aluno_hash=h,
         )
         return Response(
             {'mensagem': 'Avaliação registrada anonimamente.'},
             status=drf_status.HTTP_201_CREATED,
         )
+
+
+class JaAvalieiView(APIView):
+    """GET /api/avaliar-empresa/ja-avaliei/?empresa={id}"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        aluno = get_aluno(request.user)
+        if aluno is None:
+            return Response(
+                {'erro': 'Apenas alunos podem consultar.'},
+                status=drf_status.HTTP_403_FORBIDDEN,
+            )
+        empresa_id = request.query_params.get('empresa')
+        if not empresa_id:
+            return Response(
+                {'erro': 'Parâmetro "empresa" é obrigatório.'},
+                status=drf_status.HTTP_400_BAD_REQUEST,
+            )
+        h = _gerar_aluno_hash(aluno.pk, int(empresa_id))
+        ja = AvaliacaoEmpresa.objects.filter(aluno_hash=h).exists()
+        return Response({'ja_avaliou': ja})

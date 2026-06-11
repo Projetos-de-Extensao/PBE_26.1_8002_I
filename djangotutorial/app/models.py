@@ -403,9 +403,6 @@ class AvaliacaoEmpresa(models.Model):
     empresa = models.ForeignKey(
         EmpresaConcedente, on_delete=models.CASCADE, related_name='avaliacoes',
     )
-    # aluno/processo agora opcionais para suportar avaliações ANÔNIMAS feitas
-    # pelos alunos. As avaliações vinculadas (com processo) continuam sujeitas
-    # à constraint de unicidade. As anônimas têm processo=None e aluno=None.
     aluno = models.ForeignKey(
         Aluno, on_delete=models.SET_NULL, null=True, blank=True,
         related_name='avaliacoes_empresas',
@@ -419,6 +416,10 @@ class AvaliacaoEmpresa(models.Model):
     )
     comentario = models.TextField(blank=True, default='')
     anonimo = models.BooleanField(default=True)
+    aluno_hash = models.CharField(
+        max_length=64, blank=True, default='', db_index=True,
+        help_text='SHA-256(aluno_pk:empresa_pk:SECRET_KEY) — controle de unicidade sem expor identidade',
+    )
     data_criacao = models.DateTimeField(auto_now_add=True)
     data_atualizacao = models.DateTimeField(auto_now=True)
 
