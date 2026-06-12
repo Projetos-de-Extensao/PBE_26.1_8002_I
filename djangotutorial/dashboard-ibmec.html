@@ -96,12 +96,43 @@
     .star-empty { color: var(--border); }
     .drop-area { border: 2px dashed var(--border); border-radius: var(--radius); padding: 32px; text-align: center; cursor: pointer; transition: all .15s; }
     .drop-area:hover { border-color: var(--accent); background: rgba(108,99,255,.04); }
+    /* Cores do modo claro */
+    [data-theme="light"] {
+      --bg: #f4f6fb;
+      --surface: #ffffff;
+      --surface2: #eef0f7;
+      --border: #d5d9ea;
+      --text: #1a1d2e;
+      --muted: #6b7280;
+    }
+
+    [data-theme="light"] .pill-4 { background: rgba(0,120,90,.25); color: #005a48; }
+    [data-theme="light"] .tag-yes { background: rgba(0,120,90,.25); color: #005a48; }
+
+    /* Estilo do botão deslizável */
+    .toggle-track {
+      width: 44px; height: 24px; border-radius: 12px;
+      background: var(--surface2); border: 1px solid var(--border);
+      position: relative; transition: background .2s; cursor: pointer;
+    }
+    .toggle-track.on { background: var(--accent); }
+    .toggle-thumb {
+      position: absolute; top: 3px; left: 3px;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: white; transition: transform .2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,.3);
+    }
+    .toggle-track.on .toggle-thumb { transform: translateX(20px); }
   </style>
 </head>
 <body>
   <div id="root"></div>
   <script type="text/babel" data-presets="env,react">
     const { useState, useEffect, useMemo, useContext, createContext, useCallback, useRef } = React;
+    // Aplica o tema salvo quando a página carrega
+    document.documentElement.setAttribute(
+      'data-theme',
+      localStorage.getItem('ibmec_theme') || 'dark');
     const RC = window.Recharts || {};
     const { RadarChart, Radar, PieChart, Pie, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Cell } = RC;
 
@@ -203,16 +234,16 @@
     const STATUS_PROC = {
       RASCUNHO: { label: 'Rascunho', color: 'var(--muted)', bg: 'rgba(123,130,160,.15)' },
       PENDENTE: { label: 'Pendente', color: 'var(--accent4)', bg: 'rgba(255,209,102,.15)' },
-      APROVADO: { label: 'Aprovado', color: 'var(--accent2)', bg: 'rgba(0,212,170,.15)' },
+      APROVADO: { label: 'Aprovado', color: 'var(--accent2)', bg: 'rgba(0,120,90,.25)' },
       REJEITADO: { label: 'Rejeitado', color: 'var(--accent3)', bg: 'rgba(255,107,107,.15)' },
       CORRECAO_SOLICITADA: { label: 'Correção', color: 'var(--accent4)', bg: 'rgba(255,209,102,.15)' },
-      ATIVO: { label: 'Ativo', color: 'var(--accent2)', bg: 'rgba(0,212,170,.15)' },
+      ATIVO: { label: 'Ativo', color: 'var(--accent2)', bg: 'rgba(0,120,90,.25)' },
       ENCERRADO: { label: 'Concluído', color: 'var(--accent)', bg: 'rgba(108,99,255,.15)' },
       CANCELADO: { label: 'Cancelado', color: 'var(--muted)', bg: 'rgba(123,130,160,.15)' },
     };
     const STATUS_DOC = {
       PENDENTE: { label: 'Pendente', color: 'var(--accent4)', bg: 'rgba(255,209,102,.15)' },
-      APROVADO: { label: 'Aprovado', color: 'var(--accent2)', bg: 'rgba(0,212,170,.15)' },
+      APROVADO: { label: 'Aprovado', color: 'var(--accent2)', bg: 'rgba(0,120,90,.25)' },
       REJEITADO: { label: 'Rejeitado', color: 'var(--accent3)', bg: 'rgba(255,107,107,.15)' },
     };
     const TIPO_DOC = {
@@ -847,6 +878,26 @@
         return true;
       });
     }
+    
+    function ThemeToggle() {
+      const [dark, setDark] = React.useState(
+        () => (localStorage.getItem('ibmec_theme') || 'dark') === 'dark'
+      );
+      function toggle() {
+        const novoModo = !dark;
+        setDark(novoModo);
+        document.documentElement.setAttribute('data-theme', novoModo ? 'dark' : 'light');
+        localStorage.setItem('ibmec_theme', novoModo ? 'dark' : 'light');
+      }
+      return (
+        <div style={{ display:'flex', alignItems:'center', gap:6, cursor:'pointer', marginLeft:'auto' }} onClick={toggle}>
+          <span style={{ fontSize:12 }}>{dark ? '🌙' : '☀️'}</span>
+          <div className={`toggle-track ${dark ? 'on' : ''}`}>
+            <div className="toggle-thumb" />
+          </div>
+        </div>
+      );
+    }
 
     const SIDEBAR_FILTROS_INICIAIS = { curso: '', semestre: '', status: '', empresa: '', com_respostas: false };
 
@@ -874,7 +925,7 @@
       return (
         <aside className="surface" style={{ width: 240, height: '100vh', borderRadius: 0, borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
           <div className="flex items-center gap-2 p-4" style={{ color: 'var(--accent)', borderBottom: '1px solid var(--border)' }}>
-            {Icon.capelo}<span className="font-bold">EstágioIBMEC</span>
+            {Icon.capelo}<span className="font-bold">EstágioIBMEC</span><ThemeToggle />
           </div>
           <div className="flex-1 overflow-y-auto" style={{ minHeight: 0 }}>
             <div className="section-label">Menu</div>
@@ -1051,7 +1102,7 @@
               <div className="flex flex-wrap items-center gap-2">
                 <StatusBadge status={resumo.status} />
                 {horasTotais != null && <Badge label={`${horasTotais}h`} color="var(--accent)" bg="rgba(108,99,255,.15)" icon="⏱" />}
-                {score != null && <Badge label={`Score ${score.toFixed(2)}`} color="var(--accent2)" bg="rgba(0,212,170,.15)" icon="⭐" />}
+                {score != null && <Badge label={`Score ${score.toFixed(2)}`} color="var(--accent2)" bg="rgba(0,120,90,.25)" icon="⭐" />}
               </div>
             </div>
           </div>
@@ -1770,7 +1821,7 @@
                   <h2 className="text-xl font-bold">{sel.nome}</h2>
                   <div className="text-sm" style={{ color: 'var(--muted)' }}>{empDet?.areas_atuacao || '—'} · {empDet?.localizacao || '—'}</div>
                 </div>
-                <Badge label="Parceira" color="var(--accent2)" bg="rgba(0,212,170,.15)" />
+                <Badge label="Parceira" color="var(--accent2)" bg="rgba(0,120,90,.25)" />
                 <span className="tag">{sel.total_estagios} estagiário{sel.total_estagios !== 1 ? 's' : ''}</span>
               </div>
 
@@ -2018,7 +2069,7 @@
       return (
         <aside className="surface" style={{ width: 240, height: '100vh', borderRadius: 0, borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
           <div className="flex items-center gap-2 p-4" style={{ color: 'var(--accent)', borderBottom: '1px solid var(--border)' }}>
-            {Icon.capelo}<span className="font-bold">EstágioIBMEC</span>
+            {Icon.capelo}<span className="font-bold">EstágioIBMEC</span><ThemeToggle />
           </div>
           <div className="flex-1 overflow-y-auto">
             <div className="section-label">Menu</div>
@@ -2690,7 +2741,7 @@
         <div>
           <div className="flex items-center justify-between mb-1">
             <label className="block text-xs uppercase" style={{ color: 'var(--muted)' }}>{label}</label>
-            {extraido != null && extraido !== '' && <span style={{ fontSize: 9, padding: '2px 7px', borderRadius: 9999, background: 'rgba(0,212,170,.15)', color: 'var(--accent2)', fontWeight: 600 }}>📄 PDF</span>}
+            {extraido != null && extraido !== '' && <span style={{ fontSize: 9, padding: '2px 7px', borderRadius: 9999, background: 'rgba(0,120,90,.25)', color: 'var(--accent2)', fontWeight: 600 }}>📄 PDF</span>}
           </div>
           {children}
         </div>
@@ -2860,7 +2911,7 @@
                   <button key={s.id}
                     style={{
                       padding: '4px 10px', fontSize: 11, borderRadius: 6,
-                      background: i === secAtiva ? 'var(--accent)' : (ok ? 'rgba(0,212,170,.15)' : 'var(--surface2)'),
+                      background: i === secAtiva ? 'var(--accent)' : (ok ? 'rgba(0,120,90,.25)' : 'var(--surface2)'),
                       color: i === secAtiva ? 'white' : (ok ? 'var(--accent2)' : 'var(--text)'),
                     }}
                     onClick={() => setSecAtiva(i)}>
